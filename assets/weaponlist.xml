@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<weaponlist>
+	<weapon id="0" name="" file="gfx/laser_yellow_sm.png" ammo="100" regen="10" damage="10" rate="2" speed="6" life="10" />
+</weaponlist>
