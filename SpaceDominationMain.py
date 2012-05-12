@@ -188,7 +188,7 @@ class SpaceDominationMain():
             
         # do physics
         
-        if pygame.time.get_ticks() - self.lastTick > 100:
+        if pygame.time.get_ticks() - self.lastTick > 33:
             self.physics.updatePhysics()
             self.lastTick = pygame.time.get_ticks()
         

@@ -54,19 +54,18 @@ class PhysicsEntity(pygame.sprite.Sprite):
         
     def accelerate_r(self, mag = 0, r = 0):
         # basically, we add the vector (mag, rotation) to the current accel value
+        
         if self.get_accel_sq() <= self.max_accel_sq:
+            
             rvec = Vec2(mag, r)
             xy = rvec.getXY()
             self.accel = self.accel[0] + xy[0], self.accel[1] + xy[1] * -1
-        #if self.get_accel_sq() > self.max_accel_sq:
-        #    if self.accel[0] == 0: 
-        #        angle = 0
-        #    else:
-        #        angle = math.asin(self.accel[1] / math.sqrt(self.get_accel_sq()))
-        #    self.accel = math.cos(angle) * math.sqrt(self.max_accel_sq), math.sin(angle) * math.sqrt(self.max_accel_sq)   
-        
+       
+       
+       
     def brake(self, brake = 0):
         # to brake, we are going to subtract mag from the velocity vector until it becomes 0
+        print "brake"
         mag = math.sqrt(self.get_vel_sq())
         if mag == 0: return
         vec = Vec2(mag, math.degrees(math.asin(self.velocity[1] / mag)))
@@ -103,10 +102,28 @@ class Physics(object):
     def updatePhysics(self):
         for pChild in self.physicsChildren:
             # accelerate
+            #print "pChild-vel: " + str(pChild.velocity) + ", accel: " + str(pChild.accel)
             newVelocity = pChild.velocity[0] + pChild.accel[0], pChild.velocity[1] + pChild.accel[1]
-            if (newVelocity[0]*newVelocity[0]+newVelocity[1]*newVelocity[1]) < pChild.max_vel_sq:
-                pChild.velocity = newVelocity
+            #print "newvelocity " + str(newVelocity) + ", max " + str(math.sqrt(pChild.max_vel_sq))
+            pChild.velocity = newVelocity
+            # get the velocity in the current direction of movement
+            if pChild.get_vel_sq() > 0:
+                if pChild.velocity[0] == 0: angle = -1 * math.radians(90 * pChild.velocity[1] / math.fabs(pChild.velocity[1]))
+                else: angle = math.atan(pChild.velocity[1] / pChild.velocity[0]) + (math.radians(90) * (pChild.velocity[0] / math.fabs(pChild.velocity[0]) - 1))
             
+                vel = Vec2(math.sqrt(pChild.get_vel_sq()), math.degrees(angle) - pChild.rotation)
+                
+                vel1 = vel.getXY()[0]
+                print vel1
+                if vel1*vel1 > pChild.max_vel_sq:
+                    vel.magnitude = math.sqrt(pChild.max_vel_sq)
+                    pChild.velocity = vel.getXY()
+            
+                
+                
+                #mag = math.sqrt(pChild.max_vel_sq)
+                #pChild.velocity = math.cos(angle) * mag, - math.sin(angle) * mag
+                #print "(" + str(mag) + ", " + str(math.degrees(angle)) + ")"
             pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
             
             # TODO collision detection
