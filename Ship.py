@@ -8,6 +8,7 @@ Created on May 10, 2012
 import pygame, sys, os, random
 from pygame.locals import *
 import Utils
+from Physics import *
 
 class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an actual ship can be constructed from it
     id = 0
@@ -23,7 +24,7 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     
     weapons = [] # TODO
 
-class Ship(pygame.sprite.Sprite):
+class Ship(PhysicsEntity):
     id = 0
     name = "<Undefined>"
     file = "1st_pixel_spaceship.png"
@@ -34,7 +35,7 @@ class Ship(pygame.sprite.Sprite):
     speed = 4
     turn = 5
     armor = 0
-    rotation = 0
+    
     
     weapons = [] # TODO
     
@@ -62,13 +63,7 @@ class Ship(pygame.sprite.Sprite):
         
         #TODO implement loading weapons
         
-    def set_rotation(self, r=0):
-        self.image = pygame.transform.rotate(self.original, r)
-        self.rotation = r
-        self.rect = self.image.get_rect(center = self.rect.center)
-        
-    def get_rotation(self):
-        return self.rotation
+    
     
     def set_position(self, x, y):
         self.rect.topleft = x, y

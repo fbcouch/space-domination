@@ -6,6 +6,7 @@ Created on Apr 28, 2012
 
 from Mission import *
 from Ship import *
+from Physics import *
 import Utils
 import pygame, sys, os, random
 from pygame.locals import *
@@ -69,6 +70,7 @@ class SpaceDominationMain():
         # TODO: implement loading game assets
         self.loadMissionList()
         # TODO: implement physics manager
+        self.physics = Physics()
         
         # setup keymap
         self.keys = {"turnLeft" : 0, "turnRight" : 0, "accel" : 0, "brake" : 0, "fire" : 0, "alt-fire" : 0}
@@ -80,14 +82,16 @@ class SpaceDominationMain():
         
         # TODO: temporarily just spawn a background and a "player ship" and have the player ship start forward
         self.tempPlayerShip = Ship(parent = self.rootSprite)
-        self.tempPlayerShip.set_position(0, 10)
-        #self.tempPlayerShip.set_rotation(45)
+        self.tempPlayerShip.set_position(100, 100)
+        self.physics.addChild(self.tempPlayerShip)
+        
+        self.tempPlayerShip.set_rotation(180)
         self.rootSprite.add(self.tempPlayerShip)
         tempimg, temprect = Utils.load_image("cube_2.jpg")
         tmpSprite = pygame.sprite.Sprite()
         tmpSprite.image = tempimg
         tmpSprite.rect = temprect
-        self.rootSprite.add(tmpSprite)
+        #self.rootSprite.add(tmpSprite)
         
         #self.tempPlayerShip.setVel(Vec3(1,0,0))
         
@@ -170,14 +174,23 @@ class SpaceDominationMain():
         
         
         
-        # for now, just move the test sprite around
+        # Process inputs
         if(self.tempPlayerShip):
-            if(self.keys["accel"]): 
-                self.tempPlayerShip.set_position(self.tempPlayerShip.get_position()[0], self.tempPlayerShip.get_position()[1] - 1)
-            if(self.keys["brake"]): self.tempPlayerShip.set_position(self.tempPlayerShip.get_position()[0], self.tempPlayerShip.get_position()[1] + 1)
+            if(self.keys["accel"]): self.tempPlayerShip.accelerate(1)
+                
+            if(self.keys["brake"]): self.tempPlayerShip.accelerate(-1)
+            
             if(self.keys["turnLeft"]): self.tempPlayerShip.set_rotation(self.tempPlayerShip.get_rotation() + 5)
             if(self.keys["turnRight"]): self.tempPlayerShip.set_rotation(self.tempPlayerShip.get_rotation() - 5)
             
+            
+        # do physics
+        
+        if pygame.time.get_ticks() - self.lastTick > 100:
+            self.physics.updatePhysics()
+            self.lastTick = pygame.time.get_ticks()
+        
+            print "Vel: " + str(self.tempPlayerShip.velocity) + ", Accel: " + str(self.tempPlayerShip.accel)
         
         self.screen.blit(self.background, (0,0))
         self.rootSprite.clear(self.screen, self.background)
