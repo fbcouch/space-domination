@@ -58,6 +58,8 @@ class Ship(PhysicsEntity):
         self.shields = proto.shields
         self.sregen = proto.sregen
         self.speed = proto.speed
+        self.max_vel_sq = self.speed * self.speed
+        self.max_accel_sq = self.max_vel_sq * 0.25
         self.turn = proto.turn
         self.armor = proto.armor
         

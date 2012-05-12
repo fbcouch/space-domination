@@ -8,13 +8,38 @@ import pygame, sys, os, random, math
 from pygame.locals import *
 import Utils
 
+
+class Vec2(object):
+    magnitude = 0
+    theta = 0
+    
+    def __init__(self, mag, t):
+        self.magnitude = mag
+        self.theta = t
+    
+    def add(self, pVec = None):
+        if pVec is None or not pVec is Vec2: return self
+        
+        v1 = self.getXY()
+        v2 = pVec.getXY()
+        
+        v3 = v1[0] + v2[0], v1[1] + v1[1]
+        self.magnitude = math.sqrt(v3[0]*v3[0] + v3[1]*v3[1])
+        if not self.magnitude == 0:
+            self.theta = math.degrees(math.asin(v3[1] / self.magnitude))
+        else: self.theta = 0
+        
+        return self
+        
+    def getXY(self):
+        return (self.magnitude * math.cos(math.radians(self.theta))), (self.magnitude * math.sin(math.radians(self.theta)))
+
 class PhysicsEntity(pygame.sprite.Sprite):
     velocity = (0,0)    # current velocity of the entity
     max_vel_sq = 1024      # maximum velocity squared (for speed)
     
     accel = (0,0)       # current acceleration
     max_accel_sq = 4    # max accel squared
-    accel_damping = 1
     
     mass = 0            # TODO implement momentum in collisions
     
@@ -30,13 +55,26 @@ class PhysicsEntity(pygame.sprite.Sprite):
     def accelerate_r(self, mag = 0, r = 0):
         # basically, we add the vector (mag, rotation) to the current accel value
         if self.get_accel_sq() <= self.max_accel_sq:
-            self.accel = self.accel[0] + math.cos(math.radians(r)) * mag, self.accel[1] + math.sin(math.radians(r)) * mag * -1
-        if self.get_accel_sq() > self.max_accel_sq:
-            if self.accel[0] == 0: 
-                angle = 0
-            else:
-                angle = math.atan(self.accel[1] / self.accel[0])
-            self.accel = math.cos(angle) * math.sqrt(self.max_accel_sq), math.sin(angle) * math.sqrt(self.max_accel_sq)       
+            rvec = Vec2(mag, r)
+            xy = rvec.getXY()
+            self.accel = self.accel[0] + xy[0], self.accel[1] + xy[1] * -1
+        #if self.get_accel_sq() > self.max_accel_sq:
+        #    if self.accel[0] == 0: 
+        #        angle = 0
+        #    else:
+        #        angle = math.asin(self.accel[1] / math.sqrt(self.get_accel_sq()))
+        #    self.accel = math.cos(angle) * math.sqrt(self.max_accel_sq), math.sin(angle) * math.sqrt(self.max_accel_sq)   
+        
+    def brake(self, brake = 0):
+        # to brake, we are going to subtract mag from the velocity vector until it becomes 0
+        mag = math.sqrt(self.get_vel_sq())
+        if mag == 0: return
+        vec = Vec2(mag, math.degrees(math.asin(self.velocity[1] / mag)))
+        vec.magnitude -= brake
+        if vec.magnitude < 0:
+            self.velocity = (0,0)
+        else:
+            self.velocity = vec.getXY()
         
     def set_rotation(self, r=0):
         self.image = pygame.transform.rotate(self.original, r)
@@ -64,34 +102,10 @@ class Physics(object):
     
     def updatePhysics(self):
         for pChild in self.physicsChildren:
-            # update acceleration (damping)
-            if pChild.get_accel_sq() > 0:
-                mag = math.sqrt(pChild.get_accel_sq())
-                if mag > 0.5: mag = 0.5
-                mag *= -1
-                if(pChild.accel[0] == 0): angle = math.asin(pChild.accel[1] / math.fabs(pChild.accel[0]))
-                else: 
-                    angle = math.degrees(math.atan(pChild.accel[1] / pChild.accel[0])) + (pChild.accel[0] / math.fabs(pChild.accel[0]) - 1) * 90
-                pChild.accelerate_r(mag, math.degrees(angle))
-                #b
-            '''if pChild.accel[0] == 0: 
-                angle = 0
-            else:
-                angle = math.atan(pChild.accel[1] / pChild.accel[0])
-            mag = (math.sqrt(pChild.get_accel_sq()) - pChild.accel_damping)
-            if mag < 0: mag = 0
-            pChild.accel = math.cos(angle) * mag, math.sin(angle) * mag * -1'''
-            
-            # update velocity
-            if pChild.get_vel_sq() < pChild.max_vel_sq:
-                pChild.velocity = pChild.velocity[0] + pChild.accel[0], pChild.velocity[1] + pChild.accel[1]
-            if pChild.get_vel_sq() > pChild.max_vel_sq:
-                # moving too fast, calculate the angle then produce a new velocity vector
-                if pChild.velocity[0] == 0:
-                    angle = 0
-                else:
-                    angle = math.atan(pChild.velocity[1] / pChild.velocity[0])
-                pChild.velocity = math.cos(angle) * math.sqrt(pChild.max_vel_sq), math.sin(angle) * math.sqrt(pChild.max_vel_sq)
+            # accelerate
+            newVelocity = pChild.velocity[0] + pChild.accel[0], pChild.velocity[1] + pChild.accel[1]
+            if (newVelocity[0]*newVelocity[0]+newVelocity[1]*newVelocity[1]) < pChild.max_vel_sq:
+                pChild.velocity = newVelocity
             
             pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
             

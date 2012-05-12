@@ -85,7 +85,7 @@ class SpaceDominationMain():
         self.tempPlayerShip.set_position(100, 100)
         self.physics.addChild(self.tempPlayerShip)
         
-        self.tempPlayerShip.set_rotation(180)
+        #self.tempPlayerShip.set_rotation(180)
         self.rootSprite.add(self.tempPlayerShip)
         tempimg, temprect = Utils.load_image("cube_2.jpg")
         tmpSprite = pygame.sprite.Sprite()
@@ -176,9 +176,11 @@ class SpaceDominationMain():
         
         # Process inputs
         if(self.tempPlayerShip):
-            if(self.keys["accel"]): self.tempPlayerShip.accelerate(1)
+            if(self.keys["accel"]): self.tempPlayerShip.accelerate(self.tempPlayerShip.speed * 0.5) 
                 
-            if(self.keys["brake"]): self.tempPlayerShip.accelerate(-1)
+            if(self.keys["brake"]): self.tempPlayerShip.brake(self.tempPlayerShip.speed * 0.5)
+            
+            if not (self.keys["accel"] or self.keys["brake"]): self.tempPlayerShip.accel = (0,0)
             
             if(self.keys["turnLeft"]): self.tempPlayerShip.set_rotation(self.tempPlayerShip.get_rotation() + 5)
             if(self.keys["turnRight"]): self.tempPlayerShip.set_rotation(self.tempPlayerShip.get_rotation() - 5)
