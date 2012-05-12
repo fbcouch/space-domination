@@ -6,7 +6,7 @@ Created on May 5, 2012
 
 from xml.sax import saxutils, handler, make_parser
 
-class Mission:
+class Mission(object):
     # this will be the main class that the missions will be loaded into and will contain info on spawning backgrounds, ships, triggers, etc
     missionName = ""
     missionDesc = ""
@@ -29,7 +29,7 @@ class Mission:
         returnVal += "</mission>"
         return returnVal
     
-class Background:
+class Background(object):
     filename = ""
     x = 0
     y = 0
@@ -38,7 +38,7 @@ class Background:
     def toXML(self):
         return "<background file=\"" + self.filename + "\" x=\"" + str(self.x) + "\" y=\"" + str(self.y) + "\" scale=\"" + str(self.scale) + "\" />"
         
-class Spawn:
+class Spawn(object):
     ID = 0
     x = 0
     y = 0
@@ -51,7 +51,7 @@ class Spawn:
         returnString += " x=\"" + str(self.x) + "\" y=\"" + str(self.y) + "\" rot=\"" + str(self.r) + "\" />"
         return returnString
     
-class Trigger:
+class Trigger(object):
     # TODO implement triggers
     def toXML(self):
         return "<trigger />"

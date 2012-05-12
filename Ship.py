@@ -4,14 +4,15 @@ Created on May 10, 2012
 @author: Jami
 '''
 
-from panda3d.core import TextNode, Point2, Point3, Vec3, Vec4
-from Sprite import *
+
+import pygame, sys, os, random
+from pygame.locals import *
 import Utils
 
-class PShip: # Prototype for a "Ship" - IE: used in the shiplist and an actual ship can be constructed from it
+class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an actual ship can be constructed from it
     id = 0
     name = "<Undefined>"
-    file = "gfx/1st_pixel_spaceship.png"
+    file = "1st_pixel_spaceship.png"
     health = 100
     hregen = 2
     shields = 100
@@ -22,10 +23,10 @@ class PShip: # Prototype for a "Ship" - IE: used in the shiplist and an actual s
     
     weapons = [] # TODO
 
-class Ship(Sprite):
+class Ship(pygame.sprite.Sprite):
     id = 0
     name = "<Undefined>"
-    file = "gfx/1st_pixel_spaceship.png"
+    file = "1st_pixel_spaceship.png"
     health = 100
     hregen = 2
     shields = 100
@@ -33,12 +34,18 @@ class Ship(Sprite):
     speed = 4
     turn = 5
     armor = 0
+    rotation = 0
     
     weapons = [] # TODO
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None):
-        super(Ship, self).__init__(Utils.loadObject(tex = proto.file, pos = Point2(x,y), parent = parent), r)
+        super(Ship, self).__init__()
         self.constructFromProto(proto)
+        self.image, self.rect = Utils.load_image(self.file)
+        self.original = self.image
+        self.set_position(x,y)
+        self.set_rotation(r)
+        if not parent is None: parent.add(self)
         
     def constructFromProto(self, proto = PShip()):
         if proto is None: return
@@ -54,3 +61,17 @@ class Ship(Sprite):
         self.armor = proto.armor
         
         #TODO implement loading weapons
+        
+    def set_rotation(self, r=0):
+        self.image = pygame.transform.rotate(self.original, r)
+        self.rotation = r
+        self.rect = self.image.get_rect(center = self.rect.center)
+        
+    def get_rotation(self):
+        return self.rotation
+    
+    def set_position(self, x, y):
+        self.rect.topleft = x, y
+        
+    def get_position(self):
+        return (self.rect.left, self.rect.top)
