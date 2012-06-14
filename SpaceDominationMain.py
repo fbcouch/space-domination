@@ -178,9 +178,9 @@ class SpaceDominationMain():
         
         # Process inputs
         if(self.tempPlayerShip):
-            if(self.keys["accel"]): self.tempPlayerShip.accelerate(self.tempPlayerShip.speed * 0.5) 
+            if(self.keys["accel"]): self.tempPlayerShip.accelerate(self.tempPlayerShip.speed * 0.25) 
                 
-            if(self.keys["brake"]): self.tempPlayerShip.brake(self.tempPlayerShip.speed * 0.5)
+            if(self.keys["brake"]): self.tempPlayerShip.brake(self.tempPlayerShip.speed * 0.25)
             
             if not (self.keys["accel"] or self.keys["brake"]): self.tempPlayerShip.accel = (0,0)
             
@@ -194,7 +194,7 @@ class SpaceDominationMain():
             self.physics.updatePhysics()
             self.lastTick = pygame.time.get_ticks()
         
-            print "Vel: " + str(self.tempPlayerShip.velocity) + ", Accel: " + str(self.tempPlayerShip.accel)
+            
         
         self.screen.blit(self.background, (0,0))
         self.rootSprite.clear(self.screen, self.background)

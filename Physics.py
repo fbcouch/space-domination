@@ -84,7 +84,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
             
             rvec = Vec2(mag, r)
             xy = rvec.getXY()
-            self.accel = self.accel[0] + xy[0], self.accel[1] + xy[1] * -1
+            self.accel = self.accel[0] + xy[0], self.accel[1] + xy[1]
        
        
        
