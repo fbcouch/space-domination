@@ -80,6 +80,8 @@ class SpaceDominationMain():
         self.removeSplash()
         
         
+        
+        
         # TODO: temporarily just spawn a background and a "player ship" and have the player ship start forward
         self.tempPlayerShip = Ship(parent = self.rootSprite)
         self.tempPlayerShip.set_position(100, 100)
@@ -94,7 +96,7 @@ class SpaceDominationMain():
         #self.rootSprite.add(tmpSprite)
         
         #self.tempPlayerShip.setVel(Vec3(1,0,0))
-        
+        self.tempPlayerShip.set_rotation(90)
         
         self.gameState = SpaceDominationMain.GAMESTATE_RUNNING
         

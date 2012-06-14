@@ -32,7 +32,32 @@ class Vec2(object):
         return self
         
     def getXY(self):
-        return (self.magnitude * math.cos(math.radians(self.theta))), (self.magnitude * math.sin(math.radians(self.theta)))
+        return (self.magnitude * math.cos(math.radians(self.theta))), (-1 * self.magnitude * math.sin(math.radians(self.theta)))
+    
+    def setXY(self, x = 0.0, y = 0.0):
+        mag = 0.0
+        t = 0.0
+        
+        mag = math.sqrt(x*x + y*y)
+        if mag == 0:
+            self.magnitude = 0
+            self.theta = 0
+            return self
+        
+        if y == 0:
+            t = math.degrees(math.acos(float(x) / float(mag)))
+        elif x == 0:
+            t = math.degrees(math.asin(float(- y) / float(mag)))
+            
+        else:
+            t = math.degrees(math.atan(float(- y) / float(x)))
+            if x < 0:
+                t += 180
+            
+        self.magnitude = mag
+        self.theta = (t + 360) % 360
+        return self
+    
 
 class PhysicsEntity(pygame.sprite.Sprite):
     velocity = (0,0)    # current velocity of the entity
@@ -108,22 +133,16 @@ class Physics(object):
             pChild.velocity = newVelocity
             # get the velocity in the current direction of movement
             if pChild.get_vel_sq() > 0:
-                if pChild.velocity[0] == 0: angle = -1 * math.radians(90 * pChild.velocity[1] / math.fabs(pChild.velocity[1]))
-                else: angle = math.atan(pChild.velocity[1] / pChild.velocity[0]) + (math.radians(90) * (pChild.velocity[0] / math.fabs(pChild.velocity[0]) - 1))
+                vel = Vec2(0,0)
+                vel.setXY(pChild.velocity[0], pChild.velocity[1])
             
-                vel = Vec2(math.sqrt(pChild.get_vel_sq()), math.degrees(angle) - pChild.rotation)
+                vel.theta = pChild.rotation
                 
-                vel1 = vel.getXY()[0]
-                print vel1
-                if vel1*vel1 > pChild.max_vel_sq:
+                if vel.magnitude*vel.magnitude > pChild.max_vel_sq:
                     vel.magnitude = math.sqrt(pChild.max_vel_sq)
                     pChild.velocity = vel.getXY()
             
-                
-                
-                #mag = math.sqrt(pChild.max_vel_sq)
-                #pChild.velocity = math.cos(angle) * mag, - math.sin(angle) * mag
-                #print "(" + str(mag) + ", " + str(math.degrees(angle)) + ")"
+            
             pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
             
             # TODO collision detection
@@ -137,4 +156,98 @@ class Physics(object):
     def addChild(self, pentity):
         if not pentity is None:
             self.physicsChildren.append(pentity)
+            
+    # i need to get vec2 working properly, so I'm going to write a method to test it.
+    def testVec2(self):
+        '''
+                            90 deg
+                            
+                            -y
+                            |
+        Coordinate system:  0,0 -> +x   --> 0 deg
+                            |
+                            +y
+                            
+                            -90 deg
+        
+        So, if we define a vector as (magnitude, angle) we need to remember to reverse the sign of the y axis before doing sin/asin
+        from (m,a) to (x,y):
+        x = m * cos(t)
+        y = -1 * m * sin(t)
+        
+        from (x,y) to (m,a)
+        m = sqrt(x*x + y*y)
+        t = acos(x / m) or t = asin(-y / m)
+        
+        '''
+        
+        # test (m,a) to (x,y):
+        tv = Vec2(1,0)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        tv = Vec2(1,45)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        tv = Vec2(1,90)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        tv = Vec2(1,135)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        tv = Vec2(1,180)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        tv = Vec2(1,225)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        tv = Vec2(1,270)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        tv = Vec2(1,315)
+        xy = tv.getXY()
+        print "Test (m,a) to (x,y): (" + str(tv.magnitude) + "," + str(tv.theta) + ") --> (" + str(xy[0]) + "," + str(xy[1]) + ")" 
+        
+        
+        # test (x,y) to (m,a)
+       
+        
+        xy = (1,0)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        
+        xy = (1,-1)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        
+        xy = (0,-1)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        
+        xy = (-1,-1)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        
+        xy = (-1,0)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        
+        xy = (-1,1)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        
+        xy = (0,1)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        
+        xy = (1,1)
+        tv = Vec2(0,0).setXY(xy[0], xy[1])
+        print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
+        return
             
