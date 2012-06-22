@@ -29,7 +29,7 @@ class SpaceDominationMain():
     missionList = None
     currentMission = None
     
-    tempPlayerShip = None
+    playerShip = None
     
     fpstext = None
     
@@ -42,6 +42,11 @@ class SpaceDominationMain():
     defaultfont = None
     
     rootSprite = None
+    
+    shipSpriteGroup = None
+    backgroundSpriteGroup = None
+    triggerList = []
+    foregroundSpriteGroup = None
     
     def __init__(self):
         '''
@@ -58,7 +63,10 @@ class SpaceDominationMain():
         self.background = self.background.convert()
         self.background.fill((0,0,0))
         
-        self.rootSprite = pygame.sprite.RenderClear()
+        self.rootSprite = pygame.sprite.OrderedUpdates()
+        self.shipSpriteGroup = pygame.sprite.RenderClear()
+        self.backgroundSpriteGroup = pygame.sprite.RenderClear()
+        self.foregroundSpriteGroup = pygame.sprite.RenderClear()
         
         if pygame.font:
             self.defaultfont = pygame.font.Font(None, 20)
@@ -69,6 +77,7 @@ class SpaceDominationMain():
         self.loadMenus()
         # TODO: implement loading game assets
         self.loadMissionList()
+        
         # TODO: implement physics manager
         self.physics = Physics()
         
@@ -82,7 +91,8 @@ class SpaceDominationMain():
         
         
         
-        # TODO: temporarily just spawn a background and a "player ship" and have the player ship start forward
+        '''# TODO: temporarily just spawn a background and a "player ship" and have the player ship start forward
+        
         self.tempPlayerShip = Ship(parent = self.rootSprite)
         self.tempPlayerShip.set_position(100, 100)
         self.physics.addChild(self.tempPlayerShip)
@@ -97,9 +107,14 @@ class SpaceDominationMain():
         
         #self.tempPlayerShip.setVel(Vec3(1,0,0))
         self.tempPlayerShip.set_rotation(90)
+        '''
         
+        self.gameState = SpaceDominationMain.GAMESTATE_NONE
+        # TODO: show the menu
+        # eventually the menu will lead to...
         self.gameState = SpaceDominationMain.GAMESTATE_RUNNING
-        
+        self.currentMission = self.loadMission("assets/mission01.xml")
+        self.buildMission(self.currentMission)
         
     def run(self):
         while True:
@@ -160,6 +175,34 @@ class SpaceDominationMain():
     
         return MissionXMLParser().loadMission(filename)
     
+    def buildMission(self, mission):
+        #convert spawns to player or enemy
+        for spawn in mission.spawnList:
+            
+            if spawn.ID == -1: # this is the player ship
+                tp = PShip()
+                tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
+                tempShip = Ship(proto = tp)
+                self.playerShip = tempShip
+            else:
+                tempShip = Ship()
+            self.shipSpriteGroup.add(tempShip)
+            self.physics.addChild(tempShip)
+            tempShip.set_position(spawn.x, spawn.y)
+            tempShip.set_rotation(spawn.r)
+            
+        #convert bglist to backgrounds
+        for bg in mission.backgroundList:
+            tempBg = pygame.sprite.Sprite()
+            tempBg.image, tempBg.rect = Utils.load_image(bg.filename)
+            tempBg.rect.topleft = (bg.x, bg.y)
+            self.backgroundSpriteGroup.add(tempBg)
+        
+        #add the trigger list
+        self.triggerList = mission.triggerList
+        
+        return
+    
     def gameLoop(self):
         dt = self.clock.tick(30)
         
@@ -177,15 +220,15 @@ class SpaceDominationMain():
         
         
         # Process inputs
-        if(self.tempPlayerShip):
-            if(self.keys["accel"]): self.tempPlayerShip.accelerate(self.tempPlayerShip.speed * 0.25) 
+        if(self.playerShip):
+            if(self.keys["accel"]): self.playerShip.accelerate(self.playerShip.speed * 0.25) 
                 
-            if(self.keys["brake"]): self.tempPlayerShip.brake(self.tempPlayerShip.speed * 0.25)
+            if(self.keys["brake"]): self.playerShip.brake(self.playerShip.speed * 0.25)
             
-            if not (self.keys["accel"] or self.keys["brake"]): self.tempPlayerShip.accel = (0,0)
+            if not (self.keys["accel"] or self.keys["brake"]): self.playerShip.accel = (0,0)
             
-            if(self.keys["turnLeft"]): self.tempPlayerShip.set_rotation(self.tempPlayerShip.get_rotation() + 5)
-            if(self.keys["turnRight"]): self.tempPlayerShip.set_rotation(self.tempPlayerShip.get_rotation() - 5)
+            if(self.keys["turnLeft"]): self.playerShip.set_rotation(self.playerShip.get_rotation() + 5)
+            if(self.keys["turnRight"]): self.playerShip.set_rotation(self.playerShip.get_rotation() - 5)
             
             
         # do physics
@@ -195,10 +238,15 @@ class SpaceDominationMain():
             self.lastTick = pygame.time.get_ticks()
         
             
-        
+        # clear the background (blit a blank screen) then draw everything in the background then the sprite groups then the foreground group
         self.screen.blit(self.background, (0,0))
-        self.rootSprite.clear(self.screen, self.background)
-        self.rootSprite.draw(self.screen)
+        #self.rootSprite.clear(self.screen, self.background)
+        #self.rootSprite.draw(self.screen)
+        #self.backgroundSpriteGroup.clear(self.screen, self.background)
+        self.backgroundSpriteGroup.draw(self.screen)
+        #self.shipSpriteGroup.clear(self.screen, self.background)
+        self.shipSpriteGroup.draw(self.screen)
+        self.foregroundSpriteGroup.draw(self.screen)
         self.screen.blit(self.fpstext, (10,10))
         pygame.display.flip()
         

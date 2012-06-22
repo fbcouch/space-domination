@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shiplist>
-	<ship id="0" name="" file="gfx/redfighter0jv.png" health="100" hregen="2" shields="100" sregen="2" speed="4" turn="5" armor="0">
+	<ship id="0" name="" file="gfx/redfighter0jv.png" health="100" hregen="2" shields="100" sregen="2" speed="40" turn="5" armor="0">
 		<weapon id="0" />
 	</ship>
 	<ship id="1" name="" file="gfx/1st_pixel_spaceship.png" health="100" hregen="2" shields="100" sregen="2" speed="4" turn="5" armor="0">

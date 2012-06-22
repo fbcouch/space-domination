@@ -38,6 +38,7 @@ class Ship(PhysicsEntity):
     
     
     weapons = [] # TODO
+    selected_weapon = 0
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None):
         super(Ship, self).__init__()
@@ -64,11 +65,30 @@ class Ship(PhysicsEntity):
         self.armor = proto.armor
         
         #TODO implement loading weapons
-        
-    
+    '''
+    fire_weapon(self, time): fires the currently selected weapon, if possible
+    '''    
+    def fire_weapon(self, time, spriteGroup = None):
+        if(self.selected_weapon < len(self.weapons) and self.selected_weapon.can_fire(time)):
+            # TODO fire the weapon
+            return
     
     def set_position(self, x, y):
         self.rect.topleft = x, y
         
     def get_position(self):
         return (self.rect.left, self.rect.top)
+    
+class Weapon(object):
+    max_ammo = 0
+    cur_ammo = 0
+    ammo_regen = 0
+    fire_rate = 0
+    last_fire = 0
+    
+    image = None
+    
+    def can_fire(self, time):
+        if (self.cur_ammo > 0 and time > self.last_fire + self.fire_rate):
+            return True
+        return False
