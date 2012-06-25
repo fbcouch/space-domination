@@ -5,11 +5,15 @@ Created on Apr 28, 2012
 '''
 
 from Mission import *
-from Ship import *
 from Physics import *
-import Utils
-import pygame, sys, os, random
+from Ship import Ship, Bullet, PShip, Weapon
 from pygame.locals import *
+from PhysicsEntity import PhysicsEntity
+import Utils
+import os
+import pygame
+import random
+import sys
 
 
 class SpaceDominationMain():
@@ -34,8 +38,10 @@ class SpaceDominationMain():
     fpstext = None
     
     lastTick = 0
+    timeTotal = 0
     clock = None
     screen = None
+    screen_buffer = None
     window = None
     background = None
     
@@ -47,6 +53,7 @@ class SpaceDominationMain():
     backgroundSpriteGroup = None
     triggerList = []
     foregroundSpriteGroup = None
+
     
     def __init__(self):
         '''
@@ -133,6 +140,8 @@ class SpaceDominationMain():
                         self.setKey("turnLeft", 1)
                     elif event.key == K_RIGHT:
                         self.setKey("turnRight", 1)
+                    elif event.key == K_SPACE:
+                        self.setKey("fire", 1)
                         
                 elif event.type == KEYUP:
                     if event.key == K_UP:
@@ -143,6 +152,8 @@ class SpaceDominationMain():
                         self.setKey("turnLeft", 0)
                     elif event.key == K_RIGHT:
                         self.setKey("turnRight", 0)
+                    elif event.key == K_SPACE:
+                        self.setKey("fire",0)
                         
             # game loop
             self.gameLoop()
@@ -205,7 +216,7 @@ class SpaceDominationMain():
     
     def gameLoop(self):
         dt = self.clock.tick(30)
-        
+        self.timeTotal += dt
         
         # display the FPS
         if dt > 0: 
@@ -230,6 +241,12 @@ class SpaceDominationMain():
             if(self.keys["turnLeft"]): self.playerShip.set_rotation(self.playerShip.get_rotation() + 5)
             if(self.keys["turnRight"]): self.playerShip.set_rotation(self.playerShip.get_rotation() - 5)
             
+            if(self.keys["fire"]): 
+                bullet = self.playerShip.fire_weapon(self.timeTotal)
+                if not (bullet is None):
+                    self.physics.addChild(bullet)
+                    self.foregroundSpriteGroup.add(bullet)
+            
             
         # do physics
         
@@ -238,15 +255,58 @@ class SpaceDominationMain():
             self.lastTick = pygame.time.get_ticks()
         
             
+        # decrement bullet lifetimes'
+        for bullet in self.foregroundSpriteGroup:
+                        
+            if isinstance(bullet,Bullet):
+                #bullet = (Bullet)sprite
+                bullet.ticks_remaining -= 1
+                if bullet.ticks_remaining <= 0:
+                    self.physics.physicsChildren.remove(bullet)           
+                    self.foregroundSpriteGroup.remove(bullet)     
+                    
+            # remove any colliders
+            if isinstance(bullet,PhysicsEntity):
+                if bullet.removeSelf:
+                    if bullet in self.physics.physicsChildren: self.physics.physicsChildren.remove(bullet)
+                    if bullet in self.foregroundSpriteGroup: self.foregroundSpriteGroup.remove(bullet)
+        
+        for sprite in self.shipSpriteGroup:
+            if isinstance(sprite,PhysicsEntity):
+                if sprite.removeSelf:
+                    if sprite in self.physics.physicsChildren: self.physics.physicsChildren.remove(sprite)
+                    if sprite in self.shipSpriteGroup: self.shipSpriteGroup.remove(sprite)
+                    
+        maxrect = Rect(0,0,0,0)
+        for sprite in self.backgroundSpriteGroup: # backgrounds will define the boundaries
+            if sprite.rect.left + sprite.rect.width > maxrect.width:
+                maxrect.width = sprite.rect.left + sprite.rect.width
+            if sprite.rect.top + sprite.rect.height > maxrect.height:
+                maxrect.height = sprite.rect.top + sprite.rect.height
+            
+        self.screen_buffer = pygame.Surface((maxrect.width, maxrect.height))
+        
+        
         # clear the background (blit a blank screen) then draw everything in the background then the sprite groups then the foreground group
         self.screen.blit(self.background, (0,0))
         #self.rootSprite.clear(self.screen, self.background)
         #self.rootSprite.draw(self.screen)
         #self.backgroundSpriteGroup.clear(self.screen, self.background)
-        self.backgroundSpriteGroup.draw(self.screen)
+        self.backgroundSpriteGroup.draw(self.screen_buffer)
         #self.shipSpriteGroup.clear(self.screen, self.background)
-        self.shipSpriteGroup.draw(self.screen)
-        self.foregroundSpriteGroup.draw(self.screen)
+        self.shipSpriteGroup.draw(self.screen_buffer)
+        self.foregroundSpriteGroup.draw(self.screen_buffer)
+        
+        
+        # now render to the screen using the playerShip to decide on coords
+        render = (-1 * self.playerShip.rect.center[0] + (self.screen.get_width() * 0.5), -1 * self.playerShip.rect.center[1] + (self.screen.get_height() * 0.5))
+        if render[0] > 0: render = (0, render[1])
+        if render[1] > 0: render = (render[0], 0)
+        if render[0] < -1 * maxrect.width + self.screen.get_width(): render = (-1 * maxrect.width + self.screen.get_width(), render[1])
+        if render[1] < -1 * maxrect.height + self.screen.get_height(): render = (render[0], -1 * maxrect.height + self.screen.get_height())
+        self.screen.blit(self.screen_buffer, render)
+        
+        
         self.screen.blit(self.fpstext, (10,10))
         pygame.display.flip()
         

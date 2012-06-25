@@ -4,113 +4,15 @@ Created on May 11, 2012
 @author: Jami
 '''
 
-import pygame, sys, os, random, math
+from Ship import Bullet
 from pygame.locals import *
 import Utils
-
-
-class Vec2(object):
-    magnitude = 0
-    theta = 0
-    
-    def __init__(self, mag, t):
-        self.magnitude = mag
-        self.theta = t
-    
-    def add(self, pVec = None):
-        if pVec is None or not pVec is Vec2: return self
-        
-        v1 = self.getXY()
-        v2 = pVec.getXY()
-        
-        v3 = v1[0] + v2[0], v1[1] + v1[1]
-        self.magnitude = math.sqrt(v3[0]*v3[0] + v3[1]*v3[1])
-        if not self.magnitude == 0:
-            self.theta = math.degrees(math.asin(v3[1] / self.magnitude))
-        else: self.theta = 0
-        
-        return self
-        
-    def getXY(self):
-        return (self.magnitude * math.cos(math.radians(self.theta))), (-1 * self.magnitude * math.sin(math.radians(self.theta)))
-    
-    def setXY(self, x = 0.0, y = 0.0):
-        mag = 0.0
-        t = 0.0
-        
-        mag = math.sqrt(x*x + y*y)
-        if mag == 0:
-            self.magnitude = 0
-            self.theta = 0
-            return self
-        
-        if y == 0:
-            t = math.degrees(math.acos(float(x) / float(mag)))
-        elif x == 0:
-            t = math.degrees(math.asin(float(- y) / float(mag)))
-            
-        else:
-            t = math.degrees(math.atan(float(- y) / float(x)))
-            if x < 0:
-                t += 180
-            
-        self.magnitude = mag
-        self.theta = (t + 360) % 360
-        return self
-    
-
-class PhysicsEntity(pygame.sprite.Sprite):
-    velocity = (0,0)    # current velocity of the entity
-    max_vel_sq = 1024      # maximum velocity squared (for speed)
-    
-    accel = (0,0)       # current acceleration
-    max_accel_sq = 4    # max accel squared
-    
-    mass = 0            # TODO implement momentum in collisions
-    
-    rotation = 0        # important for acceleration stuff
-    
-    def __init__(self):
-        super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
-        
-        
-    def accelerate(self, mag = 0):
-        self.accelerate_r(mag, self.rotation)
-        
-    def accelerate_r(self, mag = 0, r = 0):
-        # basically, we add the vector (mag, rotation) to the current accel value
-        
-        if self.get_accel_sq() <= self.max_accel_sq:
-            
-            rvec = Vec2(mag, r)
-            xy = rvec.getXY()
-            self.accel = self.accel[0] + xy[0], self.accel[1] + xy[1]
-       
-       
-       
-    def brake(self, brake = 0):
-        # to brake, we are going to subtract mag from the velocity vector until it becomes 0
-        print "brake"
-        mag = math.sqrt(self.get_vel_sq())
-        if mag == 0: return
-        vec = Vec2(mag, math.degrees(math.asin(self.velocity[1] / mag)))
-        vec.magnitude -= brake
-        if vec.magnitude < 0:
-            self.velocity = (0,0)
-        else:
-            self.velocity = vec.getXY()
-        
-    def set_rotation(self, r=0):
-        self.image = pygame.transform.rotate(self.original, r)
-        self.rotation = r
-        self.rect = self.image.get_rect(center = self.rect.center)
-        
-    def get_rotation(self):
-        return self.rotation
-    
-    def get_vel_sq(self): return (self.velocity[0] * self.velocity[0]) + (self.velocity[1] * self.velocity[1])
-    
-    def get_accel_sq(self): return (self.accel[0] * self.accel[0]) + (self.accel[1] * self.accel[1])
+from Vec2  import Vec2
+import pygame
+import sys
+import os
+import random
+import math
 
 class Physics(object):
     '''
@@ -125,7 +27,10 @@ class Physics(object):
     
     
     def updatePhysics(self):
-        for pChild in self.physicsChildren:
+        
+        i=0
+        while i < len(self.physicsChildren):
+            pChild = self.physicsChildren[i]           
             # accelerate
             #print "pChild-vel: " + str(pChild.velocity) + ", accel: " + str(pChild.accel)
             newVelocity = pChild.velocity[0] + pChild.accel[0], pChild.velocity[1] + pChild.accel[1]
@@ -146,7 +51,23 @@ class Physics(object):
             pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
             
             # TODO collision detection
-            
+            j = i + 1
+            while j < len(self.physicsChildren):
+                pCollide = self.physicsChildren[j]
+                # test if these two collide by rect:
+                if not (isinstance(pChild, Bullet) and isinstance(pCollide, Bullet)):
+                    if pygame.sprite.collide_rect(pChild,pCollide):
+                        # the rectangles overlap
+                        if pygame.sprite.collide_mask(pChild,pCollide):
+                            # this is a real collision
+                            # TODO check health, etc
+                            pChild.removeSelf = True
+                            pCollide.removeSelf = True
+                            self.physicsChildren.remove(pChild)
+                            self.physicsChildren.remove(pCollide)
+                j+=1
+                    
+            i+=1
         return
     
     
