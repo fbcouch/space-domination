@@ -4,16 +4,19 @@ Created on Apr 28, 2012
 @author: Jami
 '''
 
+from AIShip import AIShip
 from Mission import *
 from Physics import *
-from Ship import Ship, Bullet, PShip, Weapon
-from pygame.locals import *
 from PhysicsEntity import PhysicsEntity
+from PlayerShip import PlayerShip
+from Ship import Ship, PShip, Weapon
+from pygame.locals import *
 import Utils
 import os
 import pygame
 import random
 import sys
+
 
 
 class SpaceDominationMain():
@@ -98,23 +101,7 @@ class SpaceDominationMain():
         
         
         
-        '''# TODO: temporarily just spawn a background and a "player ship" and have the player ship start forward
         
-        self.tempPlayerShip = Ship(parent = self.rootSprite)
-        self.tempPlayerShip.set_position(100, 100)
-        self.physics.addChild(self.tempPlayerShip)
-        
-        #self.tempPlayerShip.set_rotation(180)
-        self.rootSprite.add(self.tempPlayerShip)
-        tempimg, temprect = Utils.load_image("cube_2.jpg")
-        tmpSprite = pygame.sprite.Sprite()
-        tmpSprite.image = tempimg
-        tmpSprite.rect = temprect
-        #self.rootSprite.add(tmpSprite)
-        
-        #self.tempPlayerShip.setVel(Vec3(1,0,0))
-        self.tempPlayerShip.set_rotation(90)
-        '''
         
         self.gameState = SpaceDominationMain.GAMESTATE_NONE
         # TODO: show the menu
@@ -193,10 +180,10 @@ class SpaceDominationMain():
             if spawn.ID == -1: # this is the player ship
                 tp = PShip()
                 tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
-                tempShip = Ship(proto = tp)
+                tempShip = PlayerShip(proto = tp)
                 self.playerShip = tempShip
             else:
-                tempShip = Ship()
+                tempShip = AIShip()
             self.shipSpriteGroup.add(tempShip)
             self.physics.addChild(tempShip)
             tempShip.set_position(spawn.x, spawn.y)
@@ -224,58 +211,25 @@ class SpaceDominationMain():
             
         if not self.GAMESTATE_RUNNING:
             return True
-        
-        
-        # TODO: implement an actual game loop
-        
-        
-        
-        # Process inputs
-        if(self.playerShip):
-            if(self.keys["accel"]): self.playerShip.accelerate(self.playerShip.speed * 0.25) 
-                
-            if(self.keys["brake"]): self.playerShip.brake(self.playerShip.speed * 0.25)
-            
-            if not (self.keys["accel"] or self.keys["brake"]): self.playerShip.accel = (0,0)
-            
-            if(self.keys["turnLeft"]): self.playerShip.set_rotation(self.playerShip.get_rotation() + 5)
-            if(self.keys["turnRight"]): self.playerShip.set_rotation(self.playerShip.get_rotation() - 5)
-            
-            if(self.keys["fire"]): 
-                bullet = self.playerShip.fire_weapon(self.timeTotal)
-                if not (bullet is None):
-                    self.physics.addChild(bullet)
-                    self.foregroundSpriteGroup.add(bullet)
-            
+      
             
         # do physics
         
         if pygame.time.get_ticks() - self.lastTick > 33:
-            self.physics.updatePhysics()
+            self.physics.updatePhysics(self)
             self.lastTick = pygame.time.get_ticks()
         
             
-        # decrement bullet lifetimes'
-        for bullet in self.foregroundSpriteGroup:
-                        
-            if isinstance(bullet,Bullet):
-                #bullet = (Bullet)sprite
-                bullet.ticks_remaining -= 1
-                if bullet.ticks_remaining <= 0:
-                    self.physics.physicsChildren.remove(bullet)           
-                    self.foregroundSpriteGroup.remove(bullet)     
-                    
-            # remove any colliders
-            if isinstance(bullet,PhysicsEntity):
-                if bullet.removeSelf:
-                    if bullet in self.physics.physicsChildren: self.physics.physicsChildren.remove(bullet)
-                    if bullet in self.foregroundSpriteGroup: self.foregroundSpriteGroup.remove(bullet)
+        # update all sprites
+        for sprite in self.backgroundSpriteGroup:
+            sprite.update(self)
         
         for sprite in self.shipSpriteGroup:
-            if isinstance(sprite,PhysicsEntity):
-                if sprite.removeSelf:
-                    if sprite in self.physics.physicsChildren: self.physics.physicsChildren.remove(sprite)
-                    if sprite in self.shipSpriteGroup: self.shipSpriteGroup.remove(sprite)
+            sprite.update(self)
+        
+        for sprite in self.foregroundSpriteGroup:
+            sprite.update(self)
+        
                     
         maxrect = Rect(0,0,0,0)
         for sprite in self.backgroundSpriteGroup: # backgrounds will define the boundaries
@@ -285,6 +239,7 @@ class SpaceDominationMain():
                 maxrect.height = sprite.rect.top + sprite.rect.height
             
         self.screen_buffer = pygame.Surface((maxrect.width, maxrect.height))
+        
         
         
         # clear the background (blit a blank screen) then draw everything in the background then the sprite groups then the foreground group

@@ -4,7 +4,7 @@ Created on May 11, 2012
 @author: Jami
 '''
 
-from Ship import Bullet
+from Bullet import Bullet
 from pygame.locals import *
 import Utils
 from Vec2  import Vec2
@@ -26,7 +26,7 @@ class Physics(object):
         return
     
     
-    def updatePhysics(self):
+    def updatePhysics(self, context = None):
         
         i=0
         while i < len(self.physicsChildren):
@@ -50,21 +50,19 @@ class Physics(object):
             
             pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
             
-            # TODO collision detection
+            # Collision Detection:
             j = i + 1
-            while j < len(self.physicsChildren):
+            while j < len(self.physicsChildren): # check from the current sprite to the end of the list
                 pCollide = self.physicsChildren[j]
                 # test if these two collide by rect:
-                if not (isinstance(pChild, Bullet) and isinstance(pCollide, Bullet)):
-                    if pygame.sprite.collide_rect(pChild,pCollide):
-                        # the rectangles overlap
-                        if pygame.sprite.collide_mask(pChild,pCollide):
-                            # this is a real collision
-                            # TODO check health, etc
-                            pChild.removeSelf = True
-                            pCollide.removeSelf = True
-                            self.physicsChildren.remove(pChild)
-                            self.physicsChildren.remove(pCollide)
+                if pygame.sprite.collide_rect(pChild,pCollide):
+                    # the rectangles overlap, therefore check if colored pixels overlap:
+                    if pygame.sprite.collide_mask(pChild,pCollide):
+                        # this is a real collision
+                        
+                        pChild.collide(pCollide, context)
+                        pCollide.collide(pChild, context)
+                        
                 j+=1
                     
             i+=1

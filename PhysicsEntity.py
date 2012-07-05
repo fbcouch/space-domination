@@ -62,3 +62,16 @@ class PhysicsEntity(pygame.sprite.Sprite):
     def get_vel_sq(self): return (self.velocity[0] * self.velocity[0]) + (self.velocity[1] * self.velocity[1])
     
     def get_accel_sq(self): return (self.accel[0] * self.accel[0]) + (self.accel[1] * self.accel[1])
+    
+    '''
+    ' update(context)
+    ' @param context is the main game manager that exposes variables that may be needed by the update function
+    '''
+    def update(self, context = None):
+        pass
+    
+    def remove(self):
+        pass
+    
+    def collide(self, physicsEntity = None, context = None):
+        pass

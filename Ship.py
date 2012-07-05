@@ -5,11 +5,17 @@ Created on May 10, 2012
 '''
 
 
-import pygame, sys, os, random, math
+from Bullet import Bullet
+from PhysicsEntity import PhysicsEntity
+from Vec2 import Vec2
+from Weapon import Weapon
 from pygame.locals import *
 import Utils
-from PhysicsEntity import PhysicsEntity
-from Vec2 import Vec2         
+import math
+import os
+import pygame
+import random
+import sys
 
 class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an actual ship can be constructed from it
     id = 0
@@ -36,6 +42,8 @@ class Ship(PhysicsEntity):
     speed = 4
     turn = 5
     armor = 0
+    max_health = 0
+    max_shields = 0
     
     
     weapons = [] # TODO
@@ -64,6 +72,8 @@ class Ship(PhysicsEntity):
         self.max_accel_sq = self.max_vel_sq * 0.25
         self.turn = proto.turn
         self.armor = proto.armor
+        self.max_health = self.health
+        self.max_shields = self.shields
         
         #TODO implement loading weapons
         tempWeapon = Weapon()
@@ -95,7 +105,7 @@ class Ship(PhysicsEntity):
             bullet.original = bullet.image
             bullet.set_rotation(self.get_rotation())
             
-            # match the bullet and ship velocities
+            # match the bullet and ship velocities TODO fixme
             vel1 = Vec2(self.weapons[self.selected_weapon].bullet_speed, self.get_rotation())
             vel2 = Vec2(0,0)
             vel2.setXY(self.velocity[0], self.velocity[1])
@@ -108,6 +118,7 @@ class Ship(PhysicsEntity):
             
             # set up the bullet lifetime info
             bullet.ticks_remaining = self.weapons[self.selected_weapon].bullet_ticks
+            bullet.damage = self.weapons[self.selected_weapon].base_damage
             return bullet         # return the bullet
         return None
     
@@ -116,30 +127,34 @@ class Ship(PhysicsEntity):
         
     def get_position(self):
         return (self.rect.left, self.rect.top)
-    
-class Weapon(object):
-    max_ammo = 0
-    cur_ammo = 0
-    ammo_regen = 0
-    fire_rate = 0
-    last_fire = 0
-    base_damage = 0
-    bullet_ticks = 100
-    bullet_speed = 20
-    
-    image = None
-    
-    def can_fire(self, time):
-        if (self.cur_ammo > 0 and time > self.last_fire + self.fire_rate):
-            return True
-        return False
-    
-class Bullet(PhysicsEntity):
-    
-    parent = None
-    ticks_remaining = 0
-    
-    def __init__(self):
-        super(Bullet, self).__init__()
+   
+    def update(self, context = None):
+        super(Ship, self).update(context)
+        
+        if self.removeSelf or self.health < 0: # TODO implement explosions
+            self.remove(context)
+        
+    def remove(self, context = None):
+        if context:
+            if self in context.physics.physicsChildren: context.physics.physicsChildren.remove(self)
+            if self in context.shipSpriteGroup: context.shipSpriteGroup.remove(self)
+            
+    def collide(self, physicsEntity = None, context = None):
+        if physicsEntity: # decrement shields and health here
+            if isinstance(physicsEntity, Bullet): # a bullet hit the ship
+                self.take_damage(physicsEntity.damage)
+            
+            else: # something else hit the ship
+                self.take_damage(self.max_health / 10)
+                
+                    
+    def take_damage(self, damage = 0):
+        self.shields -= damage
+        if(self.shields < 0):
+            self.health += self.shields
+            self.shields = 0
+        
+        #print "taking damage: " + str(damage) + ", health/shields: " + str(self.health) + "/" + str(self.shields)
+
         
     
