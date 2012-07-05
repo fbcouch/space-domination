@@ -12,7 +12,7 @@ class AIShip(Ship):
         super(AIShip,self).__init__(x, y, r, proto, parent)
         
     def update(self, context = None):
-        #face the playerShip!
+        super(AIShip, self).update(context)
         
         if(context):
             self.faceTarget(context.playerShip)
@@ -27,17 +27,22 @@ class AIShip(Ship):
     def faceTarget(self, target = None):
         
         if target:
-            dx = self.rect.left - target.rect.left
-            dy = self.rect.top - target.rect.top
+            dx = target.rect.left - self.rect.left
+            dy = target.rect.top - self.rect.top
             angle = Vec2(0,0)
             angle.setXY(dx, dy)
-            targetAngle = (angle.theta + 180) % 360
-            dT = self.get_rotation() - targetAngle + 180
+            targetAngle = (angle.theta) % 360
+            dT = targetAngle - self.get_rotation()
+            if dT > 180:
+                dT = dT - 360
+            elif dT < -180:
+                dT += 360
             
-            print str(dT) # TODO make this turn over time rather than instantaneously facing target
-            #if dT > self.turn: self.set_rotation((self.get_rotation() + self.turn) % 360)
-            #elif dT < -1 * self.turn: self.set_rotation((self.get_rotation() - self.turn) % 360)
-            #else: 
-            self.set_rotation(targetAngle)
+            if dT > self.turn: 
+                self.set_rotation((self.get_rotation() + self.turn) % 360)
+            elif dT < -1 * self.turn:
+                self.set_rotation((self.get_rotation() - self.turn) % 360)
+            else:
+                self.set_rotation(targetAngle)            
             
             

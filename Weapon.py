@@ -16,6 +16,9 @@ class Weapon(object):
     
     image = None
     
+    def __init__(self):
+        pass
+    
     def can_fire(self, time):
         if (self.cur_ammo > 0 and time > self.last_fire + self.fire_rate):
             return True

@@ -261,8 +261,24 @@ class SpaceDominationMain():
         if render[1] < -1 * maxrect.height + self.screen.get_height(): render = (render[0], -1 * maxrect.height + self.screen.get_height())
         self.screen.blit(self.screen_buffer, render)
         
-        
+        # TODO display HUD things
         self.screen.blit(self.fpstext, (10,10))
+        
+        self.screen.blit( 
+            self.defaultfont.render("Ammo: " + str(self.playerShip.weapons[self.playerShip.selected_weapon].cur_ammo) + "/" 
+                                    + str(self.playerShip.weapons[self.playerShip.selected_weapon].max_ammo), 1, (0, 250, 0)) ,
+            (10, 30))
+        
+        for sprite in self.shipSpriteGroup:
+            self.screen.blit( 
+                             self.defaultfont.render(str(sprite.shields) + "/" 
+                                    + str(sprite.max_shields), 1, (0, 0, 250)) ,
+                                    (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1]))
+            self.screen.blit(
+                             self.defaultfont.render(str(sprite.health) + "/" 
+                                    + str(sprite.max_health), 1, (0, 250, 0)) ,
+                                    (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
+        
         pygame.display.flip()
         
         return True

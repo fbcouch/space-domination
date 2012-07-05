@@ -25,8 +25,8 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     hregen = 2
     shields = 100
     sregen = 2
-    speed = 4
-    turn = 5
+    speed = 10
+    turn = 1
     armor = 0
     
     weapons = [] # TODO
@@ -39,23 +39,25 @@ class Ship(PhysicsEntity):
     hregen = 2
     shields = 100
     sregen = 2
-    speed = 4
-    turn = 5
+    speed = 10
+    turn = 1
     armor = 0
     max_health = 0
     max_shields = 0
     
     
-    weapons = [] # TODO
+    weapons = None # TODO
     selected_weapon = 0
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None):
         super(Ship, self).__init__()
+        self.weapons = []
         self.constructFromProto(proto)
         self.image, self.rect = Utils.load_image(self.file)
         self.original = self.image
         self.set_position(x,y)
         self.set_rotation(r)
+        
         if not parent is None: parent.add(self)
         
     def constructFromProto(self, proto = PShip()):
@@ -92,6 +94,7 @@ class Ship(PhysicsEntity):
     '''    
     def fire_weapon(self, time):
         if(self.selected_weapon < len(self.weapons) and self.weapons[self.selected_weapon].can_fire(time)):
+            
             # TODO fire the weapon
             bullet = Bullet()
             bullet.image, bullet.rect = Utils.load_image(self.weapons[self.selected_weapon].image, (255,255,255))
@@ -99,7 +102,7 @@ class Ship(PhysicsEntity):
             
             # move the bullet to the center-front of the ship # TODO set up custom weapon firing points
             bullet.rect.center = self.rect.left + self.rect.width * 0.5, self.rect.top + self.rect.height * 0.5
-            offset = Vec2(self.rect.width * 0.5, self.get_rotation())
+            offset = Vec2(self.rect.height * 0.5 + 10, self.get_rotation())
             offset = offset.getXY()
             bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
             bullet.original = bullet.image
