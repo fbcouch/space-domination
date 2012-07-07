@@ -6,7 +6,9 @@ Created on May 10, 2012
 
 
 from Bullet import Bullet
+from Particle import Particle
 from PhysicsEntity import PhysicsEntity
+from Utils import load_sprite_sheet
 from Vec2 import Vec2
 from Weapon import Weapon
 from pygame.locals import *
@@ -48,6 +50,7 @@ class Ship(PhysicsEntity):
     
     weapons = None # TODO
     selected_weapon = 0
+    
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None):
         super(Ship, self).__init__()
@@ -135,6 +138,8 @@ class Ship(PhysicsEntity):
         super(Ship, self).update(context)
         
         if self.removeSelf or self.health <= 0: # TODO implement explosions
+            explosion = Particle(load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1), target = self)
+            context.foregroundSpriteGroup.add(explosion)
             self.remove(context)
         
     def remove(self, context = None):

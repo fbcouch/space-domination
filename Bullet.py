@@ -3,7 +3,10 @@ Created on Jul 4, 2012
 
 @author: Jami
 '''
+from Particle import Particle
 from PhysicsEntity import PhysicsEntity
+from Utils import load_sprite_sheet
+import pygame
 
 
 class Bullet(PhysicsEntity):
@@ -30,4 +33,8 @@ class Bullet(PhysicsEntity):
             
     def collide(self, physicsEntity = None, context = None):
         if(physicsEntity and not isinstance(physicsEntity, Bullet)):
+            
+            explosion = Particle(load_sprite_sheet('explosion3.png', 100, 100, colorkey = -1), target = self)
+            
+            context.foregroundSpriteGroup.add(explosion)
             self.remove(context)

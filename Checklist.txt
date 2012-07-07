@@ -16,8 +16,8 @@
 	+ basic player controls
 	+ basic physics
 	- Particle system
-		- basic "Particle" class
-		- ships & bullets load particles on death
+		+ basic "Particle" class
+		+ ships & bullets load particles on death
 		- engine glow as particles?
 		- shield hits as particles?
 	- need to add advanced controls (ie swapping weapons, etc) and fix braking/accel issues
@@ -47,7 +47,5 @@
 	- Campaign missions
 	- saved resolution/graphics settings
 	
-
- - add death anims on collision or bullet-remove
  - menus
  - split all classes into separate files

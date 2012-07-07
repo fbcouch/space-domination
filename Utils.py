@@ -37,3 +37,29 @@ def load_sound(name):
         print 'Cannot load sound:', name
         raise SystemExit, message
     return sound
+
+def load_sprite_sheet(name, width, height, colorkey = None):
+    fullimage, fullrect = load_image(name, colorkey)
+    spriteImages = []
+    cols = int(fullrect.width / width)
+    rows = int(fullrect.height / height)
+    
+    col = 0
+    row = 0
+    while row < rows:
+        col = 0
+        while col < cols:
+            #image = pygame.Surface((width, height))
+            #image = image.convert()
+            #image.blit(fullimage, (0, 0), pygame.rect.Rect(col * width, row * height, width, height))
+            image = fullimage.subsurface(pygame.rect.Rect(col * width, row * height, width, height))
+            #image = image.convert_alpha()
+            spriteImages.append(image)
+            col += 1
+        row += 1
+    
+    return spriteImages
+    
+    
+    
+    

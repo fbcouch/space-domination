@@ -143,7 +143,7 @@ class MissionListXMLParser(handler.ContentHandler):
             
             if not(image_file == None):
                 try:
-                    image, rect = load_image(image_file, -1)
+                    image, rect = load_image(image_file, colorkey = -1)
                 except SystemExit, message:
                     image = None
                     print "Error loading file: " + image_file
