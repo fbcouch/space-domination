@@ -13,6 +13,8 @@ import sys
 
 MENU_MAIN = 0 # 0-99 reserved for menu pages
 MENU_OPTIONS = 1
+MENU_PAUSE = 2
+MENU_MISSION_SELECT = 3
 MENU_EXIT = 100 # 100-199 reserved for actions
 MENU_RESUME = 101
 MENU_MISSION = 200 # missions will start with 2xx with xx being mission ID
@@ -21,20 +23,37 @@ MENU_MISSION = 200 # missions will start with 2xx with xx being mission ID
 class MenuManager(object):
     menuList = None
     selectedMenu = 0 # default to no menu shown
+    screen = None
+    parent = None
     
-    def __init__(self, screen = None):
+    def __init__(self, screen = None, parent = None):
         self.menuList = []
+        self.screen = screen
+        self.parent = parent
         # menu 0 = main menu
         self.menuList.append(cMenu(50, 50, 20, 5, 'vertical', 100, screen,
-                                [('Resume', MENU_RESUME, None),
-                                 ('Options', MENU_OPTIONS, None),
-                                 ('Exit', MENU_EXIT, None)]))
-        
+                                   [('Select Mission', MENU_MISSION_SELECT, None),
+                                    ('Options', MENU_OPTIONS, None),
+                                    ('Exit', MENU_EXIT, None)]))
         
         # menu 1 = options menu
         self.menuList.append(cMenu(50, 50, 20, 5, 'vertical', 100, screen,
                                    [('Back', MENU_MAIN, None)]))
         
+        # menu 2 = pause menu
+        self.menuList.append(cMenu(50, 50, 20, 5, 'vertical', 100, screen,
+                                [('Resume', MENU_RESUME, None),
+                                 ('Options', MENU_OPTIONS, None),
+                                 ('Exit', MENU_EXIT, None)]))
+        # menu 3 = mission menu
+        mlist = []
+        i = 0
+        for mission in self.parent.missionList:
+            mlist.append(['', 200 + i, mission[1]])
+            i += 1
+            
+        self.menuList.append(cMenu(50, 50, 50, 5, 'horizontal', 4, screen, mlist))
+            
         return
     
     def draw(self):
@@ -55,6 +74,16 @@ class MenuManager(object):
             sys.exit(0)
         elif(state == MENU_OPTIONS):
             self.selectedMenu = MENU_OPTIONS
+        elif(state == MENU_PAUSE):
+            self.selectedMenu = MENU_PAUSE
+        elif(state == MENU_MISSION_SELECT):
+            self.selectedMenu = MENU_MISSION_SELECT
+        elif(state >= MENU_MISSION):
+            # mission selected
+            self.parent.currentMission = self.parent.loadMission(self.parent.missionList[state - 200][0])
+            self.parent.buildMission(self.parent.currentMission)
+            self.parent.gameState = self.parent.GAMESTATE_PAUSED
+            self.selectedMenu = MENU_PAUSE
         
         self.menuList[self.selectedMenu].set_alignment('center', 'center')
         self.menuList[self.selectedMenu].set_center(True, True)  

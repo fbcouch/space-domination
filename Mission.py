@@ -4,7 +4,9 @@ Created on May 5, 2012
 @author: Jami
 '''
 
+from Utils import load_image
 from xml.sax import saxutils, handler, make_parser
+import os
 
 class Mission(object):
     # this will be the main class that the missions will be loaded into and will contain info on spawning backgrounds, ships, triggers, etc
@@ -64,10 +66,10 @@ class MissionXMLParser(handler.ContentHandler):
         handler.ContentHandler.__init__(self)
         self.loadedMission = Mission()
         
-    def loadMission(self, filename = "assets/mission01.xml"):
+    def loadMission(self, filename = "mission01.xml"):
         parser = make_parser()
         parser.setContentHandler(self)
-        parser.parse(filename)
+        parser.parse(os.path.join("assets", filename))
         return self.loadedMission
           
     def startElement(self, name, attrs):
@@ -117,3 +119,43 @@ class MissionXMLParser(handler.ContentHandler):
     
     def getMission(self): return self.loadedMission
         
+        
+class MissionListXMLParser(handler.ContentHandler):
+    missionList = None
+    
+    def __init__(self):
+        handler.ContentHandler.__init__(self)
+        self.missionList = []
+    
+    def loadMissionList(self, filename = "assets/missions.xml"):
+        parser = make_parser()
+        parser.setContentHandler(self)
+        parser.parse(filename)
+        return self.missionList
+    
+    def startElement(self, name, attrs):
+        if name == "missionlist":
+            self.missionList = []
+        elif name == "mission":
+            mission = []
+            mission.append(attrs.get('file',''))
+            image_file = attrs.get('icon','')
+            
+            if not(image_file == None):
+                try:
+                    image, rect = load_image(image_file, -1)
+                except SystemExit, message:
+                    image = None
+                    print "Error loading file: " + image_file
+                mission.append(image)
+            else:
+                mission.append(None)
+            self.missionList.append(mission)
+    
+    def endElement(self, name):
+        pass
+    
+    def characters(self, content):
+        pass
+    
+    

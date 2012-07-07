@@ -31,6 +31,8 @@ class SpaceDominationMain():
     GAMESTATE_PAUSED = 2
     GAMESTATE_GAMEOVER = 3
     
+
+    
     gameState = GAMESTATE_NONE
     
     physics = None
@@ -49,6 +51,7 @@ class SpaceDominationMain():
     screen_buffer = None
     window = None
     background = None
+    menuBackground = None
     
     defaultfont = None
     
@@ -58,7 +61,7 @@ class SpaceDominationMain():
     backgroundSpriteGroup = None
     triggerList = []
     foregroundSpriteGroup = None
-
+    
     
     def __init__(self):
         '''
@@ -83,16 +86,18 @@ class SpaceDominationMain():
         if pygame.font:
             self.defaultfont = pygame.font.Font(None, 20)
         
+        # TODO: implement loading game assets
+        self.missionList = self.loadMissionList()
+        
         # load the menus
-        self.menuManager = MenuManager(self.screen)
+        self.menuManager = MenuManager(self.screen, self)
         
         # load & display splash screen
         self.showSplash()
         splashTime = pygame.time.get_ticks()
         
         
-        # TODO: implement loading game assets
-        self.loadMissionList()
+        
         
         # TODO: implement physics manager
         self.physics = Physics()
@@ -110,13 +115,14 @@ class SpaceDominationMain():
         
         
         
-        self.gameState = SpaceDominationMain.GAMESTATE_PAUSED
+        self.gameState = SpaceDominationMain.GAMESTATE_NONE
+        self.menuBackground = load_image("background.PNG")[0]
         self.menuManager.menu_state_parse(Menu.MENU_MAIN)
         # TODO: show the menu
         # eventually the menu will lead to...
         #self.gameState = SpaceDominationMain.GAMESTATE_RUNNING
-        self.currentMission = self.loadMission("assets/mission01.xml")
-        self.buildMission(self.currentMission)
+        #self.currentMission = self.loadMission("mission01.xml")
+        #self.buildMission(self.currentMission)
         
     def run(self):
         rect_list = []
@@ -130,8 +136,9 @@ class SpaceDominationMain():
                         self.menuManager.update(event)
                         if self.menuManager.selectedMenu == -1 and self.gameState == self.GAMESTATE_PAUSED: self.gameState = self.GAMESTATE_RUNNING
                     elif event.key == K_ESCAPE:
-                        self.gameState = self.GAMESTATE_PAUSED
-                        self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+                        if self.gameState == self.GAMESTATE_RUNNING:
+                            self.gameState = self.GAMESTATE_PAUSED
+                            self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
                     elif event.key == K_UP:
                         self.setKey("accel", 1)
                     elif event.key == K_DOWN:
@@ -161,7 +168,8 @@ class SpaceDominationMain():
             
             # game loop
             self.gameLoop()
-            
+            if self.gameState == self.GAMESTATE_NONE:
+                self.screen.blit(self.menuBackground, (0,0))
             if self.menuManager.is_active(): self.menuManager.draw()
             pygame.display.flip()
         
@@ -187,7 +195,7 @@ class SpaceDominationMain():
         return
     
     def loadMissionList(self):
-        
+        return MissionListXMLParser().loadMissionList()
         return
     
     def loadMission(self, filename):
@@ -251,53 +259,54 @@ class SpaceDominationMain():
             for sprite in self.foregroundSpriteGroup:
                 sprite.update(self)
         
-                    
-        maxrect = Rect(0,0,0,0)
-        for sprite in self.backgroundSpriteGroup: # backgrounds will define the boundaries
-            if sprite.rect.left + sprite.rect.width > maxrect.width:
-                maxrect.width = sprite.rect.left + sprite.rect.width
-            if sprite.rect.top + sprite.rect.height > maxrect.height:
-                maxrect.height = sprite.rect.top + sprite.rect.height
+        if self.gameState != self.GAMESTATE_NONE:       
+        
+            maxrect = Rect(0,0,0,0)
+            for sprite in self.backgroundSpriteGroup: # backgrounds will define the boundaries
+                if sprite.rect.left + sprite.rect.width > maxrect.width:
+                    maxrect.width = sprite.rect.left + sprite.rect.width
+                if sprite.rect.top + sprite.rect.height > maxrect.height:
+                    maxrect.height = sprite.rect.top + sprite.rect.height
+                
+            self.screen_buffer = pygame.Surface((maxrect.width, maxrect.height))
+        
+        
+        
+        
+            #self.rootSprite.clear(self.screen, self.background)
+            #self.rootSprite.draw(self.screen)
+            #self.backgroundSpriteGroup.clear(self.screen, self.background)
+            self.backgroundSpriteGroup.draw(self.screen_buffer)
+            #self.shipSpriteGroup.clear(self.screen, self.background)
+            self.shipSpriteGroup.draw(self.screen_buffer)
+            self.foregroundSpriteGroup.draw(self.screen_buffer)
+        
+        
+            # now render to the screen using the playerShip to decide on coords
+            render = (-1 * self.playerShip.rect.center[0] + (self.screen.get_width() * 0.5), -1 * self.playerShip.rect.center[1] + (self.screen.get_height() * 0.5))
+            if render[0] > 0: render = (0, render[1])
+            if render[1] > 0: render = (render[0], 0)
+            if render[0] < -1 * maxrect.width + self.screen.get_width(): render = (-1 * maxrect.width + self.screen.get_width(), render[1])
+            if render[1] < -1 * maxrect.height + self.screen.get_height(): render = (render[0], -1 * maxrect.height + self.screen.get_height())
+            self.screen.blit(self.screen_buffer, render)
+        
+            # TODO display HUD things
+            self.screen.blit(self.fpstext, (10,10))
             
-        self.screen_buffer = pygame.Surface((maxrect.width, maxrect.height))
-        
-        
-        
-        
-        #self.rootSprite.clear(self.screen, self.background)
-        #self.rootSprite.draw(self.screen)
-        #self.backgroundSpriteGroup.clear(self.screen, self.background)
-        self.backgroundSpriteGroup.draw(self.screen_buffer)
-        #self.shipSpriteGroup.clear(self.screen, self.background)
-        self.shipSpriteGroup.draw(self.screen_buffer)
-        self.foregroundSpriteGroup.draw(self.screen_buffer)
-        
-        
-        # now render to the screen using the playerShip to decide on coords
-        render = (-1 * self.playerShip.rect.center[0] + (self.screen.get_width() * 0.5), -1 * self.playerShip.rect.center[1] + (self.screen.get_height() * 0.5))
-        if render[0] > 0: render = (0, render[1])
-        if render[1] > 0: render = (render[0], 0)
-        if render[0] < -1 * maxrect.width + self.screen.get_width(): render = (-1 * maxrect.width + self.screen.get_width(), render[1])
-        if render[1] < -1 * maxrect.height + self.screen.get_height(): render = (render[0], -1 * maxrect.height + self.screen.get_height())
-        self.screen.blit(self.screen_buffer, render)
-        
-        # TODO display HUD things
-        self.screen.blit(self.fpstext, (10,10))
-        
-        self.screen.blit( 
-            self.defaultfont.render("Ammo: " + str(self.playerShip.weapons[self.playerShip.selected_weapon].cur_ammo) + "/" 
-                                    + str(self.playerShip.weapons[self.playerShip.selected_weapon].max_ammo), 1, (0, 250, 0)) ,
-            (10, 30))
-        
-        for sprite in self.shipSpriteGroup:
             self.screen.blit( 
-                             self.defaultfont.render(str(sprite.shields) + "/" 
-                                    + str(sprite.max_shields), 1, (0, 0, 250)) ,
-                                    (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1]))
-            self.screen.blit(
-                             self.defaultfont.render(str(sprite.health) + "/" 
-                                    + str(sprite.max_health), 1, (0, 250, 0)) ,
-                                    (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
+                self.defaultfont.render("Ammo: " + str(self.playerShip.weapons[self.playerShip.selected_weapon].cur_ammo) + "/" 
+                                        + str(self.playerShip.weapons[self.playerShip.selected_weapon].max_ammo), 1, (0, 250, 0)) ,
+                (10, 30))
+            
+            for sprite in self.shipSpriteGroup:
+                self.screen.blit( 
+                                 self.defaultfont.render(str(sprite.shields) + "/" 
+                                        + str(sprite.max_shields), 1, (0, 0, 250)) ,
+                                        (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1]))
+                self.screen.blit(
+                                 self.defaultfont.render(str(sprite.health) + "/" 
+                                        + str(sprite.max_health), 1, (0, 250, 0)) ,
+                                        (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
         
         
         

@@ -1,9 +1,15 @@
 - Menus
-	+ Start implementing menus
+	+ basic menu functionality:
+		+ Start implementing menus
+		+ select mission from menus
+	- advanced menu functionality:
+		- implement scrolling or pages for mission menu
+		- implement options
+	
 - Missions
 	+ load mission from xml file
 	+ build loaded mission
-	- load mission list from xml file
+	+ load mission list from xml file
 	- implement basic triggers
 	- implement advanced triggers
 - Gameplay

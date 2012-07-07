@@ -134,7 +134,7 @@ class Ship(PhysicsEntity):
     def update(self, context = None):
         super(Ship, self).update(context)
         
-        if self.removeSelf or self.health < 0: # TODO implement explosions
+        if self.removeSelf or self.health <= 0: # TODO implement explosions
             self.remove(context)
         
     def remove(self, context = None):
