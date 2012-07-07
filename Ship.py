@@ -110,9 +110,9 @@ class Ship(PhysicsEntity):
             
             # match the bullet and ship velocities TODO fixme
             vel1 = Vec2(self.weapons[self.selected_weapon].bullet_speed, self.get_rotation())
-            vel2 = Vec2(0,0)
-            vel2.setXY(self.velocity[0], self.velocity[1])
-            vel1 = vel1.add(vel2)
+            #vel2 = Vec2(0,0)
+            #vel2.setXY(self.velocity[0], self.velocity[1])
+            #vel1 = vel1.add(vel2)
             bullet.velocity = vel1.getXY()
             
             # increment weapon stuff

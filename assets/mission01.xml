@@ -4,6 +4,8 @@
 <background file="default_background.png" x="0.0" y="512.0" scale="1.0" />
 <background file="default_background.png" x="512.0" y="512.0" scale="1.0" />
 <background file="default_background.png" x="0.0" y="0.0" scale="1.0" />
+<background file="default_background.png" x="1024.0" y="0.0" scale="1.0" />
+<background file="default_background.png" x="1024.0" y="512.0" scale="1.0" />
 <playerspawn x="265.0" y="447.0" rot="30.0" />
 <enemy id="1" x="81.0" y="93.0" rot="0.0" />
 <enemy id="1" x="582.0" y="110.0" rot="0.0" />

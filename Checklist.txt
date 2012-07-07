@@ -1,0 +1,47 @@
+- Menus
+	+ Start implementing menus
+- Missions
+	+ load mission from xml file
+	+ build loaded mission
+	- load mission list from xml file
+	- implement basic triggers
+	- implement advanced triggers
+- Gameplay
+	+ basic player controls
+	+ basic physics
+	- Particle system
+		- basic "Particle" class
+		- ships & bullets load particles on death
+		- engine glow as particles?
+		- shield hits as particles?
+	- need to add advanced controls (ie swapping weapons, etc) and fix braking/accel issues
+- AI
+	+ basic AIShip class
+	- AIShip follows player & attacks when in range
+	- AIShip can be bound patrol an area or areas
+	- More advanced AI
+- Ships
+	+ basic Ship class
+	+ basic PlayerShip class
+	- load ships from xml file
+	- specify all needed ship attributes in xml file
+- Weapons
+	~ basic Weapon class
+		- ammo decrements & creates bullets
+		- implement ammo "regen"
+- Persistence
+	- "Pilot" system
+		- create pilotdata.xml
+		- load "Pilots" from pilotdata.xml
+		- allow user to select pilot
+		- track pilot's ship
+		- track stats
+	- Upgrades
+		- allow player to acquire better weapons, etc
+	- Campaign missions
+	- saved resolution/graphics settings
+	
+
+ - add death anims on collision or bullet-remove
+ - menus
+ - split all classes into separate files

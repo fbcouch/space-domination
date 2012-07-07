@@ -5,12 +5,14 @@ Created on Apr 28, 2012
 '''
 
 from AIShip import AIShip
+from Menu import MenuManager
 from Mission import *
 from Physics import *
 from PhysicsEntity import PhysicsEntity
 from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon
 from pygame.locals import *
+import Menu
 import Utils
 import os
 import pygame
@@ -81,10 +83,14 @@ class SpaceDominationMain():
         if pygame.font:
             self.defaultfont = pygame.font.Font(None, 20)
         
-        # TODO: implement loading splash screen
+        # load the menus
+        self.menuManager = MenuManager(self.screen)
+        
+        # load & display splash screen
         self.showSplash()
-        # TODO: implement menu manager
-        self.loadMenus()
+        splashTime = pygame.time.get_ticks()
+        
+        
         # TODO: implement loading game assets
         self.loadMissionList()
         
@@ -95,7 +101,8 @@ class SpaceDominationMain():
         self.keys = {"turnLeft" : 0, "turnRight" : 0, "accel" : 0, "brake" : 0, "fire" : 0, "alt-fire" : 0}
         
         
-        
+        # allow the splash to show for no less than 5 seconds, but any time between here and there counts
+        pygame.time.wait(5000 - pygame.time.get_ticks() - splashTime)
         self.removeSplash()
         
         
@@ -103,22 +110,28 @@ class SpaceDominationMain():
         
         
         
-        self.gameState = SpaceDominationMain.GAMESTATE_NONE
+        self.gameState = SpaceDominationMain.GAMESTATE_PAUSED
+        self.menuManager.menu_state_parse(Menu.MENU_MAIN)
         # TODO: show the menu
         # eventually the menu will lead to...
-        self.gameState = SpaceDominationMain.GAMESTATE_RUNNING
+        #self.gameState = SpaceDominationMain.GAMESTATE_RUNNING
         self.currentMission = self.loadMission("assets/mission01.xml")
         self.buildMission(self.currentMission)
         
     def run(self):
+        rect_list = []
         while True:
             # handle input
             for event in pygame.event.get():
                 if event.type == QUIT:
                     sys.exit(0)
                 elif event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        sys.exit(0)
+                    if self.menuManager.is_active():
+                        self.menuManager.update(event)
+                        if self.menuManager.selectedMenu == -1 and self.gameState == self.GAMESTATE_PAUSED: self.gameState = self.GAMESTATE_RUNNING
+                    elif event.key == K_ESCAPE:
+                        self.gameState = self.GAMESTATE_PAUSED
+                        self.menuManager.menu_state_parse(Menu.MENU_MAIN)
                     elif event.key == K_UP:
                         self.setKey("accel", 1)
                     elif event.key == K_DOWN:
@@ -141,9 +154,16 @@ class SpaceDominationMain():
                         self.setKey("turnRight", 0)
                     elif event.key == K_SPACE:
                         self.setKey("fire",0)
-                        
+
+            
+            # clear the background (blit a blank screen) then draw everything in the background then the sprite groups then the foreground group
+            self.screen.blit(self.background, (0,0))
+            
             # game loop
             self.gameLoop()
+            
+            if self.menuManager.is_active(): self.menuManager.draw()
+            pygame.display.flip()
         
         return
     
@@ -151,17 +171,18 @@ class SpaceDominationMain():
         
         
     def showSplash(self):
-        # TODO: show splash screen
+        self.screen.blit(self.background,  (0, 0))
+        splashImage,  splashRect = Utils.load_image("splash.png")
+        centerScreen = (self.screen.get_size()[0] * 0.5,  self.screen.get_size()[1] * 0.5)
+        self.screen.blit(splashImage,  (centerScreen[0] - splashRect.width * 0.5, centerScreen[1] - splashRect.height * 0.5))
+        pygame.display.flip()
         
         
         return
         
     def removeSplash(self):
-        # TODO: remove splash screen
-        
-        return
-    
-    def loadMenus(self):
+        self.screen.blit(self.background,  (0, 0))
+        pygame.display.flip()
         
         return
     
@@ -209,26 +230,26 @@ class SpaceDominationMain():
         if dt > 0: 
             self.fpstext = self.defaultfont.render("FPS: " + str(float(int(10000.0 / dt)) / 10), 1, (0, 250, 0))
             
-        if not self.GAMESTATE_RUNNING:
-            return True
+        if self.gameState == self.GAMESTATE_RUNNING:
+        
       
             
-        # do physics
-        
-        if pygame.time.get_ticks() - self.lastTick > 33:
-            self.physics.updatePhysics(self)
-            self.lastTick = pygame.time.get_ticks()
-        
+            # do physics
             
-        # update all sprites
-        for sprite in self.backgroundSpriteGroup:
-            sprite.update(self)
-        
-        for sprite in self.shipSpriteGroup:
-            sprite.update(self)
-        
-        for sprite in self.foregroundSpriteGroup:
-            sprite.update(self)
+            if pygame.time.get_ticks() - self.lastTick > 33:
+                self.physics.updatePhysics(self)
+                self.lastTick = pygame.time.get_ticks()
+            
+                
+            # update all sprites
+            for sprite in self.backgroundSpriteGroup:
+                sprite.update(self)
+            
+            for sprite in self.shipSpriteGroup:
+                sprite.update(self)
+            
+            for sprite in self.foregroundSpriteGroup:
+                sprite.update(self)
         
                     
         maxrect = Rect(0,0,0,0)
@@ -242,8 +263,7 @@ class SpaceDominationMain():
         
         
         
-        # clear the background (blit a blank screen) then draw everything in the background then the sprite groups then the foreground group
-        self.screen.blit(self.background, (0,0))
+        
         #self.rootSprite.clear(self.screen, self.background)
         #self.rootSprite.draw(self.screen)
         #self.backgroundSpriteGroup.clear(self.screen, self.background)
@@ -279,7 +299,8 @@ class SpaceDominationMain():
                                     + str(sprite.max_health), 1, (0, 250, 0)) ,
                                     (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
         
-        pygame.display.flip()
+        
+        
         
         return True
     
