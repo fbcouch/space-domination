@@ -13,6 +13,7 @@ from PhysicsEntity import PhysicsEntity
 from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon
 from Utils import load_sprite_sheet
+from Weapon import WeaponListXMLParser
 from pygame.locals import *
 import Menu
 import Utils
@@ -40,6 +41,8 @@ class SpaceDominationMain():
     physics = None
     menuManager = None
     missionList = None
+    weaponList = None
+    shipList = None
     currentMission = None
     
     playerShip = None
@@ -98,10 +101,14 @@ class SpaceDominationMain():
         self.showSplash()
         splashTime = pygame.time.get_ticks()
         
+        # load weapons
+        self.weaponList = WeaponListXMLParser().loadWeaponList()
+        for weapon in self.weaponList:
+            print weapon.toXML()
+        # TODO: load ships
         
         
-        
-        # TODO: implement physics manager
+        # initialize physics manager
         self.physics = Physics()
         
         # setup keymap
@@ -198,7 +205,6 @@ class SpaceDominationMain():
     
     def loadMissionList(self):
         return MissionListXMLParser().loadMissionList()
-        return
     
     def loadMission(self, filename):
     
