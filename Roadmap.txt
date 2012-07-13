@@ -1,0 +1,28 @@
+Space Domination Project Milestones/Releases
+
+Release 1 (Ver 0.1):
+- two "training" missions to show off basic triggers, game mechanics
+- basic HUD with objective tracking
+- all basic game mechanics in place (shiplist, weaponlist, particles, bullets)
+- physics works reasonably well (this needs some work)
+
+Release 2 (Ver 0.2):
+- advanced menu functions
+- advanced triggers
+- advanced controls (swappable weapons, etc)
+- more robust shiplist
+
+Release 3 (Ver 0.3):
+- Pilot system
+- Ship selection
+
+Release 4 (Ver 0.4):
+- Create at least 1 campaign
+- Upgrades/ship customization
+- Allow changing of graphics/resolution settings
+
+Release 5 (Ver 0.5):
+- Mission Editor
+
+Release 6 and following (Ver 0.6+):
+- Content

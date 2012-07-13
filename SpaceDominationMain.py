@@ -218,15 +218,15 @@ class SpaceDominationMain():
         #convert spawns to player or enemy
         for spawn in mission.spawnList:
             
-            if spawn.ID == -1: # this is the player ship
+            if spawn.id == -1: # this is the player ship
                 tp = PShip()
                 tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
                 tp.weapons.append(0)
                 tempShip = PlayerShip(proto = tp, context = self )
                 self.playerShip = tempShip
             else:
-                if spawn.ID >= 0 and spawn.ID < len(self.shipList):
-                    tempShip = AIShip(proto = self.shipList[spawn.ID], context = self)
+                if spawn.id >= 0 and spawn.id < len(self.shipList):
+                    tempShip = AIShip(proto = self.shipList[spawn.id], context = self)
             self.shipSpriteGroup.add(tempShip)
             self.physics.addChild(tempShip)
             tempShip.set_position(spawn.x, spawn.y)

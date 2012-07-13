@@ -1,51 +1,54 @@
+Space Domination
+																Target Release
 - Menus
 	+ basic menu functionality:
-		+ Start implementing menus
-		+ select mission from menus
+		+ Start implementing menus								1
+		+ select mission from menus								1
 	- advanced menu functionality:
-		- implement scrolling or pages for mission menu
-		- implement options
+		- implement scrolling or pages for mission menu			2
+		- implement options										2
 	
 - Missions
-	+ load mission from xml file
-	+ build loaded mission
-	+ load mission list from xml file
-	- implement basic triggers
-	- implement advanced triggers
+	+ load mission from xml file								1
+	+ build loaded mission										1
+	+ load mission list from xml file							1
+	- implement basic triggers									1
+	- implement advanced triggers								2
 - Gameplay
-	+ basic player controls
-	+ basic physics
+	+ basic player controls										1
+	+ basic physics												1
 	- Particle system
-		+ basic "Particle" class
-		+ ships & bullets load particles on death
-		- engine glow as particles?
-		- shield hits as particles?
-	- need to add advanced controls (ie swapping weapons, etc) and fix braking/accel issues
+		+ basic "Particle" class								1
+		+ ships & bullets load particles on death				1
+		- engine glow as particles?								1
+		- shield hits as particles?								1
+	- need to add advanced controls (ie swapping weapons, etc) 	2
+	- fix braking/accel issues									1
 - AI
-	+ basic AIShip class
-	- AIShip follows player & attacks when in range
-	- AIShip can be bound patrol an area or areas
-	- More advanced AI
+	+ basic AIShip class										1
+	- AIShip follows player & attacks when in range				1
+	- AIShip can be bound patrol an area or areas				1
+	- More advanced AI											2
 - Ships
-	+ basic Ship class
-	+ basic PlayerShip class
-	- load ships from xml file
-	- specify all needed ship attributes in xml file
+	+ basic Ship class											1
+	+ basic PlayerShip class									1
+	+ load ships from xml file									1
+	- specify all needed ship attributes in xml file			2
 - Weapons
-	~ basic Weapon class
-		- ammo decrements & creates bullets
-		- implement ammo "regen"
+	~ basic Weapon class				
+		+ ammo decrements & creates bullets						1
+		- implement ammo "regen"								1
 - Persistence
 	- "Pilot" system
-		- create pilotdata.xml
-		- load "Pilots" from pilotdata.xml
-		- allow user to select pilot
-		- track pilot's ship
-		- track stats
+		- create pilotdata.xml									3
+		- load "Pilots" from pilotdata.xml						3
+		- allow user to select pilot							3
+		- track pilot's ship									3
+		- track stats											3
 	- Upgrades
-		- allow player to acquire better weapons, etc
-	- Campaign missions
-	- saved resolution/graphics settings
+		- allow player to acquire better weapons, etc			4
+	- Campaign missions											4
+	- saved resolution/graphics settings						4
 	
- - menus
- - split all classes into separate files
+- Mission Editor												5
+- Content Releases												6+

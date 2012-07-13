@@ -4,6 +4,7 @@ Created on May 5, 2012
 @author: Jami
 '''
 
+from Trigger import CreateTrigger, Trigger
 from Utils import load_image
 from xml.sax import saxutils, handler, make_parser
 import os
@@ -41,26 +42,27 @@ class Background(object):
         return "<background file=\"" + self.filename + "\" x=\"" + str(self.x) + "\" y=\"" + str(self.y) + "\" scale=\"" + str(self.scale) + "\" />"
         
 class Spawn(object):
-    ID = 0
+    id = 0
     x = 0
     y = 0
     r = 0
     
     def toXML(self):
         returnString = "<"
-        if self.ID == -1: returnString += "playerspawn"
-        else: returnString += "enemy id=\"" + str(self.ID) + "\""
+        if self.id == -1: returnString += "playerspawn"
+        else: returnString += "enemy id=\"" + str(self.id) + "\""
         returnString += " x=\"" + str(self.x) + "\" y=\"" + str(self.y) + "\" rot=\"" + str(self.r) + "\" />"
         return returnString
     
-class Trigger(object):
-    # TODO implement triggers
-    def toXML(self):
-        return "<trigger />"
+
 
 class MissionXMLParser(handler.ContentHandler):
     
     loadedMission = None
+    inPlayerSpawn = False
+    inEnemy = False
+    inBackground = False
+    inTrigger = False
     
     def __init__(self):
         handler.ContentHandler.__init__(self)
@@ -85,32 +87,66 @@ class MissionXMLParser(handler.ContentHandler):
             newBackground.y = float(attrs.get('y',''))
             newBackground.scale = float(attrs.get('scale',''))
             self.loadedMission.backgroundList.append(newBackground)
-                
+            
+            self.inBackground = True
         elif name == "playerspawn":
             newSpawn = Spawn()
 
             newSpawn.x = float(attrs.get('x',''))
             newSpawn.y = float(attrs.get('y',''))
             newSpawn.r = float(attrs.get('rot',''))
-            newSpawn.ID = -1
+            newSpawn.id = -1
             self.loadedMission.spawnList.append(newSpawn)
             
+            self.inPlayerSpawn = True
         elif name == "enemy":
             newSpawn = Spawn()
             
-            newSpawn.ID = int(attrs.get('id',''))
+            newSpawn.id = int(attrs.get('id',''))
             newSpawn.x = float(attrs.get('x',''))
             newSpawn.y = float(attrs.get('y',''))
             newSpawn.r = float(attrs.get('rot',''))
             
             self.loadedMission.spawnList.append(newSpawn)
+            
+            self.inEnemy = True
         elif name == "trigger":
-            self.loadedMission.triggerList.append(Trigger())
-        
+            tg = CreateTrigger(int(attrs.get('id')), 
+                               attrs.get('type',''),
+                               attrs.get('condition',''), 
+                               attrs.get('attrs',''), attrs.get('tag',''), 
+                               attrs.get('display-text',''), 
+                               attrs.get('message-icon',''),
+                               attrs.get('message-title',''),
+                               attrs.get('message-body',''))
+            if self.inPlayerSpawn or self.inEnemy:
+                tg.parent = self.loadedMission.spawnList[len(self.loadedMission.spawnList) - 1]               
+            
+            self.loadedMission.triggerList.append(tg)
+            
+            # TODO remove this
+            print "Trigger:"
+            print "\tid=" + str(tg.id)
+            print "\tcondition=" + tg.condition
+            if tg.parent:
+                print "\tparent=" + str(tg.parent.id)
+            else:
+                print "\tparent=None"
+            
+            self.inTrigger = True
         return
         
     def endElement(self, name):
         # end of an element
+        if name == "background":
+            self.inBackground = False
+        elif name == "playerspawn":
+            self.inPlayerSpawn = False
+        elif name == "enemy":
+            self.inEnemy = False
+        elif name == "trigger":
+            self.inTrigger = False
+            
         return
         
     def characters(self, content):
