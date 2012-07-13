@@ -8,8 +8,8 @@ from Vec2 import Vec2
 
 class AIShip(Ship):
     
-    def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None):
-        super(AIShip,self).__init__(x, y, r, proto, parent)
+    def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
+        super(AIShip,self).__init__(x, y, r, proto, parent, context)
         
     def update(self, context = None):
         super(AIShip, self).update(context)

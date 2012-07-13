@@ -38,6 +38,22 @@ class Weapon(object):
                 str(self.bullet_ticks) + "' speed='" + str(self.bullet_speed) +
                 "' />")
     
+    def clone(self):
+        returnVal = Weapon()
+        returnVal.id = self.id
+        returnVal.name = self.name
+        returnVal.max_ammo = self.max_ammo
+        returnVal.cur_ammo = self.cur_ammo
+        returnVal.ammo_regen = self.ammo_regen
+        returnVal.fire_rate = self.fire_rate
+        returnVal.last_fire = self.last_fire
+        returnVal.base_damage = self.base_damage
+        returnVal.bullet_ticks = self.bullet_ticks
+        returnVal.bullet_speed = self.bullet_speed
+        returnVal.image_file = self.image_file
+        returnVal.image = self.image
+        return returnVal
+    
 class WeaponListXMLParser(handler.ContentHandler):
     weaponList = None
     

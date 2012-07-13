@@ -11,7 +11,7 @@ from Particle import Particle
 from Physics import *
 from PhysicsEntity import PhysicsEntity
 from PlayerShip import PlayerShip
-from Ship import Ship, PShip, Weapon
+from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
 from pygame.locals import *
@@ -103,9 +103,10 @@ class SpaceDominationMain():
         
         # load weapons
         self.weaponList = WeaponListXMLParser().loadWeaponList()
-        for weapon in self.weaponList:
-            print weapon.toXML()
-        # TODO: load ships
+        
+        
+        # load ships
+        self.shipList = ShipListXMLParser().loadShipList()
         
         
         # initialize physics manager
@@ -210,6 +211,9 @@ class SpaceDominationMain():
     
         return MissionXMLParser().loadMission(filename)
     
+    
+        
+    
     def buildMission(self, mission):
         #convert spawns to player or enemy
         for spawn in mission.spawnList:
@@ -217,10 +221,12 @@ class SpaceDominationMain():
             if spawn.ID == -1: # this is the player ship
                 tp = PShip()
                 tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
-                tempShip = PlayerShip(proto = tp)
+                tp.weapons.append(0)
+                tempShip = PlayerShip(proto = tp, context = self )
                 self.playerShip = tempShip
             else:
-                tempShip = AIShip()
+                if spawn.ID >= 0 and spawn.ID < len(self.shipList):
+                    tempShip = AIShip(proto = self.shipList[spawn.ID], context = self)
             self.shipSpriteGroup.add(tempShip)
             self.physics.addChild(tempShip)
             tempShip.set_position(spawn.x, spawn.y)

@@ -12,8 +12,8 @@ class PlayerShip(Ship):
     '''
 
 
-    def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None):
-        super(PlayerShip,self).__init__(x, y, r, proto, parent)
+    def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
+        super(PlayerShip,self).__init__(x, y, r, proto, parent, context)
         
         
     def update(self, context = None):
