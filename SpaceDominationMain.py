@@ -14,6 +14,7 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
+from mission.TestMission import TestMission
 from pygame.locals import *
 import Menu
 import Utils
@@ -91,8 +92,10 @@ class SpaceDominationMain():
         if pygame.font:
             self.defaultfont = pygame.font.Font(None, 20)
         
-        # TODO: implement loading game assets
+        # load the mission list
         self.missionList = self.loadMissionList()
+        # TODO finalize mission system
+        #self.missionList = [TestMission(), TestMission()]
         
         # load the menus
         self.menuManager = MenuManager(self.screen, self)
@@ -215,6 +218,9 @@ class SpaceDominationMain():
         
     
     def buildMission(self, mission):
+        #add the trigger list
+        self.triggerList = mission.triggerList
+        
         #convert spawns to player or enemy
         for spawn in mission.spawnList:
             
@@ -224,9 +230,11 @@ class SpaceDominationMain():
                 tp.weapons.append(0)
                 tempShip = PlayerShip(proto = tp, context = self )
                 self.playerShip = tempShip
+                self.linkTriggers(spawn, tempShip)
             else:
                 if spawn.id >= 0 and spawn.id < len(self.shipList):
                     tempShip = AIShip(proto = self.shipList[spawn.id], context = self)
+                    self.linkTriggers(spawn, tempShip)
             self.shipSpriteGroup.add(tempShip)
             self.physics.addChild(tempShip)
             tempShip.set_position(spawn.x, spawn.y)
@@ -239,9 +247,48 @@ class SpaceDominationMain():
             tempBg.rect.topleft = (bg.x, bg.y)
             self.backgroundSpriteGroup.add(tempBg)
         
-        #add the trigger list
-        self.triggerList = mission.triggerList
         
+        
+        return
+    
+    def linkTriggers(self, spawn, ship):
+        for tg in self.triggerList:
+            if tg.parent == spawn:
+                tg.parent = ship
+    
+    def displayObjectives(self, screen):
+        
+        primary = []
+        secondary = []
+        for tg in self.triggerList:
+            if tg.type.count("objective-primary") > 0:
+                primary.append(tg)
+            elif tg.type.count("objective-secondary") > 0:
+                secondary.append(tg)
+        
+        y = 0
+        if len(primary) > 0:
+            screen.blit(self.defaultfont.render("Primary Objectives:",1,(255,255,0)), (800, y))
+            y += 20
+            
+        for tg in primary:
+            tgstr = tg.display_text
+            if tg.completed:
+                color = (0, 255, 0)
+            else:
+                color = (255, 0, 0)
+            screen.blit(self.defaultfont.render(tgstr,1,color), (824, y))
+            y += 20
+            
+        if (len(secondary) > 0):
+            screen.blit(self.defaultfont.render("Secondary Objectives:",1,(255,255,0)), (800, y))
+            y += 20
+            
+        for tg in secondary:
+            tgstr = tg.display_text
+            screen.blit(self.defaultfont.render(tgstr,1,(255,0,0)), (824, y))
+            y += 20
+            
         return
     
     def gameLoop(self):
@@ -272,6 +319,10 @@ class SpaceDominationMain():
             
             for sprite in self.foregroundSpriteGroup:
                 sprite.update(self)
+        
+            # update triggers
+            for tg in self.triggerList:
+                tg.update(self)
         
         if self.gameState != self.GAMESTATE_NONE:       
         
@@ -323,7 +374,7 @@ class SpaceDominationMain():
                                         (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
         
             
-        
+            self.displayObjectives(self.screen)
         
         return True
     

@@ -50,6 +50,8 @@ class MenuManager(object):
         i = 0
         for mission in self.parent.missionList:
             mlist.append(['', 200 + i, mission[1]])
+            #TODO finalize mission system
+            #mlist.append(['', 200 + i, mission.icon])
             i += 1
             
         self.menuList.append(cMenu(50, 50, 50, 5, 'horizontal', 4, screen, mlist))

@@ -22,7 +22,9 @@ class Trigger(object):
     message_icon_image = None
     
     parent = None
-
+    
+    completed = False
+    
     def __init__(self):
         '''
         Constructor
@@ -30,8 +32,10 @@ class Trigger(object):
         attrs = []
         
     def update(self, context = None):
-        
-        pass
+        if self.condition.count("destroy-attached") > 0:
+            if not self.parent or self.parent.health <= 0:
+                self.completed = True
+                
     
     def toXML(self):
         return "<trigger />"
