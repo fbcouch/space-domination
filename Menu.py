@@ -49,9 +49,8 @@ class MenuManager(object):
         mlist = []
         i = 0
         for mission in self.parent.missionList:
-            #mlist.append(['', 200 + i, mission[1]])
-            #TODO finalize mission system
-            mlist.append(['', 200 + i, mission.icon])
+            mlist.append(['', 200 + i, mission[1]])
+            
             i += 1
             
         self.menuList.append(cMenu(50, 50, 50, 5, 'horizontal', 4, screen, mlist))
@@ -82,7 +81,7 @@ class MenuManager(object):
             self.selectedMenu = MENU_MISSION_SELECT
         elif(state >= MENU_MISSION):
             # mission selected
-            self.parent.currentMission = self.parent.missionList[state - 200]# old XML style: self.parent.loadMission(self.parent.missionList[state - 200][0])
+            self.parent.currentMission = self.parent.loadMission(self.parent.missionList[state - 200][0])
             self.parent.buildMission(self.parent.currentMission)
             self.parent.gameState = self.parent.GAMESTATE_PAUSED
             self.selectedMenu = MENU_PAUSE

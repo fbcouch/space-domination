@@ -11,5 +11,5 @@
 <enemy id="1" x="582.0" y="110.0" rot="0.0" >
 	<trigger id="0" type="objective-primary" condition="destroy-attached" display-text="Destroy this enemy!" />
 </enemy>
-<trigger id="1" condition="mission-start" message-text="Try out your controls! Use A and D to rotate, W to accelerate, and D to brake. SPACE to FIRE!" />
+<trigger id="1" condition="mission-start" message-title="Trainer" message-body="Try out your controls! Use A and D to rotate, W to accelerate, and D to brake. SPACE to FIRE!" />
 </mission>

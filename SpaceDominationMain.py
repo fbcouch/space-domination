@@ -14,7 +14,6 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
-from mission.Mission01 import Mission01
 from pygame.locals import *
 import Menu
 import Utils
@@ -65,9 +64,10 @@ class SpaceDominationMain():
     
     shipSpriteGroup = None
     backgroundSpriteGroup = None
-    triggerList = []
+    triggerList = None
     foregroundSpriteGroup = None
     
+    messageList = None
     
     def __init__(self):
         '''
@@ -88,14 +88,14 @@ class SpaceDominationMain():
         self.shipSpriteGroup = pygame.sprite.RenderClear()
         self.backgroundSpriteGroup = pygame.sprite.RenderClear()
         self.foregroundSpriteGroup = pygame.sprite.RenderClear()
+        self.triggerList = []
+        self.messageList = []
         
         if pygame.font:
             self.defaultfont = pygame.font.Font(None, 20)
         
         # load the mission list
-        #self.missionList = self.loadMissionList()
-        # TODO finalize mission system
-        self.missionList = [Mission01(), Mission01()]
+        self.missionList = self.loadMissionList()
         
         # load the menus
         self.menuManager = MenuManager(self.screen, self)
@@ -291,6 +291,14 @@ class SpaceDominationMain():
             
         return
     
+    def displayMessages(self, screen):
+        y = 0
+        for msg in self.messageList:
+            screen.blit(msg.surface, (0,screen.get_height() - msg.surface.get_height() - y))
+            y += msg.surface.get_height()
+            msg.update()
+            
+    
     def gameLoop(self):
         dt = self.clock.tick(30)
         self.timeTotal += dt
@@ -321,8 +329,18 @@ class SpaceDominationMain():
                 sprite.update(self)
         
             # update triggers
+            primObjComplete = True
             for tg in self.triggerList:
                 tg.update(self)
+                if not tg.completed:
+                    primObjComplete = False
+            
+            if primObjComplete:
+                # player completed all primary objectives - mission should end with a victory status now
+                self.gameState = self.GAMESTATE_PAUSED
+                self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
+                print "Mission Complete!"
+                
         
         if self.gameState != self.GAMESTATE_NONE:       
         
@@ -375,6 +393,8 @@ class SpaceDominationMain():
         
             
             self.displayObjectives(self.screen)
+            
+            self.displayMessages(self.screen)
         
         return True
     
