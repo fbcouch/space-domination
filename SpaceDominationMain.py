@@ -93,9 +93,9 @@ class SpaceDominationMain():
             self.defaultfont = pygame.font.Font(None, 20)
         
         # load the mission list
-        self.missionList = self.loadMissionList()
+        #self.missionList = self.loadMissionList()
         # TODO finalize mission system
-        #self.missionList = [TestMission(), TestMission()]
+        self.missionList = [TestMission(), TestMission()]
         
         # load the menus
         self.menuManager = MenuManager(self.screen, self)
