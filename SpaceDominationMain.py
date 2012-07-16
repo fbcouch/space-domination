@@ -14,7 +14,7 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
-from mission.TestMission import TestMission
+from mission.Mission01 import Mission01
 from pygame.locals import *
 import Menu
 import Utils
@@ -95,7 +95,7 @@ class SpaceDominationMain():
         # load the mission list
         #self.missionList = self.loadMissionList()
         # TODO finalize mission system
-        self.missionList = [TestMission(), TestMission()]
+        self.missionList = [Mission01(), Mission01()]
         
         # load the menus
         self.menuManager = MenuManager(self.screen, self)

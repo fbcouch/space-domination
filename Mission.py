@@ -13,13 +13,26 @@ class Mission(object):
     # this will be the main class that the missions will be loaded into and will contain info on spawning backgrounds, ships, triggers, etc
     missionName = ""
     missionDesc = ""
-    backgroundList = []
-    spawnList = []
-    triggerList = []
+    backgroundList = None
+    spawnList = None
+    triggerList = None
+    
+    icon = None
+    
+    initialized = False
+    
+    
     
     def __init__(self):
-        # TODO something?
-        return
+        self.backgroundList = []
+        self.spawnList = []
+        self.triggerList = []
+    
+    def update(self, context = None):
+        pass
+    
+    def build(self):
+        pass
     
     def toXML(self):
         returnVal = "<mission name=\"" + self.missionName + "\" desc=\"" + self.missionDesc + "\">\n"
