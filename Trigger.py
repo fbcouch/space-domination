@@ -46,17 +46,31 @@ class Trigger(object):
         attrs = []
         
     def update(self, context = None):
+        completed = self.completed
+        
         if self.condition.count("destroy-attached") > 0:
             if not self.parent or self.parent.health <= 0:
                 self.completed = True
         
         if self.condition.count("mission-start") > 0:
             if not self.completed:
-                # display a message
-                if context:
-                    context.messageList.append(PopupMessage(self.message_title, self.message_body, 600, self.message_icon_image))
                 self.completed = True
+                
+        if self.condition == "destroy-class":
+            if context:
+                count = 0
+                for ship in context.shipSpriteGroup:
+                    if ship.tag.count(self.tag) > 0:
+                        count += 1
+                if count == 0: self.completed = True
+                else:
+                    self.display_text = self.orig_display_text + " (" + str(count) + " remain)"
     
+        if not completed and self.completed and context:
+            if self.message_title and self.message_body:
+                # display a message
+                context.messageList.append(PopupMessage(self.message_title, self.message_body, 600, self.message_icon_image))
+
     def toXML(self):
         return "<trigger />"
         
@@ -66,9 +80,11 @@ def CreateTrigger(id, type = "", condition = "", attrs = "", tag = "", display_t
     tg.type = type
     tg.condition = condition
     tg.display_text = display_text
+    tg.orig_display_text = display_text
     tg.message_icon_file = message_icon_file
     tg.message_title = message_title
     tg.message_body = message_body
+    tg.tag = tag
     
     # parse attrs
     tg.attrs = attrs.split(",")

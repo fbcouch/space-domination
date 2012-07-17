@@ -59,12 +59,13 @@ class Spawn(object):
     x = 0
     y = 0
     r = 0
+    tag = ""
     
     def toXML(self):
         returnString = "<"
         if self.id == -1: returnString += "playerspawn"
         else: returnString += "enemy id=\"" + str(self.id) + "\""
-        returnString += " x=\"" + str(self.x) + "\" y=\"" + str(self.y) + "\" rot=\"" + str(self.r) + "\" />"
+        returnString += " x=\"" + str(self.x) + "\" y=\"" + str(self.y) + "\" rot=\"" + str(self.r) + " tag=\"" + self.tag + "\" />"
         return returnString
     
 
@@ -108,6 +109,8 @@ class MissionXMLParser(handler.ContentHandler):
             newSpawn.x = float(attrs.get('x',''))
             newSpawn.y = float(attrs.get('y',''))
             newSpawn.r = float(attrs.get('rot',''))
+            newSpawn.tag = attrs.get('tag','')
+            
             newSpawn.id = -1
             self.loadedMission.spawnList.append(newSpawn)
             
@@ -119,6 +122,7 @@ class MissionXMLParser(handler.ContentHandler):
             newSpawn.x = float(attrs.get('x',''))
             newSpawn.y = float(attrs.get('y',''))
             newSpawn.r = float(attrs.get('rot',''))
+            newSpawn.tag = attrs.get('tag','')
             
             self.loadedMission.spawnList.append(newSpawn)
             
@@ -138,13 +142,13 @@ class MissionXMLParser(handler.ContentHandler):
             self.loadedMission.triggerList.append(tg)
             
             # TODO remove this
-            print "Trigger:"
-            print "\tid=" + str(tg.id)
-            print "\tcondition=" + tg.condition
-            if tg.parent:
-                print "\tparent=" + str(tg.parent.id)
-            else:
-                print "\tparent=None"
+            #print "Trigger:"
+            #print "\tid=" + str(tg.id)
+            #print "\tcondition=" + tg.condition
+            #if tg.parent:
+            #    print "\tparent=" + str(tg.parent.id)
+            #else:
+            #    print "\tparent=None"
             
             self.inTrigger = True
         return

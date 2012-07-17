@@ -59,7 +59,7 @@ class PopupMessage(object):
     def update(self, context = None):
         self.duration -= 1
         if context and self.duration <= 0:
-            if self.context.messageList.contains(self): self.context.messageList.remove(self)
+            if self in context.messageList: context.messageList.remove(self)
         
     def parse(self, text, width):
         '''

@@ -53,6 +53,8 @@ class Ship(PhysicsEntity):
     max_health = 0
     max_shields = 0
     
+    tag = ""
+    
     
     weapons = None
     selected_weapon = 0
@@ -84,6 +86,7 @@ class Ship(PhysicsEntity):
         self.armor = proto.armor
         self.max_health = self.health
         self.max_shields = self.shields
+        
         
         if not proto.image:
             try:

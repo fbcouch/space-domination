@@ -234,11 +234,13 @@ class SpaceDominationMain():
             else:
                 if spawn.id >= 0 and spawn.id < len(self.shipList):
                     tempShip = AIShip(proto = self.shipList[spawn.id], context = self)
+                    
                     self.linkTriggers(spawn, tempShip)
             self.shipSpriteGroup.add(tempShip)
             self.physics.addChild(tempShip)
             tempShip.set_position(spawn.x, spawn.y)
             tempShip.set_rotation(spawn.r)
+            tempShip.tag = spawn.tag
             
         #convert bglist to backgrounds
         for bg in mission.backgroundList:
@@ -296,7 +298,7 @@ class SpaceDominationMain():
         for msg in self.messageList:
             screen.blit(msg.surface, (0,screen.get_height() - msg.surface.get_height() - y))
             y += msg.surface.get_height()
-            msg.update()
+            msg.update(self)
             
     
     def gameLoop(self):
