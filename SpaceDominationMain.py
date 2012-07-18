@@ -403,29 +403,10 @@ class SpaceDominationMain():
     
 def Test():
     pygame.init()
-    window = pygame.display.set_mode((1024, 768))
-    screen = pygame.display.get_surface()
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
-    background.fill((0,0,0))
-    spritelist = Utils.load_sprite_sheet('explosion1.png', 100, 100, (255,255,255))
-    print str(len(spritelist))
-    count = 0
-    while 1:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                sys.exit(0)
-        
-        screen.blit(background, (0,0))
-        pygame.time.delay(50)
-        if(count < len(spritelist)):
-            screen.blit(spritelist[count], (0,0))
-            count += 1
-        else:
-            count = 0
-    
-        pygame.display.flip()
-        
+    font = pygame.font.Font(None, 20)
+    parsed = Utils.parse("Blahblahblahwakkawakkawakka dont do it in the middle of a word!", 100, font)
+    for p in parsed:
+        print p    
 #the main entry point for the program
 app = SpaceDominationMain()
 app.run()

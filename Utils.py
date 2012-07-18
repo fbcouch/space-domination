@@ -61,5 +61,43 @@ def load_sprite_sheet(name, width, height, colorkey = None):
     return spriteImages
     
     
-    
-    
+def parse(text, width, font):
+    '''
+    break up a block of text into lines
+    '''
+    returnVal = []
+    start = 0
+    end = 0
+    while(start < len(text)):
+        prev = 0
+        while(end >= 0 and end < len(text) and font.size(text[start:end+1])[0] < width):
+            prev = end
+            end = end+1
+            nextSpace = text[end:].find(" ")
+            if nextSpace == -1:
+                end = len(text)
+                if start == prev and not (font.size(text[start:])[0] < width):
+                    #special case - we have a really long word at the end
+                    end = start
+                    while(end >= 0 and end < len(text) and font.size(text[start:end+1])[0] < width):
+                        end += 1
+            else:
+                
+                end += nextSpace
+                if prev == start and not font.size(text[start:end])[0] < width:
+                    end = start
+                    while(end >= 0 and end < len(text) and font.size(text[start:end+1])[0] < width):
+                        end += 1
+                
+        
+        if end >= 0:    
+            if font.size(text[start:end])[0] < width:
+                returnVal.append(text[start:end].strip())
+                start = end
+            else:
+                returnVal.append(text[start:prev].strip())
+                start = prev
+        else:
+            returnVal.append(text[start:])
+            start = len(text)
+    return returnVal

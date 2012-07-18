@@ -33,7 +33,7 @@ class PopupMessage(object):
             self.font = pygame.font.Font(None, 20)
             
         titleSurface = self.font.render(self.title, 1, (204, 204, 204))
-        self.body = self.parse(body, 500)
+        self.body = Utils.parse(body, 500, self.font)
         bodySurfaces = []
         maxWidth = titleSurface.get_width()
         for str in self.body:
@@ -61,23 +61,5 @@ class PopupMessage(object):
         if context and self.duration <= 0:
             if self in context.messageList: context.messageList.remove(self)
         
-    def parse(self, text, width):
-        '''
-        break up a block of text into lines
-        '''
-        returnVal = []
-        start = 0
-        end = 0
-        while(start < len(text)):
-            while(end >= 0 and end < len(text) and self.font.size(text[start:end+1])[0] < width):
-                
-                end = end + 1#text[end:].find(" ")
-            
-            if end >= 0:    
-                returnVal.append(text[start:end].strip())
-                start = end
-            else:
-                returnVal.append(text[start:])
-                start = len(text)
-        return returnVal
+    
             
