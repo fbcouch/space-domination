@@ -30,12 +30,13 @@ class Physics(object):
         
         i=0
         while i < len(self.physicsChildren):
-            pChild = self.physicsChildren[i]           
+            pChild = self.physicsChildren[i]                      
+            
             # accelerate
-            #print "pChild-vel: " + str(pChild.velocity) + ", accel: " + str(pChild.accel)
             newVelocity = pChild.velocity[0] + pChild.accel[0], pChild.velocity[1] + pChild.accel[1]
-            #print "newvelocity " + str(newVelocity) + ", max " + str(math.sqrt(pChild.max_vel_sq))
+            
             pChild.velocity = newVelocity
+            
             # get the velocity in the current direction of movement
             if pChild.get_vel_sq() > 0:
                 vel = Vec2(0,0)
@@ -49,6 +50,26 @@ class Physics(object):
             
             
             pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
+            '''
+            if pChild.get_vel_sq() > 0:
+                # new way of physics updating
+                cur_vel = Vec2(0,0)
+                cur_vel.setXY(pChild.velocity[0], pChild.velocity[1])
+                
+                cur_accel = Vec2(0,0)
+                cur_accel.setXY(pChild.accel[0], pChild.accel[1])
+                
+                new_vel = cur_vel.add(cur_accel)
+                if new_vel.magnitude*new_vel.magnitude > pChild.max_vel_sq:
+                    # our speed is too large, so clamp the magnitude to the max vel
+                    new_vel.magnitude = math.sqrt(pChild.max_vel_sq)
+                
+                pChild.velocity = new_vel.getXY()
+            else:
+                pChild.velocity = (pChild.accel[0],pChild.accel[1])
+            
+            pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
+            '''
             
             # Collision Detection:
             j = i + 1

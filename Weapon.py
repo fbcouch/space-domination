@@ -76,7 +76,7 @@ class WeaponListXMLParser(handler.ContentHandler):
             weapon.id = int(attrs.get('id'))
             weapon.max_ammo = int(attrs.get('ammo', '100'))
             weapon.cur_ammo = weapon.max_ammo
-            weapon.ammo_regen = int(attrs.get('regen', '2'))
+            weapon.ammo_regen = float(attrs.get('regen', '2'))
             weapon.base_damage = int(attrs.get('damage', '10'))
             weapon.fire_rate = int(attrs.get('rate', '2'))
             weapon.bullet_speed = float(attrs.get('speed', '6'))

@@ -31,11 +31,16 @@ class PhysicsEntity(pygame.sprite.Sprite):
     def accelerate_r(self, mag = 0, r = 0):
         # basically, we add the vector (mag, rotation) to the current accel value
         
-        if self.get_accel_sq() <= self.max_accel_sq:
-            
-            rvec = Vec2(mag, r)
-            xy = rvec.getXY()
-            self.accel = self.accel[0] + xy[0], self.accel[1] + xy[1]
+        jerk = Vec2(mag, r)
+        accel = Vec2(0,0)
+        accel.setXY(self.accel[0], self.accel[1])
+        
+        new_accel = accel.add(jerk)
+        
+        if new_accel.magnitude * new_accel.magnitude <= self.max_accel_sq:
+            new_accel.magnitude = math.sqrt(self.max_accel_sq)
+        
+        self.accel = accel.getXY()
        
        
        
@@ -45,6 +50,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
         mag = math.sqrt(self.get_vel_sq())
         if mag == 0: return
         vec = Vec2(mag, math.degrees(math.asin(self.velocity[1] / mag)))
+        vec.setXY(self.velocity[0],self.velocity[1])
         vec.magnitude -= brake
         if vec.magnitude < 0:
             self.velocity = (0,0)

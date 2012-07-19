@@ -59,6 +59,8 @@ class Ship(PhysicsEntity):
     weapons = None
     selected_weapon = 0
     
+    ticks_for_regen = 30
+    
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(Ship, self).__init__()
@@ -155,6 +157,27 @@ class Ship(PhysicsEntity):
    
     def update(self, context = None):
         super(Ship, self).update(context)
+        
+        if self.ticks_for_regen == 0:
+            # health regen
+            self.health += self.hregen
+            if self.health > self.max_health:
+                self.health = self.max_health
+                
+            # shield regen
+            self.shields += self.sregen
+            if self.shields > self.max_shields:
+                self.shields = self.max_shields
+                
+            # ammo regen
+            for wp in self.weapons:
+                wp.cur_ammo += wp.ammo_regen
+                if wp.cur_ammo > wp.max_ammo:
+                    wp.cur_ammo = wp.max_ammo
+            
+            self.ticks_for_regen = 30
+        else:
+            self.ticks_for_regen -= 1
         
         if self.removeSelf or self.health <= 0: # TODO implement explosions
             explosion = Particle(load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1), target = self)
