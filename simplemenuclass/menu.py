@@ -562,6 +562,7 @@ class cMenu:
       # centered (on the surface itself or at (x, y).  We do it here instead of
       # at the beginning of this function becuase we need to know what the
       # self.contained_rect is to know the correct amount to shift them.
+      
       if self.centeredOnScreen:
          shift_x = self.x - (self.draw_surface.get_rect()[2] -
                              self.contained_rect[2]) / 2

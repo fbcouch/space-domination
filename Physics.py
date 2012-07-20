@@ -19,11 +19,11 @@ class Physics(object):
     This class will handle all physics calculations - keeping track of movement, collision detection, etc
     '''
     
-    physicsChildren = []
+    physicsChildren = None
     
     def __init__(self):
+        self.physicsChildren = []
         
-        return
     
     
     def updatePhysics(self, context = None):

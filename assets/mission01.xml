@@ -6,7 +6,9 @@
 <background file="default_background.png" x="0.0" y="0.0" scale="1.0" />
 <background file="default_background.png" x="1024.0" y="0.0" scale="1.0" />
 <background file="default_background.png" x="1024.0" y="512.0" scale="1.0" />
-<playerspawn x="265.0" y="447.0" rot="30.0" />
+<playerspawn x="265.0" y="447.0" rot="30.0" >
+	<trigger id="3" type="objective-primary" condition="survive-attached" display-text="You must survive the mission." />
+</playerspawn>
 <enemy id="2" x="81.0" y="93.0" rot="0.0" tag="prim" />
 <enemy id="2" x="582.0" y="110.0" rot="0.0" tag="prim" />
 <trigger id="1" condition="mission-start" message-title="Trainer" message-body="Try out your controls! Use A and D to rotate, W to accelerate, and D to brake. SPACE to FIRE!" />

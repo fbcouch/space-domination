@@ -14,6 +14,7 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
+from hud import HUD
 from pygame.locals import *
 import Menu
 import Utils
@@ -59,6 +60,7 @@ class SpaceDominationMain():
     menuBackground = None
     
     defaultfont = None
+    largefont = None
     
     rootSprite = None
     
@@ -68,6 +70,8 @@ class SpaceDominationMain():
     foregroundSpriteGroup = None
     
     messageList = None
+    
+    HUD = None
     
     def __init__(self):
         '''
@@ -93,6 +97,7 @@ class SpaceDominationMain():
         
         if pygame.font:
             self.defaultfont = pygame.font.Font(None, 20)
+            self.largefont = pygame.font.Font(os.path.join("assets", "PLANM___.TTF"), 40)
         
         # load the mission list
         self.missionList = self.loadMissionList()
@@ -118,6 +123,9 @@ class SpaceDominationMain():
         # setup keymap
         self.keys = {"turnLeft" : 0, "turnRight" : 0, "accel" : 0, "brake" : 0, "fire" : 0, "alt-fire" : 0}
         
+        
+        # load the HUD
+        self.HUD = HUD()
         
         # allow the splash to show for no less than 5 seconds, but any time between here and there counts
         pygame.time.wait(5000 - pygame.time.get_ticks() - splashTime)
@@ -220,6 +228,12 @@ class SpaceDominationMain():
     def buildMission(self, mission):
         #add the trigger list
         self.triggerList = mission.triggerList
+        self.rootSprite = pygame.sprite.OrderedUpdates()
+        self.shipSpriteGroup = pygame.sprite.RenderClear()
+        self.backgroundSpriteGroup = pygame.sprite.RenderClear()
+        self.foregroundSpriteGroup = pygame.sprite.RenderClear()
+        self.physics = Physics()
+        self.messageList = []
         
         #convert spawns to player or enemy
         for spawn in mission.spawnList:
@@ -262,15 +276,21 @@ class SpaceDominationMain():
         
         primary = []
         secondary = []
+        maxwidth = self.defaultfont.size("Secondary Objectives")[0]
         for tg in self.triggerList:
             if tg.type.count("objective-primary") > 0:
                 primary.append(tg)
             elif tg.type.count("objective-secondary") > 0:
                 secondary.append(tg)
+            
+            w = self.defaultfont.size(tg.display_text)[0]
+            if w > maxwidth: maxwidth = w
+        
+        
         
         y = 0
         if len(primary) > 0:
-            screen.blit(self.defaultfont.render("Primary Objectives:",1,(255,255,0)), (800, y))
+            screen.blit(self.defaultfont.render("Primary Objectives:",1,(255,255,0)), (self.screen.get_width() - maxwidth - 24, y))
             y += 20
             
         for tg in primary:
@@ -279,16 +299,16 @@ class SpaceDominationMain():
                 color = (0, 255, 0)
             else:
                 color = (255, 0, 0)
-            screen.blit(self.defaultfont.render(tgstr,1,color), (824, y))
+            screen.blit(self.defaultfont.render(tgstr,1,color), (self.screen.get_width() - maxwidth, y))
             y += 20
             
         if (len(secondary) > 0):
-            screen.blit(self.defaultfont.render("Secondary Objectives:",1,(255,255,0)), (800, y))
+            screen.blit(self.defaultfont.render("Secondary Objectives:",1,(255,255,0)), (self.screen.get_width() - maxwidth - 24, y))
             y += 20
             
         for tg in secondary:
             tgstr = tg.display_text
-            screen.blit(self.defaultfont.render(tgstr,1,(255,0,0)), (824, y))
+            screen.blit(self.defaultfont.render(tgstr,1,(255,0,0)), (self.screen.get_width() - maxwidth, y))
             y += 20
             
         return
@@ -296,10 +316,19 @@ class SpaceDominationMain():
     def displayMessages(self, screen):
         y = 0
         for msg in self.messageList:
-            screen.blit(msg.surface, (0,screen.get_height() - msg.surface.get_height() - y))
+            screen.blit(msg.surface, (17,screen.get_height() - msg.surface.get_height() - y - 5))
             y += msg.surface.get_height()
             msg.update(self)
             
+    def updateTriggers(self):
+        # update triggers
+        primObjComplete = True
+        for tg in self.triggerList:
+            tg.update(self)
+            if not tg.completed:
+                primObjComplete = False
+                
+        return primObjComplete
     
     def gameLoop(self):
         dt = self.clock.tick(30)
@@ -310,15 +339,10 @@ class SpaceDominationMain():
             self.fpstext = self.defaultfont.render("FPS: " + str(float(int(10000.0 / dt)) / 10), 1, (0, 250, 0))
             
         if self.gameState == self.GAMESTATE_RUNNING:
-        
-      
-            
             # do physics
-            
             if pygame.time.get_ticks() - self.lastTick > 33:
                 self.physics.updatePhysics(self)
                 self.lastTick = pygame.time.get_ticks()
-            
                 
             # update all sprites
             for sprite in self.backgroundSpriteGroup:
@@ -326,22 +350,25 @@ class SpaceDominationMain():
             
             for sprite in self.shipSpriteGroup:
                 sprite.update(self)
-            
+        
             for sprite in self.foregroundSpriteGroup:
                 sprite.update(self)
-        
-            # update triggers
-            primObjComplete = True
-            for tg in self.triggerList:
-                tg.update(self)
-                if not tg.completed:
-                    primObjComplete = False
-            
-            if primObjComplete:
+
+            if self.updateTriggers():
                 # player completed all primary objectives - mission should end with a victory status now
-                self.gameState = self.GAMESTATE_PAUSED
-                self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
-                print "Mission Complete!"
+                self.gameState = self.GAMESTATE_GAMEOVER
+                self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+                
+            if not self.playerShip in self.shipSpriteGroup:
+                # player ship died - game over :(
+                self.gameState = self.GAMESTATE_GAMEOVER
+                self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+        
+        elif self.gameState == self.GAMESTATE_GAMEOVER:
+            for sprite in self.foregroundSpriteGroup:
+                sprite.update(self)
+            
+            self.updateTriggers()
                 
         
         if self.gameState != self.GAMESTATE_NONE:       
@@ -354,7 +381,7 @@ class SpaceDominationMain():
                     maxrect.height = sprite.rect.top + sprite.rect.height
                 
             self.screen_buffer = pygame.Surface((maxrect.width, maxrect.height))
-        
+            
         
         
         
@@ -393,10 +420,20 @@ class SpaceDominationMain():
                                         + str(sprite.max_health), 1, (0, 250, 0)) ,
                                         (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
         
+        
+            self.HUD.draw(self.screen)
             
             self.displayObjectives(self.screen)
             
             self.displayMessages(self.screen)
+            
+            if self.gameState == self.GAMESTATE_GAMEOVER:
+                if self.updateTriggers():
+                    text_surf = self.largefont.render("MISSION COMPLETE", 1, (0, 255, 0))
+                    self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
+                else:
+                    text_surf = self.largefont.render("MISSION FAILED", 1, (255, 0, 0))
+                    self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
         
         return True
     

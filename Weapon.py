@@ -26,7 +26,7 @@ class Weapon(object):
         pass
     
     def can_fire(self, time):
-        if (self.cur_ammo > 0 and time > self.last_fire + self.fire_rate):
+        if (self.cur_ammo >= 1 and time > self.last_fire + self.fire_rate):
             return True
         return False
     

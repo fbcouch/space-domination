@@ -87,7 +87,7 @@ class MenuManager(object):
             self.selectedMenu = MENU_PAUSE
         
         self.menuList[self.selectedMenu].set_alignment('center', 'center')
-        self.menuList[self.selectedMenu].set_center(True, True)  
+        self.menuList[self.selectedMenu].set_center(False, True)  
         self.menuList[self.selectedMenu].update(pygame.event.Event(EVENT_CHANGE_STATE, key = 0), self.selectedMenu)
         
         

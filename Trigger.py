@@ -65,6 +65,13 @@ class Trigger(object):
                 if count == 0: self.completed = True
                 else:
                     self.display_text = self.orig_display_text + " (" + str(count) + " remain)"
+        
+        if self.condition == "survive-attached":
+            if not self.parent or self.parent.health <= 0:
+                self.completed = False
+            else:
+                self.completed = True
+                
     
         if not completed and self.completed and context:
             if self.message_title and self.message_body:
