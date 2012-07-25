@@ -405,10 +405,7 @@ class SpaceDominationMain():
             # TODO display HUD things
             self.screen.blit(self.fpstext, (10,10))
             
-            self.screen.blit( 
-                self.defaultfont.render("Ammo: " + str(self.playerShip.weapons[self.playerShip.selected_weapon].cur_ammo) + "/" 
-                                        + str(self.playerShip.weapons[self.playerShip.selected_weapon].max_ammo), 1, (0, 250, 0)) ,
-                (10, 30))
+            
             
             for sprite in self.shipSpriteGroup:
                 self.screen.blit( 
@@ -421,7 +418,7 @@ class SpaceDominationMain():
                                         (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
         
         
-            self.HUD.draw(self.screen)
+            self.HUD.draw(self.screen, self)
             
             self.displayObjectives(self.screen)
             
