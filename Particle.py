@@ -29,6 +29,13 @@ class Particle(PhysicsEntity):
         self.interval = interval
         self.onRemove = onRemove
         self.target = target
+        if len(self.spriteList) > 0:
+            self.image = self.spriteList[0]
+            self.original = self.image
+            self.rect = self.spriteList[0].get_rect()
+        else:
+            self.image = None
+            self.rect = pygame.rect.Rect(0,0,0,0)
         
     
     def update(self, context):
@@ -39,7 +46,9 @@ class Particle(PhysicsEntity):
             self.currentSprite += 1
             if self.currentSprite < len(self.spriteList): # still more images, continue looping
                 self.image = self.spriteList[self.currentSprite]
-                self.rect = self.spriteList[self.currentSprite].get_rect()
+                self.original = self.image
+                self.set_rotation(self.rotation)
+                #self.rect = self.spriteList[self.currentSprite].get_rect()
             else: # no more images, call on-remove and remove self
                 if self.onRemove != None: self.onRemove(context)
                 self.remove(context)

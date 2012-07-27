@@ -20,16 +20,16 @@ Space Domination
 	- Particle system
 		+ basic "Particle" class								1
 		+ ships & bullets load particles on death				1
-		- engine glow as particles?								1					*****
-		- shield hits as particles?								1					*****
+		+ engine glow as particles?								1					
+		+ shield hits as particles								1					
 	- need to add advanced controls (ie swapping weapons, etc) 	2
 	+ fix braking/accel issues									1
 	- still have some funny business with vector calculations, 
 		sometimes while turning									1					*****
 - AI
 	+ basic AIShip class										1
-	- AIShip follows player & attacks when in range				1					*****
-	- AIShip can be bound patrol an area or areas				1					*****
+	+ AIShip follows player & attacks when in range				1					
+	+ AIShip patrols its area									1					
 	- More advanced AI											2
 - Ships
 	+ basic Ship class											1

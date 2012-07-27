@@ -23,7 +23,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     def __init__(self):
         super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
-        
+        self.original = None
         
     def accelerate(self, mag = 0):
         self.accelerate_r(mag, self.rotation)

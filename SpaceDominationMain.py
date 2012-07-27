@@ -19,7 +19,7 @@ from pygame.locals import *
 import Menu
 import Utils
 import os
-import pygame
+import pygame, pygame.gfxdraw
 import random
 import sys
 
@@ -247,7 +247,7 @@ class SpaceDominationMain():
                 self.linkTriggers(spawn, tempShip)
             else:
                 if spawn.id >= 0 and spawn.id < len(self.shipList):
-                    tempShip = AIShip(proto = self.shipList[spawn.id], context = self)
+                    tempShip = AIShip(spawn.x, spawn.y, spawn.r, proto = self.shipList[spawn.id], context = self)
                     
                     self.linkTriggers(spawn, tempShip)
             self.shipSpriteGroup.add(tempShip)
@@ -416,6 +416,8 @@ class SpaceDominationMain():
                                  self.defaultfont.render(str(sprite.health) + "/" 
                                         + str(sprite.max_health), 1, (0, 250, 0)) ,
                                         (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
+                if not sprite == self.playerShip:
+                    pygame.gfxdraw.box(self.screen, pygame.rect.Rect(sprite.waypoint[0] - 5 + render[0], sprite.waypoint[1] - 5 + render[1], 10, 10), (51, 102, 255))
         
         
             self.HUD.draw(self.screen, self)
@@ -442,6 +444,7 @@ def Test():
     for p in parsed:
         print p    
 #the main entry point for the program
-app = SpaceDominationMain()
-app.run()
-#Test()
+if __name__ == "__main__":
+    app = SpaceDominationMain()
+    app.run()
+    #Test()

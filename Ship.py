@@ -179,6 +179,16 @@ class Ship(PhysicsEntity):
         else:
             self.ticks_for_regen -= 1
         
+        if self.accel[0] != 0 or self.accel[1] != 0:
+            engine_glow = Particle(load_sprite_sheet('engine2_10.png', 10, 20, colorkey = -1), interval = 2)
+            offset = Vec2(0,0)
+            offset.setXY(0.5 * self.original.get_rect().width, 0)
+            offset.theta = self.rotation
+            offset = offset.getXY()
+            engine_glow.rect.center = (self.rect.center[0] - offset[0], self.rect.center[1] - offset[1])
+            engine_glow.set_rotation(self.rotation)
+            context.foregroundSpriteGroup.add(engine_glow)
+        
         if self.removeSelf or self.health <= 0: # TODO implement explosions
             explosion = Particle(load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1), target = self)
             context.foregroundSpriteGroup.add(explosion)

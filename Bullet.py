@@ -34,7 +34,12 @@ class Bullet(PhysicsEntity):
     def collide(self, physicsEntity = None, context = None):
         if(physicsEntity and not isinstance(physicsEntity, Bullet)):
             
-            explosion = Particle(load_sprite_sheet('explosion3.png', 100, 100, colorkey = -1), target = self)
+            if physicsEntity.health < physicsEntity.max_health and physicsEntity.shields <= 1:
+                explosion = Particle(load_sprite_sheet('explosion3.png', 100, 100, colorkey = -1), target = self)
+                context.foregroundSpriteGroup.add(explosion)
+            else:
+                # sheild hit
+                explosion = Particle(load_sprite_sheet('shield_hit.png', 100, 100, colorkey = -1), target = self)
+                context.foregroundSpriteGroup.add(explosion)
             
-            context.foregroundSpriteGroup.add(explosion)
             self.remove(context)
