@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <missionlist>
-	<mission icon="mission01/icon.png" file="mission01.xml"></mission>
-	<mission icon="mission01/icon.png" file="mission02.xml"></mission>
+	<mission icon="mission01_icon.png" file="mission01.xml"></mission>
+	<mission icon="mission02_icon.png" file="mission02.xml"></mission>
 </missionlist>

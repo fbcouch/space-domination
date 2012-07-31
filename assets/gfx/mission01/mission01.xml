@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<mission>
-	<name>Flight Training</name>
-	<description>Welcome to the Academy, Cadet. Here you will learn the basics of spaceflight in the X-Wing Starfigher.</description>
-	<background file="gfx/default_background.png" x="0" y="0" scale="2" />
-	<playerspawn x="0" y="0" rot="0" />
-	<enemy x="0" y="-250" rot="50" />
-</mission>
