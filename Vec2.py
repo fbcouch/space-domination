@@ -19,12 +19,10 @@ class Vec2(object):
         v1 = self.getXY()
         v2 = pVec.getXY()
         
-        v3 = v1[0] + v2[0], v1[1] + v1[1]
-        #self.magnitude = math.sqrt(v3[0]*v3[0] + v3[1]*v3[1])
-        #if not self.magnitude == 0:
-        #    self.theta = math.degrees(math.asin(v3[1] / self.magnitude))
-        #else: self.theta = 0
+        v3 = v1[0] + v2[0], v1[1] + v2[1]
+        
         self.setXY(v3[0],v3[1])
+        
         return self
         
     def getXY(self):

@@ -24,8 +24,8 @@ Space Domination
 		+ shield hits as particles								1					
 	- need to add advanced controls (ie swapping weapons, etc) 	2
 	+ fix braking/accel issues									1
-	- still have some funny business with vector calculations, 
-		sometimes while turning									1					*****
+	+ still have some funny business with vector calculations, 
+		sometimes while turning									1					
 - AI
 	+ basic AIShip class										1
 	+ AIShip follows player & attacks when in range				1					
