@@ -2,6 +2,13 @@
 Created on Apr 28, 2012
 
 @author: Jami
+
+Space Domination
+
+Coded by Jami Couch of PixelNetworks.com
+
+Code and assets released under GPL3.0
+Special thanks to Aaron Clifford of EgoAnt.com who produced some of the ship sprites used here.
 '''
 
 from AIShip import AIShip
@@ -416,8 +423,8 @@ class SpaceDominationMain():
                                  self.defaultfont.render(str(sprite.health) + "/" 
                                         + str(sprite.max_health), 1, (0, 250, 0)) ,
                                         (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
-                if not sprite == self.playerShip:
-                    pygame.gfxdraw.box(self.screen, pygame.rect.Rect(sprite.waypoint[0] - 5 + render[0], sprite.waypoint[1] - 5 + render[1], 10, 10), (51, 102, 255))
+                #if not sprite == self.playerShip:
+                #    pygame.gfxdraw.box(self.screen, pygame.rect.Rect(sprite.waypoint[0] - 5 + render[0], sprite.waypoint[1] - 5 + render[1], 10, 10), (51, 102, 255))
         
         
             self.HUD.draw(self.screen, self)
@@ -437,14 +444,8 @@ class SpaceDominationMain():
         return True
     
     
-def Test():
-    pygame.init()
-    font = pygame.font.Font(None, 20)
-    parsed = Utils.parse("Blahblahblahwakkawakkawakka dont do it in the middle of a word!", 100, font)
-    for p in parsed:
-        print p    
+
 #the main entry point for the program
 if __name__ == "__main__":
     app = SpaceDominationMain()
     app.run()
-    #Test()
