@@ -189,6 +189,15 @@ class SpaceDominationMain():
                         self.setKey("turnRight", 0)
                     elif event.key == K_SPACE:
                         self.setKey("fire",0)
+                        
+                '''elif event.type == MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.setKey("fire", 1)
+                    print event.button
+                
+                elif event.type == MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self.setKey("fire", 0)'''
 
             
             # clear the background (blit a blank screen) then draw everything in the background then the sprite groups then the foreground group

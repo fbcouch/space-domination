@@ -628,7 +628,7 @@ class cMenu:
       #      self.selection_prev -= 1
       #   redraw_full_menu = True
       elif e.key == pygame.K_RETURN:
-         return [None], self.menu_items[s]['state']
+         return self.menu_items[s]['state']
 
       if self.selection >= len(self.menu_items) or self.selection < 0:
          self.selection = self.selection_prev
@@ -643,25 +643,25 @@ class cMenu:
          rectangle_list = self.draw_buttons()
          if self.refresh_whole_surface_on_load:
             rectangle_list = pygame.Rect((0, 0), self.draw_surface.get_size())
-            return [rectangle_list], c_state
+            return c_state
          else:
-            return [self.contained_rect], c_state
+            return c_state
 
       elif redraw_full_menu:
          self.menu_items[self.selection_prev]['selected'] = False
          self.menu_items[self.selection]['selected'] = True
          self.redraw_all()
          rectangle_list = self.draw_buttons()
-         return rectangle_list, c_state
+         return c_state
 
       elif self.selection != self.selection_prev:
          self.menu_items[self.selection_prev]['selected'] = False
          self.menu_items[self.selection]['selected'] = True
          rectangle_list = self.draw_buttons()
-         return rectangle_list, c_state
+         return c_state
 
       # If no updates were made, return defaults
-      return [None], c_state
+      return c_state
 
 
    ## ---[ draw_buttons ]-------------------------------------------------------

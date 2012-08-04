@@ -46,7 +46,6 @@ class PhysicsEntity(pygame.sprite.Sprite):
        
     def brake(self, brake = 0):
         # to brake, we are going to subtract mag from the velocity vector until it becomes 0
-        print "brake"
         mag = math.sqrt(self.get_vel_sq())
         if mag == 0: return
         vec = Vec2(mag, math.degrees(math.asin(self.velocity[1] / mag)))
