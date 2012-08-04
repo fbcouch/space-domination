@@ -190,6 +190,12 @@ class SpaceDominationMain():
                     elif event.key == K_SPACE:
                         self.setKey("fire",0)
                         
+                elif self.menuManager.is_active() and (event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP):
+                    if self.menuManager.is_active():
+                        self.menuManager.update(event)
+                        if self.menuManager.selectedMenu == -1 and self.gameState == self.GAMESTATE_PAUSED: self.gameState = self.GAMESTATE_RUNNING
+                        
+                
                 '''elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.setKey("fire", 1)
@@ -258,7 +264,7 @@ class SpaceDominationMain():
                 tp = PShip()
                 tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
                 tp.weapons.append(0)
-                tempShip = PlayerShip(proto = tp, context = self )
+                tempShip = PlayerShip(proto = self.shipList[0], context = self )
                 self.playerShip = tempShip
                 self.linkTriggers(spawn, tempShip)
             else:

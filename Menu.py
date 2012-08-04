@@ -74,19 +74,20 @@ class Menu(object):
                       'collide-rect': None}
         
         # create images for "selected", "unselected"
-        if info[2]: 
+        if return_btn['image']: 
             # we have an image - create a rectangle in the selected color
-            return_btn['unselected-image'] = return_btn['image'].copy()
+            return_btn['unselected-image'] = return_btn['image']
             temp_image = pygame.surface.Surface(
                                     (return_btn['image'].get_width() + 4, 
                                      return_btn['image'].get_height() + 4))
             temp_image.blit(return_btn['image'], (2,2))
-            pygame.gfxdraw.box(temp_image, 
+            temp_image.set_colorkey(temp_image.get_at((0,0)))
+            pygame.gfxdraw.rectangle(temp_image, 
                                pygame.rect.Rect(0, 0, 
                                                 temp_image.get_width(), 
                                                 temp_image.get_height()), 
                                self.selected_color)
-            pygame.gfxdraw.box(temp_image, 
+            pygame.gfxdraw.rectangle(temp_image, 
                                pygame.rect.Rect(1, 1, 
                                                 temp_image.get_width() - 2, 
                                                 temp_image.get_height() - 2), 
@@ -110,17 +111,121 @@ class Menu(object):
     def draw_buttons(self, draw_surface = None):
         if draw_surface:
             self.draw_surface = draw_surface
-            
         
-        # TODO implement centered and centered_on_screen
-        y = self.y_offset
+        bounding_rect = pygame.rect.Rect(0,0,0,0) # we need to find the dimensions we'll need to draw the menu...
+        
+        y = 0
+        x = 0
+        row = 0
+        col = 0
+        col_widths = []
+        row_heights = []
         for button in self.button_list:
-            if button is self.selected_btn:
-                self.draw_surface.blit(button['selected-image'], (self.x_offset, y))
+            if self.orientation == 'vertical':
+                if row >= self.num_per_rowcol:
+                    row = 0
+                    x += col_widths[col] + self.h_pad
+                    col += 1
+                    col_widths.append(0)
+
+                y += button['unselected-image'].get_height()
+                if row > 0: y += self.v_pad
+                
+                if col >= len(col_widths):
+                    col_widths.append(button['unselected-image'].get_width())
+                elif button['unselected-image'].get_width() > col_widths[col]:
+                    col_widths[col] = button['unselected-image'].get_width()
+                
+                if col == 0:
+                    row_heights.append(button['unselected-image'].get_height())
+                elif button['unselected-image'].get_height() > row_heights[row]:
+                    row_heights[row] = button['unselected-image'].get_height()
+                row += 1
+            
             else:
-                self.draw_surface.blit(button['unselected-image'], (self.x_offset, y))
-            y += button['unselected-image'].get_height() + self.v_pad
+                if col >= self.num_per_rowcol:
+                    col = 0
+                    y += row_heights[row] + self.v_pad
+                    row += 1
+                    row_heights.append(0)
+                
+                x += button['unselected-image'].get_width()
+                if col > 0: x += self.h_pad
+                
+                
+                if row >= len(row_heights):
+                    row_heights.append(button['unselected-image'].get_height())
+                elif button['unselected-image'].get_height > row_heights[row]:
+                    row_heights[row] = button['unselected-image'].get_height()
+                
+                if row == 0:
+                    col_widths.append(button['unselected-image'].get_width())
+                elif button['unselected-image'].get_width() > col_widths[col]:
+                    col_widths[col] = button['unselected-image'].get_width()
+                
+                col += 1
+            
+            
+        if self.orientation == 'vertical':
+            x += col_widths[col]
+        else:
+            y += row_heights[row]
         
+        bounding_rect.width = x
+        bounding_rect.height = y
+        
+        
+        row = 0
+        col = 0
+        if self.centered_on_screen:
+            x = (self.draw_surface.get_width() - bounding_rect.width) * 0.5
+            y = (self.draw_surface.get_height() - bounding_rect.height) * 0.5
+        else:
+            x = self.x_offset
+            y = self.y_offset
+        bounding_rect.left = x
+        bounding_rect.top = y
+        for button in self.button_list:
+            if self.orientation == 'vertical':
+                if row >= self.num_per_rowcol:
+                    row = 0
+                    x += col_widths[col] + self.h_pad
+                    col += 1
+                
+                self.draw_button(button, x, y, col_widths[col], row_heights[row])
+                
+                y += button['unselected-image'].get_height() + self.v_pad
+                row += 1
+            
+            else:
+                if col >= self.num_per_rowcol:
+                    col = 0
+                    y += row_heights[row] + self.v_pad
+                    row += 1
+                
+                self.draw_button(button, x, y, col_widths[col], row_heights[row])
+                
+                x += button['unselected-image'].get_width() + self.h_pad
+                col += 1
+        
+        #pygame.gfxdraw.rectangle(self.draw_surface, bounding_rect, (255,255,255))
+    
+    def draw_button(self, button, x, y, width, height):
+        draw_x = x
+        draw_y = y             
+        
+        if button is self.selected_btn:
+            if self.centered:
+                draw_x = x + (width - button['selected-image'].get_width()) * 0.5
+                draw_y = y + (height - button['selected-image'].get_height()) * 0.5
+            self.draw_surface.blit(button['selected-image'], (draw_x, draw_y))
+            button['collide-rect'] = button['selected-image'].get_rect(topleft=(draw_x,draw_y))
+        else:
+            if self.centered:
+                draw_x = x + (width - button['unselected-image'].get_width()) * 0.5
+                draw_y = y + (height - button['unselected-image'].get_height()) * 0.5
+            self.draw_surface.blit(button['unselected-image'], (draw_x, draw_y))
+            button['collide-rect'] = button['unselected-image'].get_rect(topleft=(draw_x,draw_y))
     
     def update(self, event, state):
         if event.type == pygame.KEYDOWN:
@@ -145,18 +250,34 @@ class Menu(object):
                 if self.orientation == 'vertical':
                     pass
                 else:
-                    pass
+                    if sel_item > 0:
+                        sel_item -= 1
+                    else:
+                        sel_item = len(self.button_list) - 1
             elif event.key == pygame.K_RIGHT:
                 if self.orientation == 'vertical':
                     pass
                 else:
-                    pass
+                    if sel_item < len(self.button_list) - 1:
+                        sel_item += 1
+                    else:
+                        sel_item = 0
+                        
             elif event.key == pygame.K_RETURN:
                 state = self.selected_btn['state']
                 
             self.selected_btn = self.button_list[sel_item]  
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            pass #TODO implement mouse listening for the menu
+            if event.button == 1:
+                for button in self.button_list:
+                    if button['collide-rect'].collidepoint(event.pos):
+                        self.selected_btn = button
+            print "MOUSEBUTTONDOWN: (btn %s, pos %s)" % (event.button, event.pos)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                if self.selected_btn['collide-rect'].collidepoint(event.pos):
+                    state = self.selected_btn['state']
+            print "MOUSEBUTTONUP: (btn %s, pos %s)" % (event.button, event.pos)
         elif event.type == EVENT_CHANGE_STATE:
             if len(self.button_list) > 0:
                 self.selected_btn = self.button_list[0]
@@ -195,11 +316,11 @@ class MenuManager(object):
                                     ('Exit', MENU_EXIT, None)]))
         
         # menu 1 = options menu
-        self.menuList.append(cMenu(50, 50, 20, 5, 'vertical', 100, screen,
+        self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen,
                                    [('Back', MENU_MAIN, None)]))
         
         # menu 2 = pause menu
-        self.menuList.append(cMenu(50, 50, 20, 5, 'vertical', 100, screen,
+        self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen,
                                 [('Resume', MENU_RESUME, None),
                                  ('Options', MENU_OPTIONS, None),
                                  ('Exit', MENU_EXIT, None)]))
@@ -211,7 +332,7 @@ class MenuManager(object):
             
             i += 1
             
-        self.menuList.append(cMenu(50, 50, 50, 5, 'horizontal', 4, screen, mlist))
+        self.menuList.append(Menu(50, 50, 50, 5, 'horizontal', 4, screen, mlist))
             
         return
     

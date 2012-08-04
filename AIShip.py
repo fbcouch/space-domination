@@ -5,6 +5,7 @@ Created on Jul 4, 2012
 '''
 from Ship import Ship, PShip
 from Vec2 import Vec2
+import math
 import pygame
 import random
 
@@ -27,7 +28,7 @@ class AIShip(Ship):
             
             # accelerate toward target
             self.accelerate(self.speed * 0.25)
-            
+                        
             bullet = self.fire_weapon(context.timeTotal)
                 
             if not (bullet is None):
@@ -63,7 +64,9 @@ class AIShip(Ship):
         elif dT < -1 * self.turn:
             self.set_rotation((self.get_rotation() - self.turn) % 360)
         else:
-            self.set_rotation(targetAngle)            
+            self.set_rotation(targetAngle)
+            
+        return dT
 
     def distance_to_sq(self, targetRect = None):
         if targetRect:
