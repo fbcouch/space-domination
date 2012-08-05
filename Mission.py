@@ -4,6 +4,7 @@ Created on May 5, 2012
 @author: Jami
 '''
 
+from Ship import PShip
 from Trigger import CreateTrigger, Trigger
 from Utils import load_image
 from xml.sax import saxutils, handler, make_parser
@@ -20,6 +21,11 @@ class Mission(object):
     icon = None
     
     initialized = False
+    
+    width = 0
+    height = 0
+    background_style = None #'tiled' or ??
+    background_file = None
     
     
     
@@ -61,6 +67,14 @@ class Spawn(object):
     r = 0
     tag = ""
     
+    type = 'enemy'
+    
+    proto = None
+    hard_points = None
+    
+    def __init__(self):
+        self.hard_points = []
+    
     def toXML(self):
         returnString = "<"
         if self.id == -1: returnString += "playerspawn"
@@ -77,6 +91,7 @@ class MissionXMLParser(handler.ContentHandler):
     inEnemy = False
     inBackground = False
     inTrigger = False
+    inPoint = False
     
     def __init__(self):
         handler.ContentHandler.__init__(self)
@@ -92,6 +107,11 @@ class MissionXMLParser(handler.ContentHandler):
         # beginning of an element that encloses others & may have attributes (process here)
         if name == "mission":
             self.loadedMission = Mission()
+            if 'width' in attrs: self.loadedMission.width = int(attrs.get('width'))
+            if 'height' in attrs: self.loadedMission.height = int(attrs.get('height'))
+            if 'background-style' in attrs: self.loadedMission.background_style = attrs.get('background-style')
+            if 'background-file' in attrs: self.loadedMission.background_file = attrs.get('background-file')
+            
             
         elif name == "background":
             newBackground = Background()
@@ -104,25 +124,16 @@ class MissionXMLParser(handler.ContentHandler):
             
             self.inBackground = True
         elif name == "playerspawn":
-            newSpawn = Spawn()
-
-            newSpawn.x = float(attrs.get('x',''))
-            newSpawn.y = float(attrs.get('y',''))
-            newSpawn.r = float(attrs.get('rot',''))
-            newSpawn.tag = attrs.get('tag','')
+            newSpawn = self.spawn_from_attrs(attrs)
             
+            newSpawn.type = 'player'
             newSpawn.id = -1
             self.loadedMission.spawnList.append(newSpawn)
             
             self.inPlayerSpawn = True
         elif name == "enemy":
-            newSpawn = Spawn()
-            
-            newSpawn.id = int(attrs.get('id',''))
-            newSpawn.x = float(attrs.get('x',''))
-            newSpawn.y = float(attrs.get('y',''))
-            newSpawn.r = float(attrs.get('rot',''))
-            newSpawn.tag = attrs.get('tag','')
+            newSpawn = self.spawn_from_attrs(attrs)
+            newSpawn.type = 'enemy'
             
             self.loadedMission.spawnList.append(newSpawn)
             
@@ -136,21 +147,25 @@ class MissionXMLParser(handler.ContentHandler):
                                attrs.get('message-icon',''),
                                attrs.get('message-title',''),
                                attrs.get('message-body',''))
+            
+            # TODO allow a trigger to link to a hard point
+            #if self.inPoint:
+            #    cspawn = self.loadedMission.spawnList[len(self.loadedMission.spawnList) - 1]
+            #    tg.parent = cspawn.hard_points[len(cspawn.hard_points) - 1]
             if self.inPlayerSpawn or self.inEnemy:
-                tg.parent = self.loadedMission.spawnList[len(self.loadedMission.spawnList) - 1]               
+                tg.parent = self.loadedMission.spawnList[len(self.loadedMission.spawnList) - 1]
+            
             
             self.loadedMission.triggerList.append(tg)
-            
-            # TODO remove this
-            #print "Trigger:"
-            #print "\tid=" + str(tg.id)
-            #print "\tcondition=" + tg.condition
-            #if tg.parent:
-            #    print "\tparent=" + str(tg.parent.id)
-            #else:
-            #    print "\tparent=None"
-            
+                        
             self.inTrigger = True
+        elif name == "point":
+            if self.inEnemy or self.inPlayerSpawn:
+                newSpawn = self.spawn_from_attrs(attrs)
+                self.loadedMission.spawnList[len(self.loadedMission.spawnList)-1].hard_points.append(newSpawn)
+                
+            self.inPoint = True
+                
         return
         
     def endElement(self, name):
@@ -163,6 +178,8 @@ class MissionXMLParser(handler.ContentHandler):
             self.inEnemy = False
         elif name == "trigger":
             self.inTrigger = False
+        elif name == "point":
+            self.inPoint = False
             
         return
         
@@ -171,7 +188,30 @@ class MissionXMLParser(handler.ContentHandler):
         return
     
     def getMission(self): return self.loadedMission
+    
+    def spawn_from_attrs(self, attrs):
+        newSpawn = Spawn()
+        newSpawn.id = int(attrs.get('id', '-1'))
+        newSpawn.x = float(attrs.get('x',''))
+        newSpawn.y = float(attrs.get('y',''))
+        newSpawn.r = float(attrs.get('rot',''))
+        newSpawn.tag = attrs.get('tag','')
         
+        # proto stuff
+        newProto = PShip()
+        if 'name' in attrs: newProto.name = attrs.get('name')
+        if 'file' in attrs: newProto.file = attrs.get('file')
+        if 'health' in attrs: newProto.health = int(attrs.get('health'))
+        if 'hregen' in attrs: newProto.hregen = float(attrs.get('hregen'))
+        if 'shields' in attrs: newProto.shields = int(attrs.get('shields'))
+        if 'sregen' in attrs: newProto.sregen = float(attrs.get('sregen'))
+        if 'speed' in attrs: newProto.speed = float(attrs.get('speed'))
+        if 'turn' in attrs: newProto.turn = float(attrs.get('turn'))
+        if 'armor' in attrs: newProto.armor = float(attrs.get('armor'))
+        newSpawn.proto = newProto
+        
+        return newSpawn
+            
         
 class MissionListXMLParser(handler.ContentHandler):
     missionList = None

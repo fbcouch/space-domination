@@ -3,6 +3,7 @@ Created on Jul 4, 2012
 
 @author: Jami
 '''
+from Bullet import Bullet
 from Ship import Ship, PShip
 from Vec2 import Vec2
 import math
@@ -77,4 +78,79 @@ class AIShip(Ship):
             
     def update_waypoint(self):
         return (self.home_position[0] + random.randint(-1 * self.area_size, self.area_size), self.home_position[1] + random.randint(-1 * self.area_size, self.area_size))
+
+class StationShip(AIShip):
     
+    initialized = False
+    
+    def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
+        super(StationShip,self).__init__(x, y, r, proto, parent, context)
+        self.home_position = (x, y)
+        self.waypoint = (x, y)
+        self.area_size = 500
+        
+    def update(self, context = None):
+        super(AIShip, self).update(context)
+        
+        if not self.initialized:
+            for hp in self.hard_points:
+                hp.area_size = hp.weapons[0].bullet_speed * hp.weapons[0].bullet_ticks
+                if hp.area_size > self.area_size: self.area_size = hp.area_size
+            self.initialized = True
+        
+        if context and self.distance_to_sq(context.playerShip.rect) < self.area_size * self.area_size:
+            for hp in self.hard_points:
+                hp.waypoint = context.playerShip.rect.center
+    
+    def can_collide(self, physicsEntity):
+        if not super(StationShip, self).can_collide(physicsEntity):
+            return False
+        
+        if len(self.hard_points) == 0 or self.shields > 0:
+            return True
+        else:
+            for hp in self.hard_points:
+                if hp.rect.colliderect(physicsEntity.rect):
+                    if pygame.sprite.collide_mask(hp, physicsEntity):
+                        
+                        return True # it's hitting a hard point, collide!
+            
+            
+            # special case: there are hard points and we can collide
+            # if the collision is going to hit a hard point eventually, leave it alone
+            # otherwise, go ahead and collide
+            if isinstance(physicsEntity, Bullet):
+                # if it's a bullet, it has "ticks_remaining"
+                ticks = physicsEntity.ticks_remaining
+            else:
+                ticks = -1
+            
+            
+            
+            orig_rect = physicsEntity.rect.copy()
+            
+            while self.rect.colliderect(physicsEntity.rect) and (ticks == -1 or ticks > 0):
+                for hp in self.hard_points:
+                    if hp.rect.colliderect(physicsEntity.rect):
+                        if pygame.sprite.collide_mask(hp, physicsEntity):
+                            physicsEntity.rect = orig_rect
+                            return False # it's going to hit a hard_point, so don't collide yet
+                ticks -= 1
+                physicsEntity.rect.left += physicsEntity.velocity[0]
+                physicsEntity.rect.top += physicsEntity.velocity[1]
+                
+            physicsEntity.rect = orig_rect
+            return True
+        
+    def collide(self, physicsEntity = None, context = None):
+        hit_hp = None
+        for hp in self.hard_points:
+            if hp.rect.colliderect(physicsEntity.rect):
+                if pygame.sprite.collide_mask(hp, physicsEntity):
+                    hit_hp = hp
+        
+        if hit_hp:
+            hit_hp.collide(physicsEntity, context)
+        else:
+            return super(StationShip, self).collide(physicsEntity, context)
+        

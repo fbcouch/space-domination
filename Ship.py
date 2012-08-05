@@ -19,6 +19,7 @@ import os
 import pygame
 import random
 import sys
+import traceback
 
 class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an actual ship can be constructed from it
     id = 0
@@ -61,6 +62,8 @@ class Ship(PhysicsEntity):
     
     ticks_for_regen = 30
     
+    hard_points = None
+    
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(Ship, self).__init__()
@@ -70,7 +73,10 @@ class Ship(PhysicsEntity):
         self.set_position(x,y)
         self.set_rotation(r)
         
-        if not parent is None: parent.add(self)
+        #if not parent is None: parent.add(self)
+        self.parent = parent
+        
+        self.hard_points = []
         
     def constructFromProto(self, proto = PShip(), context = None):
         if proto is None: return
@@ -92,7 +98,7 @@ class Ship(PhysicsEntity):
         
         if not proto.image:
             try:
-                self.image, self.rect = Utils.load_image(self.file)
+                self.image, self.rect = Utils.load_image(self.file, -1)
             except SystemExit, message:
                 print message
                 self.image = None
@@ -123,6 +129,8 @@ class Ship(PhysicsEntity):
                 bullet.rect = bullet.image.get_rect()
                 
             bullet.parent = self
+            if self.parent and self in self.parent.hard_points:
+                bullet.parent = self.parent
             
             # move the bullet to the center-front of the ship # TODO set up custom weapon firing points
             bullet.rect.center = self.rect.left + self.rect.width * 0.5, self.rect.top + self.rect.height * 0.5
@@ -157,6 +165,9 @@ class Ship(PhysicsEntity):
    
     def update(self, context = None):
         super(Ship, self).update(context)
+        
+        #for pt in self.hard_points:
+        #    pt.update(context)
         
         if self.ticks_for_regen == 0:
             # health regen
@@ -195,9 +206,17 @@ class Ship(PhysicsEntity):
             self.remove(context)
         
     def remove(self, context = None):
+        #traceback.print_stack()
+        
         if context:
             if self in context.physics.physicsChildren: context.physics.physicsChildren.remove(self)
             if self in context.shipSpriteGroup: context.shipSpriteGroup.remove(self)
+            for hp in self.hard_points:
+                if hp in context.foregroundSpriteGroup: context.foregroundSpriteGroup.remove(hp)
+            if self in context.foregroundSpriteGroup: context.foregroundSpriteGroup.remove(self)
+        
+        if self.parent:
+            if self in self.parent.hard_points: self.parent.hard_points.remove(self)
             
     def collide(self, physicsEntity = None, context = None):
         if physicsEntity: # decrement shields and health here
@@ -205,7 +224,7 @@ class Ship(PhysicsEntity):
                 self.take_damage(physicsEntity.damage)
             
             else: # something else hit the ship
-                self.take_damage(self.max_health / 10)
+                self.take_damage(physicsEntity.max_health / 10)
                 
                     
     def take_damage(self, damage = 0):

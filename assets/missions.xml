@@ -2,4 +2,5 @@
 <missionlist>
 	<mission icon="mission01_icon.png" file="mission01.xml"></mission>
 	<mission icon="mission02_icon.png" file="mission02.xml"></mission>
+	<mission icon="mission03_icon.png" file="mission03.xml"></mission>
 </missionlist>

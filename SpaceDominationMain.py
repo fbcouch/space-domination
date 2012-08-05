@@ -11,7 +11,7 @@ Code and assets released under GPL3.0
 Special thanks to Aaron Clifford of EgoAnt.com who produced some of the ship sprites used here.
 '''
 
-from AIShip import AIShip
+from AIShip import AIShip, StationShip
 from Menu import MenuManager
 from Mission import *
 from Particle import Particle
@@ -26,7 +26,8 @@ from pygame.locals import *
 import Menu
 import Utils
 import os
-import pygame, pygame.gfxdraw
+import pygame
+import pygame.gfxdraw
 import random
 import sys
 
@@ -257,17 +258,17 @@ class SpaceDominationMain():
     def buildMission(self, mission):
         #add the trigger list
         self.triggerList = mission.triggerList
-        self.rootSprite = pygame.sprite.OrderedUpdates()
-        self.shipSpriteGroup = pygame.sprite.RenderClear()
-        self.backgroundSpriteGroup = pygame.sprite.RenderClear()
-        self.foregroundSpriteGroup = pygame.sprite.RenderClear()
+        #self.rootSprite = pygame.sprite.OrderedUpdates()
+        self.shipSpriteGroup = pygame.sprite.OrderedUpdates()
+        self.backgroundSpriteGroup = pygame.sprite.OrderedUpdates()
+        self.foregroundSpriteGroup = pygame.sprite.OrderedUpdates()
         self.physics = Physics()
         self.messageList = []
         
         #convert spawns to player or enemy
         for spawn in mission.spawnList:
             
-            if spawn.id == -1: # this is the player ship
+            if spawn.type == 'player': # this is the player ship
                 tp = PShip()
                 tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
                 tp.weapons.append(0)
@@ -279,12 +280,43 @@ class SpaceDominationMain():
                     tempShip = AIShip(spawn.x, spawn.y, spawn.r, proto = self.shipList[spawn.id], context = self)
                     
                     self.linkTriggers(spawn, tempShip)
+                elif spawn.id == -1:
+                    tempShip = StationShip(spawn.x, spawn.y, spawn.r, proto = spawn.proto, context = self)
+                    for pt in spawn.hard_points:
+                        if pt.id >= 0 and pt.id < len(self.shipList):
+                            hpt = AIShip(spawn.x + pt.x, spawn.y + pt.y, spawn.r + pt.r, proto = self.shipList[pt.id], parent = tempShip, context = self)         
+                            tempShip.hard_points.append(hpt)
+                    
+                    self.linkTriggers(spawn, tempShip)
+                
             self.shipSpriteGroup.add(tempShip)
+            self.foregroundSpriteGroup.add(tempShip.hard_points)
             self.physics.addChild(tempShip)
             tempShip.set_position(spawn.x, spawn.y)
             tempShip.set_rotation(spawn.r)
             tempShip.tag = spawn.tag
             
+            
+        # first, set up any auto-backgrounds
+        if mission.background_style == 'tiled':
+            # set up a tiled background using background_file and width, height
+            x = 0
+            y = 0
+            dfimage, dfrect = Utils.load_image(mission.background_file)
+            bgSurface = pygame.surface.Surface((mission.width, mission.height))
+            bgSurface = bgSurface.convert()
+            while y < mission.height:
+                x = 0
+                while x < mission.width:
+                    
+                    bgSurface.blit(dfimage, (x,y))
+                    
+                    x += dfrect.width
+                y += dfrect.height
+            tempBg = pygame.sprite.Sprite()
+            tempBg.image, tempBg.rect = bgSurface, bgSurface.get_rect()
+            self.backgroundSpriteGroup.add(tempBg)
+        
         #convert bglist to backgrounds
         for bg in mission.backgroundList:
             tempBg = pygame.sprite.Sprite()
@@ -445,6 +477,12 @@ class SpaceDominationMain():
                                  self.defaultfont.render(str(sprite.health) + "/" 
                                         + str(sprite.max_health), 1, (0, 250, 0)) ,
                                         (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
+                
+                if isinstance(sprite, StationShip):
+                    for hp in sprite.hard_points:
+                        self.screen.blit(self.defaultfont.render("%i/%i" % (int(hp.health), int(hp.max_health)), 1, (0, 250, 0)),
+                                         (hp.rect.left + render[0], hp.rect.top + hp.rect.height + render[1]))
+                                                                 
                 #if not sprite == self.playerShip:
                 #    pygame.gfxdraw.box(self.screen, pygame.rect.Rect(sprite.waypoint[0] - 5 + render[0], sprite.waypoint[1] - 5 + render[1], 10, 10), (51, 102, 255))
         

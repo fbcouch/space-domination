@@ -11,5 +11,12 @@
 	<ship id="3" name="" file="tie1.png" health="100" hregen="2" shields="0" sregen="2" speed="4" turn="1" armor="0">
 		<weapon id="0" />
 	</ship>
-	
+	<ship id="4" name="laser-turret-1" file="laser-turret1.png" health="100" hregen="0"
+			shields="0" sregen="0" speed="0" turn="2" armor="0">
+		<weapon id="0" />
+	</ship>
+	<ship id="5" name="missile-turret-1" file="missile-turret1.png" health="100" hregen="0"
+			shields="0" sregen="0" speed="0" turn="2" armor="0">
+		<weapon id="1" />
+	</ship>
 </shiplist>

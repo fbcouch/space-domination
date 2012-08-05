@@ -21,6 +21,8 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     removeSelf = False
     
+    parent = None
+    
     def __init__(self):
         super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
         self.original = None
@@ -80,3 +82,6 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     def collide(self, physicsEntity = None, context = None):
         pass
+    
+    def can_collide(self, physicsEntity):
+        return not self is physicsEntity.parent

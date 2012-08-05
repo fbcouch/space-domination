@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mission width="2000" height="2000" background-style="tiled" background-file="default_background.png">
+	<playerspawn x="265.0" y="447.0" rot="30.0" >
+		<trigger id="1" type="objective-primary" condition="survive-attached" display-text="You must survive the mission." />
+	</playerspawn>
+	
+	
+	
+	<enemy id="-1" file="station1.png" health="1000" hregen="0"	shields="100"
+			sregen="2" speed="0" turn="0" armor="0" x="1000" y="500" 
+			rot="0.0">
+		<point id="4" x="-15" y="55" rot="270.0" />
+		<point id="4" x="347" y="55" rot="270.0" />
+		<point id="5" x="185" y="70" rot="270.0" />
+		
+		<trigger id="2" type="objective-primary" condition="destroy-attached" display-text="Take down the space station." />
+	</enemy>
+	
+</mission>

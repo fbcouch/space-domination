@@ -81,8 +81,9 @@ class Physics(object):
                     if pygame.sprite.collide_mask(pChild,pCollide):
                         # this is a real collision
                         
-                        pChild.collide(pCollide, context)
-                        pCollide.collide(pChild, context)
+                        if pChild.can_collide(pCollide) and pCollide.can_collide(pChild):
+                            pChild.collide(pCollide, context)
+                            pCollide.collide(pChild, context)
                         
                 j+=1
                     
