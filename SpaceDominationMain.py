@@ -167,6 +167,7 @@ class SpaceDominationMain():
                         if self.gameState == self.GAMESTATE_RUNNING:
                             self.gameState = self.GAMESTATE_PAUSED
                             self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
+                    # movement
                     elif event.key == K_UP:
                         self.setKey("accel", 1)
                     elif event.key == K_DOWN:
@@ -177,8 +178,14 @@ class SpaceDominationMain():
                         self.setKey("turnRight", 1)
                     elif event.key == K_SPACE:
                         self.setKey("fire", 1)
-                        
+                    # weapon swapping
+                    elif event.key >= pygame.K_1 and event.key <= pygame.K_9:
+                        wp = event.key - pygame.K_1
+                        if len(self.playerShip.weapons) >= wp + 1:
+                            self.playerShip.selected_weapon = wp
+                    
                 elif event.type == KEYUP:
+                    # movement
                     if event.key == K_UP:
                         self.setKey("accel", 0)
                     elif event.key == K_DOWN:
