@@ -31,7 +31,9 @@ class PlayerShip(Ship):
             if(context.keys["fire"]): 
                 bullet = self.fire_weapon(context.timeTotal)
                 
-                if not (bullet is None):
-                    context.physics.addChild(bullet)
-                    context.foregroundSpriteGroup.add(bullet)
+                
+                if bullet:
+                    for bt in bullet:
+                        context.physics.addChild(bt)
+                        context.foregroundSpriteGroup.add(bt)
                     

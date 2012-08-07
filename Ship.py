@@ -108,11 +108,12 @@ class Ship(PhysicsEntity):
             self.rect = self.image.get_rect()
         
         for weapon in proto.weapons:
-            if context != None and weapon >= 0 and weapon < len(context.weaponList):
-                self.weapons.append(context.weaponList[weapon].clone())
+            if context != None and weapon['id'] >= 0 and weapon['id'] < len(context.weaponList):
+                self.weapons.append(context.weaponList[weapon['id']].clone())
             else:
                 self.weapons.append(Weapon())
-        
+            if 'points' in weapon and weapon['points']:
+                self.weapons[len(self.weapons) - 1].set_points(weapon['points'])
         
     '''
     fire_weapon(self, time): fires the currently selected weapon, if possible
@@ -121,40 +122,62 @@ class Ship(PhysicsEntity):
         if(self.selected_weapon < len(self.weapons) and self.weapons[self.selected_weapon].can_fire(time)):
             
             # TODO fire the weapon
-            bullet = Bullet()
-            if not self.weapons[self.selected_weapon].image:
-                bullet.image, bullet.rect = Utils.load_image(self.weapons[self.selected_weapon].image, (255,255,255))
+            bullets = []
+            weapon = self.weapons[self.selected_weapon]
+            if weapon.fire_points and len(weapon.fire_points) > 0:
+                for point in weapon.fire_points:
+                    bullets.append(Bullet())
             else:
-                bullet.image = self.weapons[self.selected_weapon].image
-                bullet.rect = bullet.image.get_rect()
+                bullets.append(Bullet())
+            #bullet = Bullet()
+            n = 0
+            for bullet in bullets:
+                if not weapon.image:
+                    bullet.image, bullet.rect = Utils.load_image(weapon.image, (255,255,255))
+                else:
+                    bullet.image = weapon.image
+                    bullet.rect = bullet.image.get_rect()
+                    
+                bullet.parent = self
+                if self.parent and self in self.parent.hard_points:
+                    bullet.parent = self.parent
                 
-            bullet.parent = self
-            if self.parent and self in self.parent.hard_points:
-                bullet.parent = self.parent
+                if weapon.fire_points and len(weapon.fire_points) > n:
+                    # move the bullet to the specified point
+                    offset = Vec2(0,0)
+                    offset.setXY(weapon.fire_points[n][0] - self.original.get_rect().width * 0.5 + bullet.rect.width, weapon.fire_points[n][1] - self.original.get_rect().height * 0.5)
+                    offset.theta += self.get_rotation()
+                    offset = offset.getXY()
+                    bullet.rect.center = self.rect.center
+                    bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
+                else:
+                    # move the bullet to the center-front of the ship
+                    bullet.rect.center = self.rect.left + self.rect.width * 0.5, self.rect.top + self.rect.height * 0.5
+                    offset = Vec2(self.rect.height * 0.5 + bullet.rect.width, self.get_rotation())
+                    offset = offset.getXY()
+                    bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
+                
+                bullet.original = bullet.image
+                bullet.set_rotation(self.get_rotation())
+                    
+                # match the bullet and ship velocities TODO fixme
+                vel1 = Vec2(self.weapons[self.selected_weapon].bullet_speed, self.get_rotation())
+                #vel2 = Vec2(0,0)
+                #vel2.setXY(self.velocity[0], self.velocity[1])
+                #vel1 = vel1.add(vel2)
+                bullet.velocity = vel1.getXY()
             
-            # move the bullet to the center-front of the ship # TODO set up custom weapon firing points
-            bullet.rect.center = self.rect.left + self.rect.width * 0.5, self.rect.top + self.rect.height * 0.5
-            offset = Vec2(self.rect.height * 0.5 + 10, self.get_rotation())
-            offset = offset.getXY()
-            bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
-            bullet.original = bullet.image
-            bullet.set_rotation(self.get_rotation())
+                # increment weapon stuff
+                self.weapons[self.selected_weapon].cur_ammo -= 1
+                self.weapons[self.selected_weapon].last_fire = time
             
-            # match the bullet and ship velocities TODO fixme
-            vel1 = Vec2(self.weapons[self.selected_weapon].bullet_speed, self.get_rotation())
-            #vel2 = Vec2(0,0)
-            #vel2.setXY(self.velocity[0], self.velocity[1])
-            #vel1 = vel1.add(vel2)
-            bullet.velocity = vel1.getXY()
-            
-            # increment weapon stuff
-            self.weapons[self.selected_weapon].cur_ammo -= 1
-            self.weapons[self.selected_weapon].last_fire = time
-            
-            # set up the bullet lifetime info
-            bullet.ticks_remaining = self.weapons[self.selected_weapon].bullet_ticks
-            bullet.damage = self.weapons[self.selected_weapon].base_damage
-            return bullet         # return the bullet
+                # set up the bullet lifetime info
+                bullet.ticks_remaining = self.weapons[self.selected_weapon].bullet_ticks
+                bullet.damage = self.weapons[self.selected_weapon].base_damage
+                
+                n += 1
+                
+            return bullets         # return the bullet list
         return None
     
     def set_position(self, x, y):
@@ -284,7 +307,8 @@ class ShipListXMLParser(handler.ContentHandler):
             self.shipList.append(self.ship)
         
         elif name == "weapon":
-            self.ship.weapons.append(int(attrs.get('id', '0')))
+            self.ship.weapons.append({'id':int(attrs.get('id', '0')), 'points':attrs.get('points')})
+            
             
     def endElement(self, name):
         pass

@@ -19,6 +19,8 @@ class Weapon(object):
     bullet_ticks = 100
     bullet_speed = 20
     
+    fire_points = None
+    
     image_file = None
     image = None
     
@@ -26,10 +28,30 @@ class Weapon(object):
         pass
     
     def can_fire(self, time):
-        if (self.cur_ammo >= 1 and time > self.last_fire + self.fire_rate):
+        
+        if not self.fire_points or len(self.fire_points) == 0: 
+            points = 1
+        else:
+            points = len(self.fire_points)
+        if (self.cur_ammo >= points and time > self.last_fire + self.fire_rate):
             return True
         return False
     
+    def set_points(self, pointlist):
+        self.fire_points = []
+        i = 0
+        while i < len(pointlist):
+            f = pointlist.find(";", i)
+            if f == -1:
+                f = len(pointlist)
+            # the next point is defined by [i:f]
+            point = pointlist[i:f]
+            c = point.find(",")
+            if c >= 1: 
+                # we have a valid point, grab everything before c as the "x" value and after as "y"
+                self.fire_points.append((int(point[:c]),int(point[c+1:])))
+            i = f + 1
+        
     def toXML(self):
         return ("<weapon id='" + str(self.id) + "' name='" + self.name + 
                 "' ammo='" + str(self.max_ammo) + "' regen='" + 

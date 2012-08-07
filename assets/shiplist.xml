@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shiplist>
-	<ship id="0" name="" file="redfighter0jv.png" health="100" hregen="2" shields="100" sregen="2" speed="10" turn="5" armor="0">
-		<weapon id="0" />
-		<weapon id="1" />
+	<ship id="0" name="" file="base-fighter1.png" health="100" hregen="2" shields="100" sregen="2" speed="10" turn="5" armor="0">
+		<weapon id="0" points="39,4;39,96"/>
+		<weapon id="2" />
 	</ship>
 	<ship id="1" name="" file="1st_pixel_spaceship.png" health="100" hregen="2" shields="0" sregen="2" speed="4" turn="1" armor="0">
-		<weapon id="0" />
+		<weapon id="1" />
 	</ship>
 	<ship id="2" name="" file="block1.png" health="100" hregen="0" shields="0" sregen="0" speed="0" turn="0" armor="0" />
 	<ship id="3" name="" file="tie1.png" health="100" hregen="2" shields="0" sregen="2" speed="4" turn="1" armor="0">
-		<weapon id="0" />
+		<weapon id="1" />
 	</ship>
 	<ship id="4" name="laser-turret-1" file="laser-turret1.png" health="100" hregen="0"
 			shields="0" sregen="0" speed="0" turn="2" armor="0">
-		<weapon id="0" />
+		<weapon id="3" points="64,28;64,38" />
 	</ship>
 	<ship id="5" name="missile-turret-1" file="missile-turret1.png" health="100" hregen="0"
 			shields="0" sregen="0" speed="0" turn="2" armor="0">
-		<weapon id="1" />
+		<weapon id="2" />
 	</ship>
 </shiplist>
