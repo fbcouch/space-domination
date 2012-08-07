@@ -259,9 +259,9 @@ class SpaceDominationMain():
         #add the trigger list
         self.triggerList = mission.triggerList
         #self.rootSprite = pygame.sprite.OrderedUpdates()
-        self.shipSpriteGroup = pygame.sprite.OrderedUpdates()
-        self.backgroundSpriteGroup = pygame.sprite.OrderedUpdates()
-        self.foregroundSpriteGroup = pygame.sprite.OrderedUpdates()
+        self.shipSpriteGroup = OrderedUpdatesRect()
+        self.backgroundSpriteGroup = OrderedUpdatesRect() #pygame.sprite.OrderedUpdates()
+        self.foregroundSpriteGroup = OrderedUpdatesRect() #pygame.sprite.OrderedUpdates()
         self.physics = Physics()
         self.messageList = []
         
@@ -302,8 +302,8 @@ class SpaceDominationMain():
             # set up a tiled background using background_file and width, height
             x = 0
             y = 0
-            dfimage, dfrect = Utils.load_image(mission.background_file)
-            bgSurface = pygame.surface.Surface((mission.width, mission.height))
+            mission.background_image, dfrect = Utils.load_image(mission.background_file)
+            '''bgSurface = pygame.surface.Surface((mission.width, mission.height))
             bgSurface = bgSurface.convert()
             while y < mission.height:
                 x = 0
@@ -315,7 +315,7 @@ class SpaceDominationMain():
                 y += dfrect.height
             tempBg = pygame.sprite.Sprite()
             tempBg.image, tempBg.rect = bgSurface, bgSurface.get_rect()
-            self.backgroundSpriteGroup.add(tempBg)
+            self.backgroundSpriteGroup.add(tempBg)'''
         
         #convert bglist to backgrounds
         for bg in mission.backgroundList:
@@ -433,42 +433,52 @@ class SpaceDominationMain():
                 
         
         if self.gameState != self.GAMESTATE_NONE:       
-        
-            maxrect = Rect(0,0,0,0)
+            
+            # use the given mission width/height and the backgrounds to determine the boundaries
+            maxrect = Rect(0,0,self.currentMission.width,self.currentMission.height)
             for sprite in self.backgroundSpriteGroup: # backgrounds will define the boundaries
                 if sprite.rect.left + sprite.rect.width > maxrect.width:
                     maxrect.width = sprite.rect.left + sprite.rect.width
                 if sprite.rect.top + sprite.rect.height > maxrect.height:
                     maxrect.height = sprite.rect.top + sprite.rect.height
                 
-            self.screen_buffer = pygame.Surface((maxrect.width, maxrect.height))
-            
-        
-        
-        
-            #self.rootSprite.clear(self.screen, self.background)
-            #self.rootSprite.draw(self.screen)
-            #self.backgroundSpriteGroup.clear(self.screen, self.background)
-            self.backgroundSpriteGroup.draw(self.screen_buffer)
-            #self.shipSpriteGroup.clear(self.screen, self.background)
-            self.shipSpriteGroup.draw(self.screen_buffer)
-            self.foregroundSpriteGroup.draw(self.screen_buffer)
-        
-        
             # now render to the screen using the playerShip to decide on coords
             render = (-1 * self.playerShip.rect.center[0] + (self.screen.get_width() * 0.5), -1 * self.playerShip.rect.center[1] + (self.screen.get_height() * 0.5))
             if render[0] > 0: render = (0, render[1])
             if render[1] > 0: render = (render[0], 0)
             if render[0] < -1 * maxrect.width + self.screen.get_width(): render = (-1 * maxrect.width + self.screen.get_width(), render[1])
             if render[1] < -1 * maxrect.height + self.screen.get_height(): render = (render[0], -1 * maxrect.height + self.screen.get_height())
-            self.screen.blit(self.screen_buffer, render)
+            
+            # draw a tiled background if necessary
+            if self.currentMission and self.currentMission.background_style == 'tiled' and self.currentMission.background_image:
+                # we will always assume that 0,0 is the starting point for the tiling
+                bgimg = self.currentMission.background_image
+                # set the offset to start at the closest tiling position to the top/left of the current area
+                offset = [-1 * render[0], -1 * render[1]]
+                offset[0] = int(offset[0] / bgimg.get_width()) * bgimg.get_width()
+                offset[1] = int(offset[1] / bgimg.get_height()) * bgimg.get_height()
+                start = [offset[0], offset[1]]
+                end = [-1 * render[0] + self.screen.get_width(), -1 * render[1] + self.screen.get_height()]
+                # render the tiles until off the screen
+                while offset[0] < end[0] and offset[1] < end[1]:
+                    self.screen.blit(bgimg, (offset[0] + render[0], offset[1] + render[1]))
+                    offset[0] += bgimg.get_width()
+                    if offset[0] >= end[0]:
+                        offset[0] = start[0]
+                        offset[1] += bgimg.get_height()
+                
+            # now draw the sprites
+            drawrect = pygame.rect.Rect(-1 * render[0], -1 * render[1], self.screen.get_width(), self.screen.get_height())
+            self.backgroundSpriteGroup.draw(self.screen, drawrect, render)
+            self.shipSpriteGroup.draw(self.screen, drawrect, render)
+            self.foregroundSpriteGroup.draw(self.screen, drawrect, render)
+        
         
             # TODO display HUD things
             self.screen.blit(self.fpstext, (10,10))
             
-            
-            
             for sprite in self.shipSpriteGroup:
+                # TODO change these to bars (open/filled rect)
                 self.screen.blit( 
                                  self.defaultfont.render(str(sprite.shields) + "/" 
                                         + str(sprite.max_shields), 1, (0, 0, 250)) ,
@@ -502,8 +512,31 @@ class SpaceDominationMain():
                     self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
         
         return True
+
+class OrderedUpdatesRect(pygame.sprite.OrderedUpdates):
+    '''
+    extension of pygame.sprite.OrderedUpdates with a draw function that 
+    accepts a rect defining the "screen" and an offset for where to draw the 
+    sprites on the surface
     
+    '''  
     
+    def draw(self, surface, rect = None, offset = None):
+        '''draw only sprites contained in rect to surface at offset
+        
+        OrderedUpdatesRect.draw(surface, rect, offset) returns None
+        
+        @param surface     target for rendering
+        @param rect        only sprites that collide with this rect will be rendered
+        @param offset      sprites will be rendered with this offset
+        '''
+        for spt in self.sprites():
+            if not rect or spt.rect.colliderect(rect):
+                if offset:
+                    self.spritedict[spt] = surface.blit(spt.image, (spt.rect.left + offset[0], spt.rect.top + offset[1]))
+                else:
+                    self.spritedict[spt] = surface.blit(spt.image, spt.rect)
+                    
 
 #the main entry point for the program
 if __name__ == "__main__":
