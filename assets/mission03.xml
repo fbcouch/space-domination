@@ -7,7 +7,7 @@
 	
 	
 	<enemy id="-1" file="station1.png" health="1000" hregen="0"	shields="100"
-			sregen="2" speed="0" turn="0" armor="0" x="1000" y="500" 
+			sregen="2" speed="0" turn="0" armor="0" x="1500" y="800" 
 			rot="0.0">
 		<point id="4" x="-15" y="55" rot="270.0" />
 		<point id="4" x="347" y="55" rot="270.0" />

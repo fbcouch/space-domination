@@ -43,6 +43,7 @@ class PopupMessage(object):
         
         y = 0
         textSurface = pygame.Surface((maxWidth, titleSurface.get_height() + 2 + (bodySurfaces[0].get_height() + 2) * len(bodySurfaces) ))
+        textSurface.set_colorkey((0,0,0))
         textSurface.blit(titleSurface, (0,y))
         y += titleSurface.get_height() + 2
         for surf in bodySurfaces:
@@ -51,15 +52,16 @@ class PopupMessage(object):
         
         if self.icon:
             self.surface = pygame.Surface((self.icon.get_width() + textSurface.get_width(), self.icon.get_height() + textSurface.get_height()))
+            self.surface.set_colorkey((0,0,0))
             self.surface.blit(self.icon, (0,0))
             self.surface.blit(textSurface, (self.icon.get_width(),0))
         else:
             self.surface = textSurface
         
-    def update(self, context = None):
+    def update(self, parent = None):
         self.duration -= 1
-        if context and self.duration <= 0:
-            if self in context.messageList: context.messageList.remove(self)
+        if parent and self.duration <= 0:
+            if self in parent: parent.remove(self)
         
     
             

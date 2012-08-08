@@ -107,15 +107,15 @@ class SpaceDominationMain():
             self.defaultfont = pygame.font.Font(None, 20)
             self.largefont = pygame.font.Font(os.path.join("assets", "PLANM___.TTF"), 40)
         
+        # load & display splash screen
+        self.showSplash()
+        splashTime = pygame.time.get_ticks()
+        
         # load the mission list
         self.missionList = self.loadMissionList()
         
         # load the menus
         self.menuManager = MenuManager(self.screen, self)
-        
-        # load & display splash screen
-        self.showSplash()
-        splashTime = pygame.time.get_ticks()
         
         # load weapons
         self.weaponList = WeaponListXMLParser().loadWeaponList()
@@ -138,11 +138,6 @@ class SpaceDominationMain():
         # allow the splash to show for no less than 5 seconds, but any time between here and there counts
         pygame.time.wait(5000 - pygame.time.get_ticks() - splashTime)
         self.removeSplash()
-        
-        
-        
-        
-        
         
         self.gameState = SpaceDominationMain.GAMESTATE_NONE
         self.menuBackground = load_image("background.PNG")[0]
@@ -303,19 +298,7 @@ class SpaceDominationMain():
             x = 0
             y = 0
             mission.background_image, dfrect = Utils.load_image(mission.background_file)
-            '''bgSurface = pygame.surface.Surface((mission.width, mission.height))
-            bgSurface = bgSurface.convert()
-            while y < mission.height:
-                x = 0
-                while x < mission.width:
-                    
-                    bgSurface.blit(dfimage, (x,y))
-                    
-                    x += dfrect.width
-                y += dfrect.height
-            tempBg = pygame.sprite.Sprite()
-            tempBg.image, tempBg.rect = bgSurface, bgSurface.get_rect()
-            self.backgroundSpriteGroup.add(tempBg)'''
+            
         
         #convert bglist to backgrounds
         for bg in mission.backgroundList:
@@ -324,62 +307,11 @@ class SpaceDominationMain():
             tempBg.rect.topleft = (bg.x, bg.y)
             self.backgroundSpriteGroup.add(tempBg)
         
-        
-        
-        return
     
     def linkTriggers(self, spawn, ship):
         for tg in self.triggerList:
             if tg.parent == spawn:
                 tg.parent = ship
-    
-    def displayObjectives(self, screen):
-        
-        primary = []
-        secondary = []
-        maxwidth = self.defaultfont.size("Secondary Objectives")[0]
-        for tg in self.triggerList:
-            if tg.type.count("objective-primary") > 0:
-                primary.append(tg)
-            elif tg.type.count("objective-secondary") > 0:
-                secondary.append(tg)
-            
-            w = self.defaultfont.size(tg.display_text)[0]
-            if w > maxwidth: maxwidth = w
-        
-        
-        
-        y = 0
-        if len(primary) > 0:
-            screen.blit(self.defaultfont.render("Primary Objectives:",1,(255,255,0)), (self.screen.get_width() - maxwidth - 24, y))
-            y += 20
-            
-        for tg in primary:
-            tgstr = tg.display_text
-            if tg.completed:
-                color = (0, 255, 0)
-            else:
-                color = (255, 0, 0)
-            screen.blit(self.defaultfont.render(tgstr,1,color), (self.screen.get_width() - maxwidth, y))
-            y += 20
-            
-        if (len(secondary) > 0):
-            screen.blit(self.defaultfont.render("Secondary Objectives:",1,(255,255,0)), (self.screen.get_width() - maxwidth - 24, y))
-            y += 20
-            
-        for tg in secondary:
-            tgstr = tg.display_text
-            screen.blit(self.defaultfont.render(tgstr,1,(255,0,0)), (self.screen.get_width() - maxwidth, y))
-            y += 20
-            
-        return
-    
-    def displayMessages(self, screen):
-        y = 0
-        for msg in self.messageList:
-            screen.blit(msg.surface, (17,screen.get_height() - msg.surface.get_height() - y - 5))
-            y += msg.surface.get_height()
-            msg.update(self)
             
     def updateTriggers(self):
         # update triggers
@@ -497,11 +429,8 @@ class SpaceDominationMain():
                 #    pygame.gfxdraw.box(self.screen, pygame.rect.Rect(sprite.waypoint[0] - 5 + render[0], sprite.waypoint[1] - 5 + render[1], 10, 10), (51, 102, 255))
         
         
-            self.HUD.draw(self.screen, self)
+            self.HUD.draw(self.screen, self, render)
             
-            self.displayObjectives(self.screen)
-            
-            self.displayMessages(self.screen)
             
             if self.gameState == self.GAMESTATE_GAMEOVER:
                 if self.updateTriggers():
