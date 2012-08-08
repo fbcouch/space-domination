@@ -18,7 +18,11 @@ class HUD(object):
         Constructor
         '''
         self.hud_bottom, rect = Utils.load_image("hud_msg_panel.png", colorkey = -1)
-        self.objective_pointer, rect = Utils.load_image("objective-pointer.png", colorkey = -1)
+        
+        
+        imagey, rect = Utils.load_image("objective-pointer-yellow.png", colorkey = -1)
+        imageg, rect = Utils.load_image("objective-pointer-green.png", colorkey = -1)
+        self.objective_pointer = {'destroy': imagey, 'survive': imageg}
         
     def update(self):
         pass
@@ -28,7 +32,7 @@ class HUD(object):
         
         if context:
             # draw glowing balls to point out objectives that are off screen
-            self.mark_objectives(screen, context.triggerList, pygame.rect.Rect(-1 * render[0], -1 * render[1], screen.get_width(), screen.get_height()))
+            self.mark_objectives(screen, context.triggerList, pygame.rect.Rect(-1 * render[0], -1 * render[1], screen.get_width(), screen.get_height()), context.shipSpriteGroup)
             
             # draw objective text
             self.display_objectives(screen, context.triggerList, font)
@@ -120,67 +124,64 @@ class HUD(object):
             y += font.size(ammotext[n])[1] + 2
             n += 1
         
-    def mark_objectives(self, screen, triggers, rect):
+    def mark_objectives(self, screen, triggers, rect, shiplist):
         '''draw little balls around the edge of the screen toward the offscreen objectives'''
-        # TODO clean this up a bit, its an ugly hack for now
-        # TODO figure out how to get class type objectives in on this
-        # TODO change color of marker based on survive/kill
         
+        # TODO change color of marker based on survive/kill
         for tg in triggers:
-            if not tg.completed and tg.parent and not tg.parent.rect.colliderect(rect):
-                # ok, lets draw this guy
-                # to figure out the position, lets assume a line from rect.center (x1, y1) to tg.parent.rect.center (x2, y2)
-                x1, y1 = rect.center
-                x2, y2 = tg.parent.rect.center
-                draw_loc = None
-                if not x1 == x2 and not y1 == y2:
-                    m = float(y2 - y1) / float(x2 - x1)
-                    b = y1 - m * x1
-                    if y2 >= y1:
-                        y_test = rect.top + rect.height
-                        result = self.calc_line_y(m, b, y_test)
-                        if result >= rect.left and result <= rect.left + rect.width:
-                            # we have our location
-                            draw_loc = (result, y_test)
-                        elif x2 >= x1:
-                            x_test = rect.left + rect.width
-                            result = self.calc_line_x(m, b, x_test)
-                            draw_loc = (x_test, result)
+            for ship in tg.get_attached(shiplist):
+                if not ship.rect.colliderect(rect):
+                    # ok, lets draw this guy
+                    # to figure out the position, lets assume a line from rect.center (x1, y1) to tg.parent.rect.center (x2, y2)
+                    x1, y1 = rect.center
+                    x2, y2 = ship.rect.center
+                    draw_loc = None
+                    if not x1 == x2 and not y1 == y2:
+                        m = float(y2 - y1) / float(x2 - x1)
+                        b = y1 - m * x1
+                        if y2 >= y1:
+                            y_test = rect.top + rect.height
+                            result = self.calc_line_y(m, b, y_test)
+                            if result >= rect.left and result <= rect.left + rect.width:
+                                draw_loc = (result, y_test)
+                            elif x2 >= x1:
+                                draw_loc = (rect.left + rect.width, self.calc_line_x(m, b, rect.left + rect.width))
+                            else:
+                                draw_loc = (rect.left, self.calc_line_x(m, b, rect.left))
                         else:
-                            x_test = rect.left
-                            result = self.calc_line_x(m, b, x_test)
-                            draw_loc = (x_test, result)
-                    else:
-                        y_test = rect.top
-                        result = self.calc_line_y(m, b, y_test)
-                        if result >= rect.left and result <= rect.left + rect.width:
-                            draw_loc = (result, y_test)
-                        elif x2 >= x1:
-                            draw_loc = (rect.left + rect.width, self.calc_line_x(m, b, rect.left + rect.width))
+                            y_test = rect.top
+                            result = self.calc_line_y(m, b, y_test)
+                            if result >= rect.left and result <= rect.left + rect.width:
+                                draw_loc = (result, y_test)
+                            elif x2 >= x1:
+                                draw_loc = (rect.left + rect.width, self.calc_line_x(m, b, rect.left + rect.width))
+                            else:
+                                draw_loc = (rect.left, self.calc_line_x(m, b, rect.left))
+                        
+                    elif x1 == x2:
+                        # boundary case where x1==x2
+                        if y2 >= y1:
+                            draw_loc = (x2, rect.top + rect.height)
                         else:
-                            draw_loc = (rect.left, self.calc_line_x(m, b, rect.left))
-                    
-                elif x1 == x2:
-                    # boundary case where x1==x2
-                    if y2 >= y1:
-                        draw_loc = (x2, rect.top + rect.height)
+                            draw_loc = (x2, rect.top)
                     else:
-                        draw_loc = (x2, rect.top)
-                else:
-                    #boundary case where y1==y2
-                    if x2 >= x1:
-                        draw_loc = (rect.left + rect.width, y2)
-                    else:
-                        draw_loc = (rect.left, y2)
-                
-                # draw the damn thing
-                if draw_loc:
+                        #boundary case where y1==y2
+                        if x2 >= x1:
+                            draw_loc = (rect.left + rect.width, y2)
+                        else:
+                            draw_loc = (rect.left, y2)
                     
-                    draw_loc = (draw_loc[0] - rect.left, draw_loc[1] - rect.top)
-                    #pygame.gfxdraw.filled_circle(screen, int(draw_loc[0]), int(draw_loc[1]), 10, (255,255,0))
-                    rect = self.objective_pointer.get_rect()
-                    rect.center = draw_loc
-                    screen.blit(self.objective_pointer, rect.topleft)
+                    # draw the damn thing
+                    if draw_loc:
+                        
+                        draw_loc = (draw_loc[0] - rect.left, draw_loc[1] - rect.top)
+                        #pygame.gfxdraw.filled_circle(screen, int(draw_loc[0]), int(draw_loc[1]), 10, (255,255,0))
+                        draw_rect = self.objective_pointer['destroy'].get_rect()
+                        draw_rect.center = draw_loc
+                        if tg.condition.count('survive') > 0:
+                            screen.blit(self.objective_pointer['survive'], draw_rect.topleft)
+                        else:
+                            screen.blit(self.objective_pointer['destroy'], draw_rect.topleft)
                 
     def calc_line_x(self, m, b, x):
         return m * x + b

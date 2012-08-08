@@ -58,10 +58,7 @@ class Trigger(object):
                 
         if self.condition == "destroy-class":
             if context:
-                count = 0
-                for ship in context.shipSpriteGroup:
-                    if ship.tag.count(self.tag) > 0:
-                        count += 1
+                count = len(self.get_attached(context.shipSpriteGroup))
                 if count == 0: self.completed = True
                 else:
                     self.display_text = self.orig_display_text + " (" + str(count) + " remain)"
@@ -77,6 +74,18 @@ class Trigger(object):
             if self.message_title and self.message_body:
                 # display a message
                 context.messageList.append(PopupMessage(self.message_title, self.message_body, 600, self.message_icon_image))
+                
+                
+    def get_attached(self, shiplist):
+        '''get a list of the attached ships'''
+        attached = []
+        if self.condition.count("class") > 0:
+            for ship in shiplist:
+                if ship.tag.count(self.tag) > 0:
+                    attached.append(ship)
+        elif self.parent:
+            attached.append(self.parent)
+        return attached
 
     def toXML(self):
         return "<trigger />"
