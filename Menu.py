@@ -20,55 +20,30 @@ MENU_RESUME = 101
 MENU_MISSION = 200 # missions will start with 2xx with xx being mission ID
 EVENT_CHANGE_STATE = pygame.USEREVENT + 1
 
-class Menu(object):
-    x_offset = 0
-    y_offset = 0
-    h_pad = 0
-    v_pad = 0
-    orientation = 'vertical'
-    num_per_rowcol = 0
-    background = None
-    draw_surface = None
-    button_list = None
+class Button(object):
+    '''basic button in the old style for menus'''
+
+    attrs = None
     font = None
-    
-    centered = False
-    centered_on_screen = False
-    
-    h_align = 'left'
-    v_align = 'top'
-    
     selected_color = None
     unselected_color = None
     
-    selected_btn = None
-    
-    def __init__(self, x_offset, y_offset, h_pad = 0, v_pad = 0, orientation = 'vertical', number = 10, background = None, button_list = None):
-        self.x_offset = x_offset
-        self.y_offset = y_offset
-        self.h_pad = h_pad
-        self.v_pad = v_pad
-        self.orientation = orientation
-        self.num_per_rowcol = number
-        self.background = background.copy()
-        self.draw_surface = background
-        self.button_list = []
+    def __init__(self, text, state, image, font = None, selected_color = None, unselected_color = None):
         
+        if not font:
+            self.font = pygame.font.Font(None, 20)
+        else:
+            self.font = font
         
+        self.selected_color = selected_color
+        if not self.selected_color: self.selected_color = (250, 0, 0)
+        self.unselected_color = unselected_color
+        if not self.unselected_color: self.unselected_color = (250, 250, 250)
         
-        self.font = pygame.font.Font(None, 32)
-        
-        self.selected_color = (255, 0, 0)
-        self.unselected_color = (255, 255, 255)
-        
-        
-        for button in button_list:
-            self.button_list.append(self.create_button(button))
-            
-        if len(self.button_list) > 0:
-            selected_btn = self.button_list[0]
-        
+        self.attrs = self.create_button([text, state, image])
+
     def create_button(self, info):
+        '''create a button from @param info, a tuple containing (text, state, image)'''
         return_btn = {'text': info[0], 'state': info[1], 'image': info[2], 
                       'selected-image': None, 'unselected-image': None, 
                       'collide-rect': None}
@@ -104,6 +79,72 @@ class Menu(object):
                                                       self.unselected_color)
             
         return return_btn
+    
+    
+    def draw(self, draw_surface, x, y, width, height, centered, selected):
+        '''draw the button to @param draw_surface in the box defined by @param x, @param y, @param width, @param height'''
+        draw_x = x
+        draw_y = y
+        if selected:
+            if centered:
+                draw_x = x + (width - self.attrs['selected-image'].get_width()) * 0.5
+                draw_y = y + (height - self.attrs['selected-image'].get_height()) * 0.5
+            draw_surface.blit(self.attrs['selected-image'], (draw_x, draw_y))
+            self.attrs['collide-rect'] = self.attrs['selected-image'].get_rect(topleft=(draw_x,draw_y))
+        else:
+            if centered:
+                draw_x = x + (width - self.attrs['unselected-image'].get_width()) * 0.5
+                draw_y = y + (height - self.attrs['unselected-image'].get_height()) * 0.5
+            draw_surface.blit(self.attrs['unselected-image'], (draw_x, draw_y))
+            self.attrs['collide-rect'] = self.attrs['unselected-image'].get_rect(topleft=(draw_x,draw_y))
+        
+class Menu(object):
+    x_offset = 0
+    y_offset = 0
+    h_pad = 0
+    v_pad = 0
+    orientation = 'vertical'
+    num_per_rowcol = 0
+    background = None
+    draw_surface = None
+    button_list = None
+    font = None
+    
+    centered = False
+    centered_on_screen = False
+    
+    h_align = 'left'
+    v_align = 'top'
+    
+    selected_color = None
+    unselected_color = None
+    
+    selected_btn = None
+    
+    def __init__(self, x_offset = 0, y_offset = 0, h_pad = 0, v_pad = 0, orientation = 'vertical', number = 10, background = None, button_list = None):
+        self.x_offset = x_offset
+        self.y_offset = y_offset
+        self.h_pad = h_pad
+        self.v_pad = v_pad
+        self.orientation = orientation
+        self.num_per_rowcol = number
+        self.background = background.copy()
+        self.draw_surface = background
+        self.button_list = []
+        
+        
+        
+        self.font = pygame.font.Font(None, 32)
+        
+        self.selected_color = (255, 0, 0)
+        self.unselected_color = (255, 255, 255)
+        
+        
+        for button in button_list:
+            self.button_list.append(Button(button[0], button[1], button[2], self.font, self.selected_color, self.unselected_color))
+            
+        if len(self.button_list) > 0:
+            selected_btn = self.button_list[0]
         
     def redraw_all(self):
         pass
@@ -121,6 +162,7 @@ class Menu(object):
         col_widths = []
         row_heights = []
         for button in self.button_list:
+            button = button.attrs
             if self.orientation == 'vertical':
                 if row >= self.num_per_rowcol:
                     row = 0
@@ -192,9 +234,9 @@ class Menu(object):
                     x += col_widths[col] + self.h_pad
                     col += 1
                 
-                self.draw_button(button, x, y, col_widths[col], row_heights[row])
+                button.draw(self.draw_surface, x, y, col_widths[col], row_heights[row], self.centered, button is self.selected_btn)
                 
-                y += button['unselected-image'].get_height() + self.v_pad
+                y += button.attrs['unselected-image'].get_height() + self.v_pad
                 row += 1
             
             else:
@@ -203,9 +245,9 @@ class Menu(object):
                     y += row_heights[row] + self.v_pad
                     row += 1
                 
-                self.draw_button(button, x, y, col_widths[col], row_heights[row])
+                button.draw(self.draw_surface, x, y, col_widths[col], row_heights[row], self.centered, button is self.selected_btn)
                 
-                x += button['unselected-image'].get_width() + self.h_pad
+                x += button.attrs['unselected-image'].get_width() + self.h_pad
                 col += 1
         
         #pygame.gfxdraw.rectangle(self.draw_surface, bounding_rect, (255,255,255))
@@ -215,6 +257,7 @@ class Menu(object):
         draw_y = y             
         
         if button is self.selected_btn:
+            
             if self.centered:
                 draw_x = x + (width - button['selected-image'].get_width()) * 0.5
                 draw_y = y + (height - button['selected-image'].get_height()) * 0.5
@@ -264,7 +307,7 @@ class Menu(object):
                         sel_item = 0
                         
             elif event.key == pygame.K_RETURN:
-                state = self.selected_btn['state']
+                state = self.selected_btn.attrs['state']
                 
             self.selected_btn = self.button_list[sel_item]  
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -276,7 +319,7 @@ class Menu(object):
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 if self.selected_btn['collide-rect'].collidepoint(event.pos):
-                    state = self.selected_btn['state']
+                    state = self.selected_btn.attrs['state']
             print "MOUSEBUTTONUP: (btn %s, pos %s)" % (event.button, event.pos)
         elif event.type == EVENT_CHANGE_STATE:
             if len(self.button_list) > 0:

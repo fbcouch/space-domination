@@ -23,6 +23,7 @@ from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
 from hud import HUD
 from pygame.locals import *
+from xml.sax.xmlreader import AttributesImpl
 import Menu
 import Utils
 import os
@@ -31,7 +32,7 @@ import pygame.gfxdraw
 import random
 import sys
 
-
+VERSION = "0.2"
 
 class SpaceDominationMain():
     '''
@@ -79,17 +80,44 @@ class SpaceDominationMain():
     
     messageList = None
     
+    # Profile stuff
+    profiles = None
+    currentProfile = None
+    
     HUD = None
     
     def __init__(self):
         '''
         Constructor
         '''
+        # before anything else, load the profiles
+        self.profiles = ProfileXMLParser().loadProfiles(os.path.join('assets','profiles.xml'))
+        for profile in self.profiles:
+            if profile['active']:
+                self.currentProfile = profile
+                break
+        
         #initialize managers
         pygame.init()
         random.seed()
-        self.window = pygame.display.set_mode((1440,900))
-        pygame.display.set_caption("Space Domination")
+        
+        try:
+            if 'width' in self.currentProfile:
+                self.currentProfile['width'] = int(self.currentProfile['width'])
+            else:
+                self.currentProfile['width'] = 1024
+            
+            if 'height' in self.currentProfile:
+                self.currentProfile['height'] = int(self.currentProfile['height'])
+            else:
+                self.currentProfile['height'] = 768
+                
+            self.window = pygame.display.set_mode((self.currentProfile['width'],self.currentProfile['height']))
+        except ValueError, msg:
+            print "Error in profile height/width: %s" % msg
+            self.window = pygame.display.set_mode((1024, 768))
+        
+        pygame.display.set_caption("Space Domination (version %s) by Jami Couch" % VERSION)
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.get_surface()
         self.background = pygame.Surface(self.screen.get_size())
@@ -247,9 +275,6 @@ class SpaceDominationMain():
     def loadMission(self, filename):
     
         return MissionXMLParser().loadMission(filename)
-    
-    
-        
     
     def buildMission(self, mission):
         #add the trigger list
@@ -467,6 +492,44 @@ class OrderedUpdatesRect(pygame.sprite.OrderedUpdates):
                 else:
                     self.spritedict[spt] = surface.blit(spt.image, spt.rect)
                     
+class ProfileXMLParser(handler.ContentHandler):
+    '''load the profiles from a specified xml file'''
+    profileList = None
+    defaultID = 0
+    
+    def __init__(self):
+        handler.ContentHandler.__init__(self)
+        self.profileList = []
+    
+    def loadProfiles(self, filename = None):
+        '''load the profiles from @param filename (defaults to assets/profiles.xml)'''
+        if not filename:
+            filename = os.path.join("assets","profiles.xml")
+        parser = make_parser()
+        parser.setContentHandler(self)
+        parser.parse(filename)
+        return self.profileList
+        
+    
+    def startElement(self, name, attrs):
+        if name == "profiles":
+            self.profileList = []
+            self.defaultID = int(attrs.get('default',0))
+        elif name == "profile":
+            keys = attrs.keys()
+            profile = {}
+            for key in keys:
+                profile[key] = attrs.get(key)
+            if int(profile['id']) == self.defaultID:
+                profile['active'] = True
+            self.profileList.append(profile)
+    
+    def endElement(self, name):
+        pass
+    
+    def characters(self, content):
+        pass
+
 
 #the main entry point for the program
 if __name__ == "__main__":

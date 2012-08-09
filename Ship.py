@@ -276,7 +276,9 @@ class ShipListXMLParser(handler.ContentHandler):
         handler.ContentHandler.__init__(self)
         self.shipList = []
     
-    def loadShipList(self, filename = "assets/shiplist.xml"):
+    def loadShipList(self, filename = None):
+        if not filename:
+            filename = os.path.join("assets","shiplist.xml")
         parser = make_parser()
         parser.setContentHandler(self)
         parser.parse(filename)
