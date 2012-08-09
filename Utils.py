@@ -101,3 +101,19 @@ def parse(text, width, font):
             returnVal.append(text[start:])
             start = len(text)
     return returnVal
+
+def parse_pointlist(pointlist):
+    returnval = []
+    i = 0
+    while i < len(pointlist):
+        f = pointlist.find(";", i)
+        if f == -1:
+            f = len(pointlist)
+        # the next point is defined by [i:f]
+        point = pointlist[i:f]
+        c = point.find(",")
+        if c >= 1: 
+            # we have a valid point, grab everything before c as the "x" value and after as "y"
+            returnval.append((int(point[:c]),int(point[c+1:])))
+        i = f + 1
+    return returnval

@@ -33,6 +33,8 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     turn = 1
     armor = 0
     
+    engine_points = None
+    
     weapons = None
     
     image = None
@@ -63,6 +65,8 @@ class Ship(PhysicsEntity):
     ticks_for_regen = 30
     
     hard_points = None
+    
+    engine_points = None
     
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
@@ -101,8 +105,9 @@ class Ship(PhysicsEntity):
                 self.image, self.rect = Utils.load_image(self.file, -1)
             except SystemExit, message:
                 print message
-                self.image = None
-                self.rect = pygame.rect.Rect()
+                self.image = pygame.surface.Surface((10,10))
+                pygame.gfxdraw.filled_circle(self.image, 5, 5, 5, (51, 102, 255))
+                self.rect = self.image.get_rect()
         else:
             self.image = proto.image
             self.rect = self.image.get_rect()
@@ -114,6 +119,9 @@ class Ship(PhysicsEntity):
                 self.weapons.append(Weapon())
             if 'points' in weapon and weapon['points']:
                 self.weapons[len(self.weapons) - 1].set_points(weapon['points'])
+                
+        if proto.engine_points:
+            self.engine_points = Utils.parse_pointlist(proto.engine_points)
         
     '''
     fire_weapon(self, time): fires the currently selected weapon, if possible
@@ -213,15 +221,16 @@ class Ship(PhysicsEntity):
         else:
             self.ticks_for_regen -= 1
         
-        if self.accel[0] != 0 or self.accel[1] != 0:
-            engine_glow = Particle(load_sprite_sheet('engine2_10.png', 10, 20, colorkey = -1), interval = 2)
-            offset = Vec2(0,0)
-            offset.setXY(0.5 * self.original.get_rect().width, 0)
-            offset.theta = self.rotation
-            offset = offset.getXY()
-            engine_glow.rect.center = (self.rect.center[0] - offset[0], self.rect.center[1] - offset[1])
-            engine_glow.set_rotation(self.rotation)
-            context.foregroundSpriteGroup.add(engine_glow)
+        if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0):
+            for ep in self.engine_points:
+                engine_glow = Particle(load_sprite_sheet('engine1_10.png', 10, 10, colorkey = -1), interval = 2)
+                offset = Vec2(0,0)
+                offset.setXY(ep[0] - 0.5 * self.original.get_rect().width, ep[1] - 0.5 * self.original.get_rect().height)
+                offset.theta += self.rotation
+                offset = offset.getXY()
+                engine_glow.rect.center = (self.rect.center[0] + offset[0], self.rect.center[1] + offset[1])
+                engine_glow.set_rotation(self.rotation)
+                context.foregroundSpriteGroup.add(engine_glow)
         
         if self.removeSelf or self.health <= 0: # TODO implement explosions
             explosion = Particle(load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1), target = self)
@@ -247,7 +256,7 @@ class Ship(PhysicsEntity):
                 self.take_damage(physicsEntity.damage)
             
             else: # something else hit the ship
-                self.take_damage(physicsEntity.max_health / 10)
+                self.take_damage(10)
                 
                     
     def take_damage(self, damage = 0):
@@ -288,6 +297,7 @@ class ShipListXMLParser(handler.ContentHandler):
             self.ship.speed = int(attrs.get('speed', 5))
             self.ship.turn = int(attrs.get('turn', 5))
             self.ship.armor = int(attrs.get('armor', 0))
+            self.ship.engine_points = attrs.get('engines', '')
             
             self.ship.file = attrs.get('file','')
             

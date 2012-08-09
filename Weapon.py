@@ -3,8 +3,9 @@ Created on Jul 4, 2012
 
 @author: Jami
 '''
-from xml.sax import handler, make_parser
 from Utils import *
+from xml.sax import handler, make_parser
+import Utils
 
 class Weapon(object):
     id = 0
@@ -38,8 +39,8 @@ class Weapon(object):
         return False
     
     def set_points(self, pointlist):
-        self.fire_points = []
-        i = 0
+        self.fire_points = Utils.parse_pointlist(pointlist)
+        ''''i = 0
         while i < len(pointlist):
             f = pointlist.find(";", i)
             if f == -1:
@@ -50,7 +51,7 @@ class Weapon(object):
             if c >= 1: 
                 # we have a valid point, grab everything before c as the "x" value and after as "y"
                 self.fire_points.append((int(point[:c]),int(point[c+1:])))
-            i = f + 1
+            i = f + 1'''
         
     def toXML(self):
         return ("<weapon id='" + str(self.id) + "' name='" + self.name + 

@@ -88,7 +88,7 @@ class SpaceDominationMain():
         #initialize managers
         pygame.init()
         random.seed()
-        self.window = pygame.display.set_mode((1024,768))
+        self.window = pygame.display.set_mode((1440,900))
         pygame.display.set_caption("Space Domination")
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.get_surface()
@@ -215,7 +215,8 @@ class SpaceDominationMain():
             # game loop
             self.gameLoop()
             if self.gameState == self.GAMESTATE_NONE:
-                self.screen.blit(self.menuBackground, (0,0))
+                drawSurf = pygame.transform.scale(self.menuBackground, self.screen.get_size())
+                self.screen.blit(drawSurf, (0,0))
             if self.menuManager.is_active(): self.menuManager.draw()
             pygame.display.flip()
         

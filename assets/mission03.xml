@@ -16,4 +16,8 @@
 		<trigger id="2" type="objective-primary" condition="destroy-attached" display-text="Take down the space station." />
 	</enemy>
 	
+	<enemy id="3" x="1500" y="600" rot="180.0" tag="sec" />
+	<enemy id="3" x="1300" y="800" rot="90.0" tag="sec" />
+	
+	<trigger id="3" type="objective-secondary" condition="destroy-attached" display-test="Kill the enemy fighters." />
 </mission>
