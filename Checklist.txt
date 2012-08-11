@@ -6,7 +6,7 @@ Space Domination
 		+ select mission from menus								1
 	- advanced menu functionality:
 		- implement scrolling or pages for mission menu			2				*****
-		- implement options										2				*****
+		+ implement options										2
 	
 - Missions
 	+ load mission from xml file								1

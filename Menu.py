@@ -28,7 +28,9 @@ class Button(object):
     selected_color = None
     unselected_color = None
     
-    def __init__(self, text, state, image, font = None, selected_color = None, unselected_color = None):
+    on_click_fxn = None
+    
+    def __init__(self, text, state, image, font = None, selected_color = None, unselected_color = None, on_click_fxn = None):
         
         if not font:
             self.font = pygame.font.Font(None, 20)
@@ -41,6 +43,7 @@ class Button(object):
         if not self.unselected_color: self.unselected_color = (250, 250, 250)
         
         self.attrs = self.create_button([text, state, image])
+        self.on_click_fxn = on_click_fxn
 
     def create_button(self, info):
         '''create a button from @param info, a tuple containing (text, state, image)'''
@@ -100,7 +103,8 @@ class Button(object):
         
     def on_click(self):
         '''called when the button is clicked or return is pressed while selected'''
-        print "click"
+        if self.on_click_fxn:
+            return self.on_click_fxn()
     
     def on_selected(self):
         '''called when the button is selected'''
@@ -124,11 +128,27 @@ class MissionButton(Button):
         self.mission_start(self.mission)
         return self.attrs['state']
 
+class SaveButton(Button):
+    '''this button calls "on_click" for all other items in the parent before its own'''
+    parent = None
+    def __init__(self, parent, text, state, image, font = None, selected_color = None, unselected_color = None, on_click_fxn = None):
+        super(SaveButton, self).__init__(text, state, image, font, selected_color, unselected_color, on_click_fxn)
+        self.parent = parent
+    
+    def on_click(self):
+        for item in self.parent.button_list:
+            if not item is self:
+                item.on_click()
+        super(SaveButton, self).on_click()
+        
 class TextInput(Button):
     '''special button used for text input'''
     
     label = ""
     value = ""
+    numbers_only = False
+    
+    link = None # a tuple containing (var, key) such that var[key] will be set to self.value on click
     
     keymap = {K_0: '0', K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5', K_6: '6', K_7: '7', K_8: '8', K_9: '9',
               K_a: 'a', K_b: 'b', K_c: 'c', K_d: 'd', K_e: 'e', K_f: 'f', K_g: 'g', K_h: 'h', K_i: 'i', K_j: 'j', 
@@ -136,17 +156,23 @@ class TextInput(Button):
               K_u: 'u', K_v: 'v', K_w: 'w', K_x: 'x', K_y: 'y', K_z: 'z', K_MINUS: '-', K_UNDERSCORE: '_'}
     numbers = {K_0: '0', K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5', K_6: '6', K_7: '7', K_8: '8', K_9: '9'}
     
-    def __init__(self, label, value, font = None, selected_color = None, unselected_color = None):
-        super(TextInput, self).__init__((label + ": " + value), value, None, font, selected_color, unselected_color)
-        self.label = label
-        self.value = value
+    def __init__(self, label, value, state, font = None, selected_color = None, unselected_color = None, numbers_only = False, link = None):
+        self.label = str(label)
+        self.value = str(value)
         
+        super(TextInput, self).__init__((self.label + ": " + self.value), state, None, font, selected_color, unselected_color)
+        self.numbers_only = numbers_only
+        self.link = link
         self.update_images()
         
     def on_keypress(self, key, mod):
         print "keypress (%s, %s)" % (str(key), str(mod))
-        if key in self.keymap:
-            self.value += self.keymap[key]
+        
+        if key in self.numbers or (not self.numbers_only and key in self.keymap):
+            if pygame.K_LSHIFT & mod or pygame.K_RSHIFT & mod:
+                self.value += self.keymap[key].capitalize()
+            else:
+                self.value += self.keymap[key]
         elif key == pygame.K_BACKSPACE:
             if len(self.value) > 0:
                 self.value = self.value[:len(self.value) - 1]
@@ -156,6 +182,10 @@ class TextInput(Button):
     def update_images(self):
         self.attrs['unselected-image'] = self.font.render(self.label + ": " + self.value, 1, self.unselected_color)
         self.attrs['selected-image'] = self.font.render(self.label + ": " + self.value + "_", 1, self.selected_color)
+        
+    def on_click(self):
+        if self.link:
+            self.link[0][self.link[1]] = self.value
         
 class Menu(object):
     x_offset = 0
@@ -413,6 +443,8 @@ class Menu(object):
         if v_align in ['top', 'center', 'bottom']:
             self.v_align = v_align
 
+    
+    
 class MenuManager(object):
     menuList = None
     selectedMenu = 0 # default to no menu shown
@@ -436,7 +468,10 @@ class MenuManager(object):
         # menu 1 = options menu
         self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen, None))
         menu = self.menuList[len(self.menuList) - 1]
-        menu.add_button(TextInput('Width','1440', menu.font, menu.selected_color, menu.unselected_color))
+        menu.add_button(TextInput('Callsign',self.parent.currentProfile['name'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, False, (self.parent.currentProfile, 'name')))
+        menu.add_button(TextInput('Width',self.parent.currentProfile['width'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, True, (self.parent.currentProfile, 'width')))
+        menu.add_button(TextInput('Height',self.parent.currentProfile['height'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, True, (self.parent.currentProfile, 'height')))
+        menu.add_button(SaveButton(menu, 'Save', MENU_OPTIONS, None, menu.font, menu.selected_color, menu.unselected_color, self.parent.saveProfiles))
         menu.add_button(('Back', MENU_MAIN, None))
         
         # menu 2 = pause menu
@@ -464,6 +499,8 @@ class MenuManager(object):
     def menu_state_parse(self, state = 0):
         if(state == MENU_MAIN):
             self.selectedMenu = MENU_MAIN
+            if self.parent.gameState == self.parent.GAMESTATE_PAUSED:
+                self.selectedMenu = MENU_PAUSE
         elif(state == MENU_RESUME):
             self.selectedMenu = -1
         elif(state == MENU_EXIT):
@@ -474,9 +511,9 @@ class MenuManager(object):
             self.selectedMenu = MENU_PAUSE
         elif(state == MENU_MISSION_SELECT):
             self.selectedMenu = MENU_MISSION_SELECT
-        elif(state >= MENU_MISSION):
-            # mission selected
-            self.parent.startMission(self.parent.missionList[state - 200])
+        #elif(state >= MENU_MISSION):
+        #    # mission selected
+        #    self.parent.startMission(self.parent.missionList[state - 200])
         
         self.menuList[self.selectedMenu].set_alignment('center', 'center')
         self.menuList[self.selectedMenu].set_center(True, True)  
