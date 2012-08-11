@@ -22,9 +22,8 @@ Space Domination
 		+ ships & bullets load particles on death				1
 		+ engine glow as particles?								1					
 		+ shield hits as particles								1					
-	- advanced controls										  	2				*****
+	- advanced controls										  	2				
 		+ weapon swapping										2
-		- ???													2
 	+ fix braking/accel issues									1
 	+ still have some funny business with vector calculations, 
 		sometimes while turning									1					
@@ -37,7 +36,7 @@ Space Domination
 	+ basic Ship class											1
 	+ basic PlayerShip class									1
 	+ load ships from xml file									1
-	- specify all needed ship attributes in xml file			2				*****
+	- specify all needed ship attributes in xml file			ongoing
 - Weapons
 	+ basic Weapon class				
 		+ ammo decrements & creates bullets						1

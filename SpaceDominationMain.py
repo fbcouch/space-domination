@@ -33,7 +33,7 @@ import random
 import sys
 
 VERSION = "0.2"
-SPLASH_TIME = 5000
+SPLASH_TIME = 2000
 STATE_LOSE_FOCUS = 2
 STATE_GAIN_FOCUS = 6
 
@@ -297,6 +297,12 @@ class SpaceDominationMain():
     def loadMission(self, filename):
     
         return MissionXMLParser().loadMission(filename)
+    
+    def startMission(self, mission):
+        self.currentMission = self.loadMission(mission[0])
+        self.buildMission(self.currentMission)
+        self.gameState = self.GAMESTATE_PAUSED
+        self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
     
     def buildMission(self, mission):
         #add the trigger list

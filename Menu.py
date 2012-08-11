@@ -98,6 +98,65 @@ class Button(object):
             draw_surface.blit(self.attrs['unselected-image'], (draw_x, draw_y))
             self.attrs['collide-rect'] = self.attrs['unselected-image'].get_rect(topleft=(draw_x,draw_y))
         
+    def on_click(self):
+        '''called when the button is clicked or return is pressed while selected'''
+        print "click"
+    
+    def on_selected(self):
+        '''called when the button is selected'''
+        
+    def on_keypress(self, key, mod):
+        '''called when a key that is not normally handled by the menu is pressed'''
+
+class MissionButton(Button):
+    '''special button specifically for missions'''
+    
+    mission = None
+    mission_start = None
+    
+    def __init__(self, context, text, mission, image, font = None, selected_color = None, unselected_color = None):
+        '''rather than a "state", which this button will always set to -1, this has a Mission'''
+        super(MissionButton, self).__init__(text, -1, image, font, selected_color, unselected_color)
+        self.mission = mission
+        self.mission_start = context.startMission
+        
+    def on_click(self):
+        self.mission_start(self.mission)
+        return self.attrs['state']
+
+class TextInput(Button):
+    '''special button used for text input'''
+    
+    label = ""
+    value = ""
+    
+    keymap = {K_0: '0', K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5', K_6: '6', K_7: '7', K_8: '8', K_9: '9',
+              K_a: 'a', K_b: 'b', K_c: 'c', K_d: 'd', K_e: 'e', K_f: 'f', K_g: 'g', K_h: 'h', K_i: 'i', K_j: 'j', 
+              K_k: 'k', K_l: 'l', K_m: 'm', K_n: 'n', K_o: 'o', K_p: 'p', K_q: 'q', K_r: 'r', K_s: 's', K_t: 't', 
+              K_u: 'u', K_v: 'v', K_w: 'w', K_x: 'x', K_y: 'y', K_z: 'z', K_MINUS: '-', K_UNDERSCORE: '_'}
+    numbers = {K_0: '0', K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5', K_6: '6', K_7: '7', K_8: '8', K_9: '9'}
+    
+    def __init__(self, label, value, font = None, selected_color = None, unselected_color = None):
+        super(TextInput, self).__init__((label + ": " + value), value, None, font, selected_color, unselected_color)
+        self.label = label
+        self.value = value
+        
+        self.update_images()
+        
+    def on_keypress(self, key, mod):
+        print "keypress (%s, %s)" % (str(key), str(mod))
+        if key in self.keymap:
+            self.value += self.keymap[key]
+        elif key == pygame.K_BACKSPACE:
+            if len(self.value) > 0:
+                self.value = self.value[:len(self.value) - 1]
+                
+        self.update_images()
+        
+    def update_images(self):
+        self.attrs['unselected-image'] = self.font.render(self.label + ": " + self.value, 1, self.unselected_color)
+        self.attrs['selected-image'] = self.font.render(self.label + ": " + self.value + "_", 1, self.selected_color)
+        
 class Menu(object):
     x_offset = 0
     y_offset = 0
@@ -140,11 +199,16 @@ class Menu(object):
         self.unselected_color = (255, 255, 255)
         
         
+        if not button_list: button_list = []
         for button in button_list:
-            self.button_list.append(Button(button[0], button[1], button[2], self.font, self.selected_color, self.unselected_color))
+            self.add_button(button)
             
         if len(self.button_list) > 0:
             selected_btn = self.button_list[0]
+    
+    def add_button(self, button):
+        if isinstance(button, Button): self.button_list.append(button)
+        else: self.button_list.append(Button(button[0], button[1], button[2], self.font, self.selected_color, self.unselected_color))
         
     def redraw_all(self):
         pass
@@ -152,6 +216,9 @@ class Menu(object):
     def draw_buttons(self, draw_surface = None):
         if draw_surface:
             self.draw_surface = draw_surface
+        
+        if len(self.button_list) == 0:
+            return
         
         bounding_rect = pygame.rect.Rect(0,0,0,0) # we need to find the dimensions we'll need to draw the menu...
         
@@ -308,19 +375,27 @@ class Menu(object):
                         
             elif event.key == pygame.K_RETURN:
                 state = self.selected_btn.attrs['state']
+                self.selected_btn.on_click()
                 
-            self.selected_btn = self.button_list[sel_item]  
+            else:
+                self.selected_btn.on_keypress(event.key, event.mod)
+            
+            if not self.selected_btn == self.button_list[sel_item]:    
+                self.selected_btn = self.button_list[sel_item]
+                self.selected_btn.on_selected()  
+                
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 for button in self.button_list:
                     if button.attrs['collide-rect'].collidepoint(event.pos):
                         self.selected_btn = button
-            print "MOUSEBUTTONDOWN: (btn %s, pos %s)" % (event.button, event.pos)
+            #print "MOUSEBUTTONDOWN: (btn %s, pos %s)" % (event.button, event.pos)
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 if self.selected_btn.attrs['collide-rect'].collidepoint(event.pos):
                     state = self.selected_btn.attrs['state']
-            print "MOUSEBUTTONUP: (btn %s, pos %s)" % (event.button, event.pos)
+                    self.selected_btn.on_click()
+            #print "MOUSEBUTTONUP: (btn %s, pos %s)" % (event.button, event.pos)
         elif event.type == EVENT_CHANGE_STATE:
             if len(self.button_list) > 0:
                 self.selected_btn = self.button_list[0]
@@ -359,8 +434,10 @@ class MenuManager(object):
                                     ('Exit', MENU_EXIT, None)]))
         
         # menu 1 = options menu
-        self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen,
-                                   [('Back', MENU_MAIN, None)]))
+        self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen, None))
+        menu = self.menuList[len(self.menuList) - 1]
+        menu.add_button(TextInput('Width','1440', menu.font, menu.selected_color, menu.unselected_color))
+        menu.add_button(('Back', MENU_MAIN, None))
         
         # menu 2 = pause menu
         self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen,
@@ -368,14 +445,10 @@ class MenuManager(object):
                                  ('Options', MENU_OPTIONS, None),
                                  ('Exit', MENU_EXIT, None)]))
         # menu 3 = mission menu
-        mlist = []
-        i = 0
+        menu = Menu(50, 50, 50, 5, 'horizontal', 4, screen, [])
+        self.menuList.append(menu)
         for mission in self.parent.missionList:
-            mlist.append(['', 200 + i, mission[1]])
-            
-            i += 1
-            
-        self.menuList.append(Menu(50, 50, 50, 5, 'horizontal', 4, screen, mlist))
+            menu.add_button(MissionButton(self.parent, '', mission, mission[1], menu.font, menu.selected_color, menu.unselected_color))
             
         return
     
@@ -403,11 +476,7 @@ class MenuManager(object):
             self.selectedMenu = MENU_MISSION_SELECT
         elif(state >= MENU_MISSION):
             # mission selected
-            self.parent.currentMission = self.parent.loadMission(
-                                     self.parent.missionList[state - 200][0])
-            self.parent.buildMission(self.parent.currentMission)
-            self.parent.gameState = self.parent.GAMESTATE_PAUSED
-            self.selectedMenu = MENU_PAUSE
+            self.parent.startMission(self.parent.missionList[state - 200])
         
         self.menuList[self.selectedMenu].set_alignment('center', 'center')
         self.menuList[self.selectedMenu].set_center(True, True)  
