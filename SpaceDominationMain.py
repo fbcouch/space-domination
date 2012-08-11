@@ -33,6 +33,10 @@ import random
 import sys
 
 VERSION = "0.2"
+SPLASH_TIME = 5000
+STATE_LOSE_FOCUS = 2
+STATE_GAIN_FOCUS = 6
+
 
 class SpaceDominationMain():
     '''
@@ -139,6 +143,17 @@ class SpaceDominationMain():
         self.showSplash()
         splashTime = pygame.time.get_ticks()
         
+        # show the splash for up to 5 seconds or until a key is pressed
+        event = None
+        keypress = False
+        while (not keypress) and pygame.time.get_ticks() < splashTime + SPLASH_TIME:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    keypress = True
+        
+        # remove the splash screen
+        self.removeSplash()
+        
         # load the mission list
         self.missionList = self.loadMissionList()
         
@@ -163,9 +178,7 @@ class SpaceDominationMain():
         # load the HUD
         self.HUD = HUD()
         
-        # allow the splash to show for no less than 5 seconds, but any time between here and there counts
-        pygame.time.wait(5000 - pygame.time.get_ticks() - splashTime)
-        self.removeSplash()
+        
         
         self.gameState = SpaceDominationMain.GAMESTATE_NONE
         self.menuBackground = load_image("background.PNG")[0]
@@ -189,8 +202,7 @@ class SpaceDominationMain():
                         if self.menuManager.selectedMenu == -1 and self.gameState == self.GAMESTATE_PAUSED: self.gameState = self.GAMESTATE_RUNNING
                     elif event.key == K_ESCAPE:
                         if self.gameState == self.GAMESTATE_RUNNING:
-                            self.gameState = self.GAMESTATE_PAUSED
-                            self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
+                            self.pause_game()
                     # movement
                     elif event.key == K_UP:
                         self.setKey("accel", 1)
@@ -220,6 +232,12 @@ class SpaceDominationMain():
                         self.setKey("turnRight", 0)
                     elif event.key == K_SPACE:
                         self.setKey("fire",0)
+                
+                elif event.type == pygame.ACTIVEEVENT:
+                    if event.state == STATE_LOSE_FOCUS:
+                        if self.gameState == self.GAMESTATE_RUNNING:
+                            self.pause_game()
+                        
                         
                 elif self.menuManager.is_active() and (event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP):
                     if self.menuManager.is_active():
@@ -243,12 +261,16 @@ class SpaceDominationMain():
             # game loop
             self.gameLoop()
             if self.gameState == self.GAMESTATE_NONE:
-                drawSurf = pygame.transform.scale(self.menuBackground, self.screen.get_size())
-                self.screen.blit(drawSurf, (0,0))
+                #drawSurf = pygame.transform.scale(self.menuBackground, self.screen.get_size())
+                self.screen.blit(self.menuBackground, ((self.screen.get_width() - self.menuBackground.get_width()) * 0.5, (self.screen.get_height() - self.menuBackground.get_height()) * 0.5))
             if self.menuManager.is_active(): self.menuManager.draw()
             pygame.display.flip()
         
         return
+    
+    def pause_game(self):
+        self.gameState = self.GAMESTATE_PAUSED
+        self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
     
     def setKey(self, key, val): self.keys[key] = val
         

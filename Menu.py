@@ -313,12 +313,12 @@ class Menu(object):
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 for button in self.button_list:
-                    if button['collide-rect'].collidepoint(event.pos):
+                    if button.attrs['collide-rect'].collidepoint(event.pos):
                         self.selected_btn = button
             print "MOUSEBUTTONDOWN: (btn %s, pos %s)" % (event.button, event.pos)
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
-                if self.selected_btn['collide-rect'].collidepoint(event.pos):
+                if self.selected_btn.attrs['collide-rect'].collidepoint(event.pos):
                     state = self.selected_btn.attrs['state']
             print "MOUSEBUTTONUP: (btn %s, pos %s)" % (event.button, event.pos)
         elif event.type == EVENT_CHANGE_STATE:

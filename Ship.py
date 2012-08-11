@@ -6,7 +6,7 @@ Created on May 10, 2012
 
 
 from Bullet import Bullet
-from Particle import Particle
+from Particle import Particle, GlowParticle
 from PhysicsEntity import PhysicsEntity
 from Utils import load_sprite_sheet, load_image
 from Vec2 import Vec2
@@ -223,7 +223,9 @@ class Ship(PhysicsEntity):
         
         if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0):
             for ep in self.engine_points:
-                engine_glow = Particle(load_sprite_sheet('engine1_10.png', 10, 10, colorkey = -1), interval = 2)
+                #engine_glow = Particle(load_sprite_sheet('glowengine1_10.png', 10, 10, colorkey = -1), interval = 1)
+                engine_glow = GlowParticle('circle', 10, (250, 100, 0), 100, interval = 2)
+                
                 offset = Vec2(0,0)
                 offset.setXY(ep[0] - 0.5 * self.original.get_rect().width, ep[1] - 0.5 * self.original.get_rect().height)
                 offset.theta += self.rotation
@@ -232,7 +234,7 @@ class Ship(PhysicsEntity):
                 engine_glow.set_rotation(self.rotation)
                 context.foregroundSpriteGroup.add(engine_glow)
         
-        if self.removeSelf or self.health <= 0: # TODO implement explosions
+        if self.removeSelf or self.health <= 0:
             explosion = Particle(load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1), target = self)
             context.foregroundSpriteGroup.add(explosion)
             self.remove(context)
