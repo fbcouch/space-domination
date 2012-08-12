@@ -13,11 +13,12 @@
 		<point id="4" x="347" y="55" rot="270.0" />
 		<point id="5" x="185" y="70" rot="270.0" />
 		
-		<trigger id="2" type="objective-primary" condition="destroy-attached" display-text="Take down the space station." />
+		<trigger id="2" type="objective-primary" condition="destroy-attached" display-text="Take down the space station." message-title="Trainer" message-body="Woohoo! Nice job, kid! Look's like you're ready for some real action." />
 	</enemy>
 	
 	<enemy id="3" x="1500" y="600" rot="180.0" tag="sec" />
 	<enemy id="3" x="1300" y="800" rot="90.0" tag="sec" />
 	
-	<trigger id="3" type="objective-secondary" condition="destroy-attached" display-test="Kill the enemy fighters." />
+	<trigger id="3" type="objective-secondary" condition="destroy-class" tag="sec" display-text="Kill the enemy fighters." />
+	<trigger id="4" condition="mission-start" message-title="Trainer" message-body="There's an outpost near here that those scouts came from. If we move quickly, they will be caught unaware. Find it, and take it down!" />
 </mission>

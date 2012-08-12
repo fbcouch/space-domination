@@ -15,11 +15,11 @@ Release 2 (Ver 0.2):
 Release 3 (Ver 0.3):
 - Pilot system
 - Ship selection
+- Campaign system
+- custom hotkeys
 
 Release 4 (Ver 0.4):
-- Create at least 1 campaign
 - Upgrades/ship customization
-- Allow changing of graphics/resolution settings
 
 Release 5 (Ver 0.5):
 - Mission Editor

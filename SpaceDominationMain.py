@@ -8,7 +8,6 @@ Space Domination
 Coded by Jami Couch of PixelNetworks.com
 
 Code and assets released under GPL3.0
-Special thanks to Aaron Clifford of EgoAnt.com who produced some of the ship sprites used here.
 '''
 
 from AIShip import AIShip, StationShip
@@ -38,7 +37,8 @@ VERSION = "0.2"
 SPLASH_TIME = 2000
 STATE_LOSE_FOCUS = 2
 STATE_GAIN_FOCUS = 6
-
+MIN_WINDOW_WIDTH = 1024
+MIN_WINDOW_HEIGHT = 768
 
 class SpaceDominationMain():
     '''
@@ -310,22 +310,26 @@ class SpaceDominationMain():
                 tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
                 tp.weapons.append(0)
                 tempShip = PlayerShip(proto = self.shipList[0], context = self )
+                tempShip.team = spawn.team
                 self.playerShip = tempShip
                 self.linkTriggers(spawn, tempShip)
             else:
                 if spawn.id >= 0 and spawn.id < len(self.shipList):
                     tempShip = AIShip(spawn.x, spawn.y, spawn.r, proto = self.shipList[spawn.id], context = self)
+                    tempShip.team = spawn.team
                     
                     self.linkTriggers(spawn, tempShip)
                 elif spawn.id == -1:
                     tempShip = StationShip(spawn.x, spawn.y, spawn.r, proto = spawn.proto, context = self)
+                    tempShip.team = spawn.team
                     for pt in spawn.hard_points:
                         if pt.id >= 0 and pt.id < len(self.shipList):
-                            hpt = AIShip(spawn.x + pt.x, spawn.y + pt.y, spawn.r + pt.r, proto = self.shipList[pt.id], parent = tempShip, context = self)         
+                            hpt = AIShip(spawn.x + pt.x, spawn.y + pt.y, spawn.r + pt.r, proto = self.shipList[pt.id], parent = tempShip, context = self)    
+                            hpt.team = tempShip.team     
                             tempShip.hard_points.append(hpt)
                     
                     self.linkTriggers(spawn, tempShip)
-                
+            
             self.shipSpriteGroup.add(tempShip)
             self.foregroundSpriteGroup.add(tempShip.hard_points)
             self.physics.addChild(tempShip)
@@ -485,16 +489,17 @@ class SpaceDominationMain():
         return True
     
     def createDisplay(self):
+        '''creates a display from the current profile settings'''
         try:
-            if 'width' in self.currentProfile:
+            if 'width' in self.currentProfile and int(self.currentProfile['width']) >= MIN_WINDOW_WIDTH:
                 self.currentProfile['width'] = int(self.currentProfile['width'])
             else:
-                self.currentProfile['width'] = 1024
+                self.currentProfile['width'] = MIN_WINDOW_WIDTH
             
-            if 'height' in self.currentProfile:
+            if 'height' in self.currentProfile and int(self.currentProfile['height']) >= MIN_WINDOW_HEIGHT:
                 self.currentProfile['height'] = int(self.currentProfile['height'])
             else:
-                self.currentProfile['height'] = 768
+                self.currentProfile['height'] = MIN_WINDOW_HEIGHT
                 
             self.window = pygame.display.set_mode((self.currentProfile['width'],self.currentProfile['height']))
         except ValueError, msg:

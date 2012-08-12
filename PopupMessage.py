@@ -6,10 +6,14 @@ Created on Jul 16, 2012
 import Utils
 import pygame
 
+
+
 class PopupMessage(object):
     '''
     classdocs
     '''
+    DEFAULT_DURATION = 600
+    
     icon = None
     title = ""
     body = ""
@@ -20,7 +24,7 @@ class PopupMessage(object):
     
     surface = None
 
-    def __init__(self, title, body, duration, icon = None, font = None):
+    def __init__(self, title, body, duration, width, icon = None, font = None):
         '''
         Constructor
         '''
@@ -33,7 +37,10 @@ class PopupMessage(object):
             self.font = pygame.font.Font(None, 20)
             
         titleSurface = self.font.render(self.title, 1, (204, 204, 204))
-        self.body = Utils.parse(body, 396, self.font)
+        if self.icon:
+            self.body = Utils.parse(body, width - self.icon.get_width, self.font)
+        else:
+            self.body = Utils.parse(body, width, self.font)
         bodySurfaces = []
         maxWidth = titleSurface.get_width()
         for str in self.body:

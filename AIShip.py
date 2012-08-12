@@ -4,33 +4,76 @@ Created on Jul 4, 2012
 @author: Jami
 '''
 from Bullet import Bullet
+from PhysicsEntity import PhysicsEntity
 from Ship import Ship, PShip
 from Vec2 import Vec2
 import math
 import pygame
 import random
 
+DIFFICULTY_HARD = 0
+DIFFICULTY_NORMAL = 1
+DIFFICULTY_EASY = 2
+COLLIDE_MULTIPLIER = 10
+DEFAULT_AREA_SIZE = 500
+
 class AIShip(Ship):
     home_position = None
     waypoint = None
-    area_size = 250
+    area_size = DEFAULT_AREA_SIZE
+    max_facing_angle = 5
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(AIShip,self).__init__(x, y, r, proto, parent, context)
+        
         self.home_position = (x, y)
+        
+        if len(self.weapons) > 0 and self.selected_weapon < len(self.weapons):
+            self.area_size = self.weapons[self.selected_weapon].bullet_speed * self.weapons[self.selected_weapon].bullet_ticks
         self.waypoint = self.update_waypoint()
         
     def update(self, context = None):
         super(AIShip, self).update(context)
         
-        if context and self.distance_to_sq(context.playerShip.rect) < self.area_size * self.area_size:
+        if self.collide_risk(context.shipSpriteGroup):
+            self.update_waypoint()
+        elif context and len(self.weapons) > 0 and self.distance_to_sq(context.playerShip.rect) < self.area_size * self.area_size:
             # we are near the target - face & attack it!
-            self.face_target(context.playerShip.rect.center)
+            target = context.playerShip.rect.center
+            # adjust for the velocity of the target and the distance to it
+            dist = math.sqrt(self.distance_to_sq(context.playerShip.rect))
+            time = float(dist) / float(self.weapons[self.selected_weapon].bullet_speed)
+            target = (target[0] + context.playerShip.velocity[0] * time, target[1] + context.playerShip.velocity[1])
             
-            # accelerate toward target
-            self.accelerate(self.speed * 0.25)
-                        
-            bullet = self.fire_weapon(context.timeTotal)
+            # TODO next add a bit of noise to account for difficulty
+            
+            angle = self.face_target(target)
+            
+            bullet = None
+            
+            # don't fire unless we're facing the target
+            if math.fabs(angle) < self.max_facing_angle: 
+                # test whether an ally is within the line of fire
+                vel = Vec2(self.weapons[self.selected_weapon].bullet_speed, self.rotation)
+                
+                can_fire = True
+                for ship in context.shipSpriteGroup:
+                    # create a small rect to calculate the bullet trajectory
+                    test_bullet = PhysicsEntity()
+                    test_bullet.rect = pygame.rect.Rect(self.rect.center[0], self.rect.center[1], 1, 1)
+                    test_bullet.velocity = vel.getXY()
+                    
+                    if ship is self or ship is self.parent:
+                        # we don't care if the bullet intersects with self or parent
+                        continue
+                    if not ship.team == self.team:
+                        # we don't mind hitting an enemy
+                        continue
+                    if test_bullet.will_collide(ship, self.weapons[self.selected_weapon].bullet_ticks):
+                        # we would hit a friendly...
+                        can_fire = False
+                if can_fire:
+                    bullet = self.fire_weapon(context.timeTotal)
                 
             if bullet:
                 for bt in bullet:
@@ -44,8 +87,8 @@ class AIShip(Ship):
             # we are not near the target (or didn't give a context)
             self.face_target(self.waypoint)
             
-            # accelerate toward target
-            self.accelerate(self.speed * 0.25)
+        # accelerate toward target
+        self.accelerate(self.speed * 0.25)
             
             
             
@@ -73,13 +116,25 @@ class AIShip(Ship):
 
     def distance_to_sq(self, targetRect = None):
         if targetRect:
-            dx = self.rect.left - targetRect.left
-            dy = self.rect.top - targetRect.top
+            dx = self.rect.center[0] - targetRect.center[0]
+            dy = self.rect.center[1] - targetRect.center[1]
             return dx*dx + dy*dy
         return -1
             
     def update_waypoint(self):
         return (self.home_position[0] + random.randint(-1 * self.area_size, self.area_size), self.home_position[1] + random.randint(-1 * self.area_size, self.area_size))
+        
+    def collide_risk(self, shiplist):
+        '''checks if the ship is in danger of colliding with anybody in rectlist'''
+        for ship in shiplist:
+            if ship is self:
+                continue
+            if self.distance_to_sq(ship.rect) < self.max_vel_sq * COLLIDE_MULTIPLIER * COLLIDE_MULTIPLIER:
+                if self.will_collide(ship, COLLIDE_MULTIPLIER):
+                    return True
+        
+        # no collision risks, return false
+        return False
 
 class StationShip(AIShip):
     
@@ -125,23 +180,11 @@ class StationShip(AIShip):
                 # if it's a bullet, it has "ticks_remaining"
                 ticks = physicsEntity.ticks_remaining
             else:
-                ticks = -1
+                ticks = int(math.sqrt(self.rect.width * self.rect.width + self.rect.height * self.rect.height) / math.sqrt(physicsEntity.get_vel_sq())) + 1
             
-            
-            
-            orig_rect = physicsEntity.rect.copy()
-            
-            while self.rect.colliderect(physicsEntity.rect) and (ticks == -1 or ticks > 0):
-                for hp in self.hard_points:
-                    if hp.rect.colliderect(physicsEntity.rect):
-                        if pygame.sprite.collide_mask(hp, physicsEntity):
-                            physicsEntity.rect = orig_rect
-                            return False # it's going to hit a hard_point, so don't collide yet
-                ticks -= 1
-                physicsEntity.rect.left += physicsEntity.velocity[0]
-                physicsEntity.rect.top += physicsEntity.velocity[1]
-                
-            physicsEntity.rect = orig_rect
+            for hp in self.hard_points:
+                if physicsEntity.will_collide(hp, ticks):
+                    return False
             return True
         
     def collide(self, physicsEntity = None, context = None):

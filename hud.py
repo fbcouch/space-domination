@@ -27,7 +27,7 @@ class HUD(object):
     def update(self):
         pass
     
-    def draw(self, screen, context, render, font = None,):
+    def draw(self, screen, context, render, font = None):
         if not font: font = pygame.font.Font(None, 20)
         
         if context:

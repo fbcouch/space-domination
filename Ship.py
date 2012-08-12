@@ -32,6 +32,7 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     speed = 10
     turn = 1
     armor = 0
+    team = -1
     
     engine_points = None
     
@@ -43,6 +44,9 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
         self.weapons = []
 
 class Ship(PhysicsEntity):
+    TEAM_DEFAULT_FRIENDLY = 0
+    TEAM_DEFAULT_ENEMY = 1
+    
     id = 0
     name = "<Undefined>"
     file = "1st_pixel_spaceship.png"
@@ -55,6 +59,7 @@ class Ship(PhysicsEntity):
     armor = 0
     max_health = 0
     max_shields = 0
+    team = TEAM_DEFAULT_ENEMY
     
     tag = ""
     
@@ -82,6 +87,7 @@ class Ship(PhysicsEntity):
         
         self.hard_points = []
         
+        
     def constructFromProto(self, proto = PShip(), context = None):
         if proto is None: return
         self.id = proto.id
@@ -98,7 +104,7 @@ class Ship(PhysicsEntity):
         self.armor = proto.armor
         self.max_health = self.health
         self.max_shields = self.shields
-        
+        self.team = proto.team
         
         if not proto.image:
             try:
@@ -122,7 +128,8 @@ class Ship(PhysicsEntity):
                 
         if proto.engine_points:
             self.engine_points = Utils.parse_pointlist(proto.engine_points)
-        
+            
+
     '''
     fire_weapon(self, time): fires the currently selected weapon, if possible
     '''    

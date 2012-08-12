@@ -4,8 +4,8 @@ Space Domination
 	+ basic menu functionality:
 		+ Start implementing menus								1
 		+ select mission from menus								1
-	- advanced menu functionality:
-		- implement scrolling or pages for mission menu			2				*****
+	+ advanced menu functionality:
+		+ implement scrolling or pages for mission menu			2
 		+ implement options										2
 	
 - Missions
@@ -13,7 +13,7 @@ Space Domination
 	+ build loaded mission										1
 	+ load mission list from xml file							1
 	+ implement basic triggers									1
-	- implement advanced triggers								2				*****
+	- implement advanced triggers								ongoing
 - Gameplay
 	+ basic player controls										1
 	+ basic physics												1
@@ -22,7 +22,7 @@ Space Domination
 		+ ships & bullets load particles on death				1
 		+ engine glow as particles?								1					
 		+ shield hits as particles								1					
-	- advanced controls										  	2				
+	+ advanced controls										  	2				
 		+ weapon swapping										2
 	+ fix braking/accel issues									1
 	+ still have some funny business with vector calculations, 
@@ -31,7 +31,7 @@ Space Domination
 	+ basic AIShip class										1
 	+ AIShip follows player & attacks when in range				1					
 	+ AIShip patrols its area									1					
-	- More advanced AI											2				*****
+	+ More advanced AI											2
 - Ships
 	+ basic Ship class											1
 	+ basic PlayerShip class									1

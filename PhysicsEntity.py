@@ -25,6 +25,8 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     def __init__(self):
         super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
+        self.image = None
+        self.rect = None
         self.original = None
         
     def accelerate(self, mag = 0):
@@ -85,3 +87,36 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     def can_collide(self, physicsEntity):
         return not self is physicsEntity.parent
+    
+    def will_collide(self, physicsEntity, ticks):
+        '''determine if this entity will collide with physicsEntity within the given number of ticks'''
+        
+        # determine if we may collide
+        n = 0
+        test_rect_self = self.rect.copy()
+        test_rect_other = physicsEntity.rect.copy()
+        while n <= ticks:
+            
+            if test_rect_self.colliderect(test_rect_other):
+                self_rect_save = self.rect.copy()
+                self.rect = test_rect_self
+                other_rect_save = physicsEntity.rect.copy()
+                physicsEntity.rect = test_rect_other
+                
+                if not self.image or not physicsEntity.image:
+                    collide = True
+                else:
+                    collide = pygame.sprite.collide_mask(self, physicsEntity)
+                
+                self.rect = self_rect_save
+                physicsEntity.rect = other_rect_save
+                
+                if collide:
+                    return True
+            
+            test_rect_self.left += self.velocity[0]
+            test_rect_self.top += self.velocity[1]
+            
+            test_rect_other.left += physicsEntity.velocity[0]
+            test_rect_other.top += physicsEntity.velocity[1]
+            n += 1

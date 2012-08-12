@@ -73,7 +73,7 @@ class Trigger(object):
         if not completed and self.completed and context:
             if self.message_title and self.message_body:
                 # display a message
-                context.messageList.append(PopupMessage(self.message_title, self.message_body, 600, self.message_icon_image))
+                context.messageList.append(PopupMessage(self.message_title, self.message_body, PopupMessage.DEFAULT_DURATION, context.screen.get_width(), self.message_icon_image))
                 
                 
     def get_attached(self, shiplist):

@@ -4,7 +4,7 @@ Created on May 5, 2012
 @author: Jami
 '''
 
-from Ship import PShip
+from Ship import PShip, Ship
 from Trigger import CreateTrigger, Trigger
 from Utils import load_image
 from xml.sax import saxutils, handler, make_parser
@@ -127,6 +127,7 @@ class MissionXMLParser(handler.ContentHandler):
             newSpawn = self.spawn_from_attrs(attrs)
             
             newSpawn.type = 'player'
+            newSpawn.team = Ship.TEAM_DEFAULT_FRIENDLY
             newSpawn.id = -1
             self.loadedMission.spawnList.append(newSpawn)
             
@@ -134,6 +135,7 @@ class MissionXMLParser(handler.ContentHandler):
         elif name == "enemy":
             newSpawn = self.spawn_from_attrs(attrs)
             newSpawn.type = 'enemy'
+            newSpawn.team = Ship.TEAM_DEFAULT_ENEMY
             
             self.loadedMission.spawnList.append(newSpawn)
             
