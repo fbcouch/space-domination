@@ -266,6 +266,7 @@ class Menu(object):
                     x += col_widths[col] + self.h_pad
                     col += 1
                     col_widths.append(0)
+                    y = 0
 
                 y += button['unselected-image'].get_height()
                 if row > 0: y += self.v_pad
@@ -287,6 +288,7 @@ class Menu(object):
                     y += row_heights[row] + self.v_pad
                     row += 1
                     row_heights.append(0)
+                    x = 0
                 
                 x += button['unselected-image'].get_width()
                 if col > 0: x += self.h_pad
@@ -310,12 +312,18 @@ class Menu(object):
         else:
             y += row_heights[row]
         
+        x = -1 * self.h_pad
+        for c in col_widths:
+            x += c + self.h_pad
         bounding_rect.width = x
+        y = -1 * self.v_pad
+        for r in row_heights:
+            y += r + self.v_pad
         bounding_rect.height = y
-        
         
         row = 0
         col = 0
+        
         if self.centered_on_screen:
             x = (self.draw_surface.get_width() - bounding_rect.width) * 0.5
             y = (self.draw_surface.get_height() - bounding_rect.height) * 0.5
@@ -324,12 +332,15 @@ class Menu(object):
             y = self.y_offset
         bounding_rect.left = x
         bounding_rect.top = y
+        x_start = x
+        y_start = y
         for button in self.button_list:
             if self.orientation == 'vertical':
                 if row >= self.num_per_rowcol:
                     row = 0
                     x += col_widths[col] + self.h_pad
                     col += 1
+                    y = y_start
                 
                 button.draw(self.draw_surface, x, y, col_widths[col], row_heights[row], self.centered, button is self.selected_btn)
                 
@@ -341,13 +352,15 @@ class Menu(object):
                     col = 0
                     y += row_heights[row] + self.v_pad
                     row += 1
+                    x = x_start
                 
                 button.draw(self.draw_surface, x, y, col_widths[col], row_heights[row], self.centered, button is self.selected_btn)
                 
                 x += button.attrs['unselected-image'].get_width() + self.h_pad
                 col += 1
+                
+        return bounding_rect
         
-        #pygame.gfxdraw.rectangle(self.draw_surface, bounding_rect, (255,255,255))
     
     def draw_button(self, button, x, y, width, height):
         draw_x = x
@@ -406,6 +419,9 @@ class Menu(object):
             elif event.key == pygame.K_RETURN:
                 state = self.selected_btn.attrs['state']
                 self.selected_btn.on_click()
+            
+            elif event.key == pygame.K_ESCAPE:
+                state = MENU_MAIN
                 
             else:
                 self.selected_btn.on_keypress(event.key, event.mod)
@@ -443,8 +459,68 @@ class Menu(object):
         if v_align in ['top', 'center', 'bottom']:
             self.v_align = v_align
 
+class PagedMenu(Menu):
+    '''this menu will be a horizontal layout with an up and down arrow to change pages when the number of items > num_per_rowcol'''
+    full_button_list = None
+    dot_size = 10
     
-    
+    def __init__(self, x_offset = 0, y_offset = 0, h_pad = 0, v_pad = 0, number = 10, background = None, button_list = None):
+        super(PagedMenu, self).__init__(x_offset, y_offset, h_pad, v_pad, 'horizontal', number, background, button_list)
+        self.full_button_list = []
+        for btn in self.button_list:
+            self.full_button_list.append(btn)
+        
+    def add_button(self, button):
+        super(PagedMenu, self).add_button(button)
+        self.full_button_list.append(self.button_list[len(self.button_list) - 1])
+        
+    def draw_buttons(self, draw_surface = None):
+        if not draw_surface:
+            draw_surface = self.draw_surface
+        else:
+            self.draw_surface = draw_surface
+        
+        # get the page based on the int val of selected index / num per rowcol
+        page = int(self.full_button_list.index(self.selected_btn) / self.num_per_rowcol)
+        max_page = int(len(self.full_button_list) / self.num_per_rowcol)
+        
+        # select the proper subset to draw
+        if page < max_page:
+            self.button_list = self.full_button_list[int(page * self.num_per_rowcol):int((page + 1) * self.num_per_rowcol)]
+        if page == max_page:
+            self.button_list = self.full_button_list[int(page * self.num_per_rowcol):]
+        
+        # draw
+        menu_rect = super(PagedMenu, self).draw_buttons(draw_surface)
+        
+        # restore the button list
+        self.button_list = self.full_button_list
+        
+        # draw the page numbers
+        dots_width = -1 * self.dot_size
+        for p in range(0, max_page + 1):
+            dots_width += self.dot_size * 2
+        
+        dots_width = max_page * self.dot_size + (max_page + 1) * self.dot_size + 1
+        dots_surf = pygame.surface.Surface((dots_width, self.dot_size))
+        dots_surf.set_colorkey((0,0,0))
+        x = int(self.dot_size * 0.5)
+        for p in range(0, max_page + 1):
+            if p == page:
+                pygame.gfxdraw.filled_circle(dots_surf, x, int(self.dot_size * 0.5), int(self.dot_size * 0.5), self.selected_color)
+            else:
+                pygame.gfxdraw.filled_circle(dots_surf, x, int(self.dot_size * 0.5), int(self.dot_size * 0.5), self.unselected_color)
+            x += self.dot_size * 2
+            
+        if self.centered_on_screen:
+            draw_x = (draw_surface.get_width() - dots_width) * 0.5
+        else:
+            draw_x = self.x_offset
+        
+        draw_y = menu_rect.top + menu_rect.height + self.v_pad * 2
+        
+        self.draw_surface.blit(dots_surf, (draw_x, draw_y))
+        
 class MenuManager(object):
     menuList = None
     selectedMenu = 0 # default to no menu shown
@@ -480,7 +556,7 @@ class MenuManager(object):
                                  ('Options', MENU_OPTIONS, None),
                                  ('Exit', MENU_EXIT, None)]))
         # menu 3 = mission menu
-        menu = Menu(50, 50, 50, 5, 'horizontal', 4, screen, [])
+        menu = PagedMenu(50, 50, 50, 50, 4, screen, [])
         self.menuList.append(menu)
         for mission in self.parent.missionList:
             menu.add_button(MissionButton(self.parent, '', mission, mission[1], menu.font, menu.selected_color, menu.unselected_color))
