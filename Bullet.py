@@ -41,5 +41,6 @@ class Bullet(PhysicsEntity):
                 # sheild hit
                 explosion = Particle(load_sprite_sheet('shield_hit.png', 100, 100, colorkey = -1), target = self)
                 context.foregroundSpriteGroup.add(explosion)
-            
+            self.parent.stats['damage-dealt'] += self.damage
+            self.parent.stats['shots-hit'] += 1
             self.remove(context)

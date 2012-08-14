@@ -64,6 +64,7 @@ class Ship(PhysicsEntity):
     
     tag = ""
     
+    stats = None
     
     weapons = None
     selected_weapon = 0
@@ -82,6 +83,8 @@ class Ship(PhysicsEntity):
         self.original = self.image
         self.set_position(x,y)
         self.set_rotation(r)
+        self.stats = {'kills': 0, 'shots-fired': 0, 'shots-hit': 0, 'damage-dealt': 0, 'damage-taken': 0, 'damaged-by': {}}
+        
         
         #if not parent is None: parent.add(self)
         self.parent = parent
@@ -192,7 +195,12 @@ class Ship(PhysicsEntity):
                 bullet.damage = self.weapons[self.selected_weapon].base_damage
                 
                 n += 1
-                
+            
+            # increment the stats
+            if self.parent and self in self.parent.hard_points:
+                self.parent.stats['shots-fired'] += len(bullets)
+            else:
+                self.stats['shots-fired'] += len(bullets)
             return bullets         # return the bullet list
         return None
     
@@ -259,14 +267,33 @@ class Ship(PhysicsEntity):
         
         if self.parent:
             if self in self.parent.hard_points: self.parent.hard_points.remove(self)
+        else:
+            max_damager = None
+            for damager in self.stats['damaged-by'].keys():
+                if not max_damager or self.stats['damaged-by'][damager] > self.stats['damaged-by'][max_damager]:
+                    max_damager = damager
+                    
+            if max_damager:
+                max_damager.stats['kills'] += 1 
             
     def collide(self, physicsEntity = None, context = None):
         if physicsEntity: # decrement shields and health here
             if isinstance(physicsEntity, Bullet): # a bullet hit the ship
-                self.take_damage(physicsEntity.damage)
-            
+                damage = self.take_damage(physicsEntity.damage)
+                if physicsEntity.parent:
+                    if physicsEntity.parent in self.stats['damaged-by']:
+                        self.stats['damaged-by'][physicsEntity.parent] += damage
+                    else:
+                        self.stats['damaged-by'][physicsEntity.parent] = damage
             else: # something else hit the ship
-                self.take_damage(10)
+                damage = 10
+                self.take_damage(damage)
+                if isinstance(physicsEntity, Ship):
+                    if physicsEntity in self.stats['damaged-by']:
+                        self.stats['damaged-by'][physicsEntity] += damage
+                    else:
+                        self.stats['damaged-by'][physicsEntity] = damage
+            
                 
                     
     def take_damage(self, damage = 0):
@@ -275,6 +302,13 @@ class Ship(PhysicsEntity):
             self.health += self.shields
             self.shields = 0
         
+        if self.parent and self in self.parent.hard_points:
+            self.parent.stats['damage-taken'] += damage
+        else:
+            self.stats['damage-taken'] += damage
+            
+        return damage
+            
         #print "taking damage: " + str(damage) + ", health/shields: " + str(self.health) + "/" + str(self.shields)
 
         

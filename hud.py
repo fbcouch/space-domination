@@ -103,6 +103,15 @@ class HUD(object):
         # shields
         shieldtext = "Shield: %i/%i" % (int(ship.shields), int(ship.max_shields))
         
+        statstext = []
+        accuracy = 0.0
+        if ship.stats['shots-fired'] > 0:
+            accuracy = int(float(ship.stats['shots-hit'])/float(ship.stats['shots-fired']) * 1000) / 10.0
+        statstext.append("Accuracy: %i.%i (%i/%i)" % (int(accuracy), int((accuracy % 1) * 10), ship.stats['shots-hit'], ship.stats['shots-fired']))
+        statstext.append("Kills: %i" % ship.stats['kills'])
+        statstext.append("Damage dealt: %i" % ship.stats['damage-dealt'])
+        statstext.append("Damage taken: %i" % ship.stats['damage-taken'])
+        
         
         y = screen.get_height() - 150
         
@@ -123,6 +132,11 @@ class HUD(object):
             screen.blit(font.render(ammotext[n], 1, color), (screen.get_width() - font.size(ammotext[n])[0] - 10, y))
             y += font.size(ammotext[n])[1] + 2
             n += 1
+            
+        for text in statstext:
+            color = (0, 250, 0)
+            screen.blit(font.render(text, 1, color), (screen.get_width() - font.size(text)[0] - 10, y))
+            y += font.size(text)[1] + 2
         
     def mark_objectives(self, screen, triggers, rect, shiplist):
         '''draw little balls around the edge of the screen toward the offscreen objectives'''

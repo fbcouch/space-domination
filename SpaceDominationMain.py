@@ -401,6 +401,37 @@ class SpaceDominationMain():
                 # player ship died - game over :(
                 self.gameState = self.GAMESTATE_GAMEOVER
                 self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+            
+            if self.gameState == self.GAMESTATE_GAMEOVER:
+                # TODO the game is ending, save the profile stats
+                if not 'shots-fired' in self.currentProfile:
+                    self.currentProfile['shots-fired'] = 0
+                self.currentProfile['shots-fired'] += self.playerShip.stats['shots-fired']
+                
+                if not 'shots-hit' in self.currentProfile:
+                    self.currentProfile['shots-hit'] = 0
+                self.currentProfile['shots-hit'] += self.playerShip.stats['shots-hit']
+                
+                if not 'damage-dealt' in self.currentProfile:
+                    self.currentProfile['damage-dealt'] = 0
+                self.currentProfile['damage-dealt'] += self.playerShip.stats['damage-dealt']
+                
+                if not 'damage-taken' in self.currentProfile:
+                    self.currentProfile['damage-taken'] = 0
+                self.currentProfile['damage-taken'] += self.playerShip.stats['damage-taken']
+                
+                if not 'kills' in self.currentProfile:
+                    self.currentProfile['kills'] = 0
+                self.currentProfile['kills'] += self.playerShip.stats['kills']
+                
+                death = 0
+                if not self.playerShip in self.shipSpriteGroup:
+                    death = 1
+                if not 'deaths' in self.currentProfile:
+                    self.currentProfile['deaths'] = 0
+                self.currentProfile['deaths'] = death
+                
+                self.saveProfiles()
         
         elif self.gameState == self.GAMESTATE_GAMEOVER:
             for sprite in self.foregroundSpriteGroup:

@@ -13,8 +13,8 @@ Space Domination
 		+ create profiles.xml									3
 		- load "Pilots" from profiles.xml						3
 		- create/select/remove pilots							3
-		- track pilot's ship									3
-		- track stats											3
+		+ track pilot's ship									3
+		+ track stats											3
 	- Upgrades
 		- allow player to acquire better weapons, etc			4
 	- Campaign missions											4
