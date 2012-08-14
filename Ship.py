@@ -33,6 +33,7 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     turn = 1
     armor = 0
     team = -1
+    player_flyable = False
     
     engine_points = None
     
@@ -309,6 +310,7 @@ class ShipListXMLParser(handler.ContentHandler):
             self.ship.turn = int(attrs.get('turn', 5))
             self.ship.armor = int(attrs.get('armor', 0))
             self.ship.engine_points = attrs.get('engines', '')
+            self.ship.player_flyable = attrs.get('flyable', False)
             
             self.ship.file = attrs.get('file','')
             

@@ -15,14 +15,15 @@ Release 2 (Ver 0.2):
 Release 3 (Ver 0.3):
 - Pilot system
 - Ship selection
-- Campaign system
 - custom hotkeys
 
 Release 4 (Ver 0.4):
 - Upgrades/ship customization
+- Campaign system
 
 Release 5 (Ver 0.5):
 - Mission Editor
 
 Release 6 and following (Ver 0.6+):
+- Co-op mode
 - Content

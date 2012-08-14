@@ -5,6 +5,7 @@ Created on Jun 13, 2012
 '''
 from pygame.locals import *
 from simplemenuclass.menu import cMenu, EVENT_CHANGE_STATE
+import Utils
 import math
 import os
 import pygame
@@ -15,6 +16,7 @@ MENU_MAIN = 0 # 0-99 reserved for menu pages
 MENU_OPTIONS = 1
 MENU_PAUSE = 2
 MENU_MISSION_SELECT = 3
+MENU_SHIP_SELECT = 4
 MENU_EXIT = 100 # 100-199 reserved for actions
 MENU_RESUME = 101
 MENU_MISSION = 200 # missions will start with 2xx with xx being mission ID
@@ -127,6 +129,20 @@ class MissionButton(Button):
     def on_click(self):
         self.mission_start(self.mission)
         return self.attrs['state']
+    
+class ShipButton(Button):
+    '''special button for selecting ships'''
+    ship = None
+    context = None
+    
+    def __init__(self, context, text, state, ship, image, font = None, selected_color = None, unselected_color = None):
+        super(ShipButton, self).__init__(text, state, image, font, selected_color, unselected_color)
+        self.ship = ship
+        self.context = context
+    
+    def on_click(self):
+        self.context.currentProfile['ship'] = self.ship.id
+        return self.attrs['state']
 
 class SaveButton(Button):
     '''this button calls "on_click" for all other items in the parent before its own'''
@@ -234,11 +250,14 @@ class Menu(object):
             self.add_button(button)
             
         if len(self.button_list) > 0:
-            selected_btn = self.button_list[0]
+            self.selected_btn = self.button_list[0]
     
     def add_button(self, button):
         if isinstance(button, Button): self.button_list.append(button)
         else: self.button_list.append(Button(button[0], button[1], button[2], self.font, self.selected_color, self.unselected_color))
+        
+        if not self.selected_btn:
+            self.selected_btn = self.button_list[len(self.button_list) - 1]
         
     def redraw_all(self):
         pass
@@ -442,9 +461,9 @@ class Menu(object):
                     state = self.selected_btn.attrs['state']
                     self.selected_btn.on_click()
             #print "MOUSEBUTTONUP: (btn %s, pos %s)" % (event.button, event.pos)
-        elif event.type == EVENT_CHANGE_STATE:
-            if len(self.button_list) > 0:
-                self.selected_btn = self.button_list[0]
+        #elif event.type == EVENT_CHANGE_STATE:
+        #    if len(self.button_list) > 0:
+        #        self.selected_btn = self.button_list[0]
         
         
         return state
@@ -532,9 +551,6 @@ class MenuManager(object):
         self.screen = screen
         self.parent = parent
         
-        
-        
-        
         # menu 0 = main menu
         self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen,
                                    [('Select Mission', MENU_MISSION_SELECT, None),
@@ -547,6 +563,7 @@ class MenuManager(object):
         menu.add_button(TextInput('Callsign',self.parent.currentProfile['name'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, False, (self.parent.currentProfile, 'name')))
         menu.add_button(TextInput('Width',self.parent.currentProfile['width'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, True, (self.parent.currentProfile, 'width')))
         menu.add_button(TextInput('Height',self.parent.currentProfile['height'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, True, (self.parent.currentProfile, 'height')))
+        menu.add_button(('Select Ship...', MENU_SHIP_SELECT, None))
         menu.add_button(SaveButton(menu, 'Save', MENU_OPTIONS, None, menu.font, menu.selected_color, menu.unselected_color, self.parent.saveProfiles))
         menu.add_button(('Back', MENU_MAIN, None))
         
@@ -560,9 +577,18 @@ class MenuManager(object):
         self.menuList.append(menu)
         for mission in self.parent.missionList:
             menu.add_button(MissionButton(self.parent, '', mission, mission[1], menu.font, menu.selected_color, menu.unselected_color))
-            
-        return
-    
+        
+        # ship selector menu
+        menu = PagedMenu(50, 50, 50, 50, 4, screen, [])
+        self.menuList.append(menu)
+        for ship in self.parent.shipList:
+            if ship.player_flyable:
+                image, rect = Utils.load_image(ship.file, -1)
+                image = pygame.transform.rotate(image, 90)
+                menu.add_button(ShipButton(self.parent, '', MENU_OPTIONS, ship, image, menu.font, menu.selected_color, menu.unselected_color))
+                if 'ship' in self.parent.currentProfile and int(self.parent.currentProfile['ship']) == ship.id:
+                    menu.selected_btn = menu.button_list[len(menu.button_list) - 1]
+                
     def draw(self):
         self.menuList[self.selectedMenu].redraw_all()
         self.menuList[self.selectedMenu].draw_buttons()
@@ -585,6 +611,8 @@ class MenuManager(object):
             self.selectedMenu = MENU_OPTIONS
         elif(state == MENU_PAUSE):
             self.selectedMenu = MENU_PAUSE
+        elif (state == MENU_SHIP_SELECT):
+            self.selectedMenu = MENU_SHIP_SELECT
         elif(state == MENU_MISSION_SELECT):
             self.selectedMenu = MENU_MISSION_SELECT
         #elif(state >= MENU_MISSION):

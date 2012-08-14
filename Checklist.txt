@@ -1,57 +1,24 @@
 Space Domination
 																Target Release
-- Menus
-	+ basic menu functionality:
-		+ Start implementing menus								1
-		+ select mission from menus								1
-	+ advanced menu functionality:
-		+ implement scrolling or pages for mission menu			2
-		+ implement options										2
-	
-- Missions
-	+ load mission from xml file								1
-	+ build loaded mission										1
-	+ load mission list from xml file							1
-	+ implement basic triggers									1
-	- implement advanced triggers								ongoing
-- Gameplay
-	+ basic player controls										1
-	+ basic physics												1
-	- Particle system
-		+ basic "Particle" class								1
-		+ ships & bullets load particles on death				1
-		+ engine glow as particles?								1					
-		+ shield hits as particles								1					
-	+ advanced controls										  	2				
-		+ weapon swapping										2
-	+ fix braking/accel issues									1
-	+ still have some funny business with vector calculations, 
-		sometimes while turning									1					
-- AI
-	+ basic AIShip class										1
-	+ AIShip follows player & attacks when in range				1					
-	+ AIShip patrols its area									1					
-	+ More advanced AI											2
-- Ships
-	+ basic Ship class											1
-	+ basic PlayerShip class									1
-	+ load ships from xml file									1
-	- specify all needed ship attributes in xml file			ongoing
+
 - Weapons
 	+ basic Weapon class				
-		+ ammo decrements & creates bullets						1
-		+ implement ammo "regen"								1
+		- refactor fire weapon to the weapon class				3
+		
+- Options
+	- Custom hotkeys											3
+		
 - Persistence
 	- "Pilot" system
-		- create pilotdata.xml									3
-		- load "Pilots" from pilotdata.xml						3
-		- allow user to select pilot							3
+		+ create profiles.xml									3
+		- load "Pilots" from profiles.xml						3
+		- create/select/remove pilots							3
 		- track pilot's ship									3
 		- track stats											3
 	- Upgrades
 		- allow player to acquire better weapons, etc			4
 	- Campaign missions											4
-	- saved resolution/graphics settings						4
 	
-- Mission Editor												5
+- Campaign/Mission Editor										5
+- Cooperative Play												6
 - Content Releases												6+

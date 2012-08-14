@@ -21,12 +21,14 @@ from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
 from hud import HUD
+from profile import Profile
 from pygame.locals import *
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
 import Menu
 import Utils
 import os
+import profile
 import pygame
 import pygame.gfxdraw
 import random
@@ -145,16 +147,11 @@ class SpaceDominationMain():
         # load the mission list
         self.missionList = self.loadMissionList()
         
-        # load the menus
-        self.menuManager = MenuManager(self.screen, self)
-        
         # load weapons
         self.weaponList = WeaponListXMLParser().loadWeaponList()
         
-        
         # load ships
         self.shipList = ShipListXMLParser().loadShipList()
-        
         
         # initialize physics manager
         self.physics = Physics()
@@ -162,10 +159,11 @@ class SpaceDominationMain():
         # setup keymap
         self.keys = {"turnLeft" : 0, "turnRight" : 0, "accel" : 0, "brake" : 0, "fire" : 0, "alt-fire" : 0}
         
-        
         # load the HUD
         self.HUD = HUD()
         
+        # load the menus
+        self.menuManager = MenuManager(self.screen, self)
         
         
         self.gameState = SpaceDominationMain.GAMESTATE_NONE
@@ -306,10 +304,11 @@ class SpaceDominationMain():
         for spawn in mission.spawnList:
             
             if spawn.type == 'player': # this is the player ship
-                tp = PShip()
-                tp.file = "redfighter0jv.png" # todo - obviously we should load this in a player-specific manner
-                tp.weapons.append(0)
-                tempShip = PlayerShip(proto = self.shipList[0], context = self )
+                tp = self.shipList[0]
+                for proto in self.shipList:
+                    if 'ship' in self.currentProfile and proto.id == int(self.currentProfile['ship']):
+                        tp = proto
+                tempShip = PlayerShip(proto = tp, context = self)
                 tempShip.team = spawn.team
                 self.playerShip = tempShip
                 self.linkTriggers(spawn, tempShip)
@@ -579,13 +578,7 @@ class ProfileXMLParser(handler.ContentHandler):
             self.profileList = []
             self.defaultID = int(attrs.get('default',0))
         elif name == "profile":
-            keys = attrs.keys()
-            profile = {}
-            for key in keys:
-                profile[key] = attrs.get(key)
-            if int(profile['id']) == self.defaultID:
-                profile['active'] = True
-            self.profileList.append(profile)
+            self.profileList.append(profile.create_profile_from_attrs(attrs, self.defaultID))
     
     def endElement(self, name):
         pass

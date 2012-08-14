@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <profilelist default="0">
-	<profile width="1440" id="0" name="Jami" height="900"></profile>
+	<profile id="0" width="1440" ship="6" name="Jami" height="900"></profile>
 </profilelist>
