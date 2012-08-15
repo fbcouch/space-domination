@@ -3,6 +3,7 @@ Created on Jun 13, 2012
 
 @author: Jami
 '''
+from profile import Profile
 from pygame.locals import *
 from simplemenuclass.menu import cMenu, EVENT_CHANGE_STATE
 import Utils
@@ -17,6 +18,7 @@ MENU_OPTIONS = 1
 MENU_PAUSE = 2
 MENU_MISSION_SELECT = 3
 MENU_SHIP_SELECT = 4
+MENU_PROFILE = 5
 MENU_EXIT = 100 # 100-199 reserved for actions
 MENU_RESUME = 101
 MENU_MISSION = 200 # missions will start with 2xx with xx being mission ID
@@ -215,11 +217,11 @@ class Menu(object):
     button_list = None
     font = None
     
-    centered = False
-    centered_on_screen = False
+    centered = True
+    centered_on_screen = True
     
-    h_align = 'left'
-    v_align = 'top'
+    h_align = 'center'
+    v_align = 'center'
     
     selected_color = None
     unselected_color = None
@@ -233,7 +235,10 @@ class Menu(object):
         self.v_pad = v_pad
         self.orientation = orientation
         self.num_per_rowcol = number
-        self.background = background.copy()
+        if background:
+            self.background = background.copy()
+        else:
+            self.background = None
         self.draw_surface = background
         self.button_list = []
         
@@ -539,6 +544,151 @@ class PagedMenu(Menu):
         draw_y = menu_rect.top + menu_rect.height + self.v_pad * 2
         
         self.draw_surface.blit(dots_surf, (draw_x, draw_y))
+
+class ProfileMenu(Menu):
+    # contains the profile list from the parent
+    profile_list = None
+    # contains a reference to the save profiles function
+    profile_save = None
+    
+    # if this is set to a profile, we will draw the profile editing menu rather than the profile selection menu
+    edit_profile = None
+    
+    # if this is set, we will allow name entry only, then move to the edit menu
+    new_profile = None
+    
+    profile = None
+    
+    fonts = None
+    
+    def __init__(self, profile, profile_list, profile_save, draw_surface = None):
+        super(ProfileMenu, self).__init__()
+        
+        self.profile_list = profile_list
+        self.profile_save = profile_save
+        if not draw_surface:
+            draw_surface = pygame.display.get_surface()
+        self.draw_surface = draw_surface
+        self.profile = profile
+        
+        self.fonts = {}
+        self.fonts['small'] = pygame.font.Font(None, 16)
+        self.fonts['medium'] = pygame.font.Font(None, 20)
+        self.fonts['large'] = pygame.font.Font(None, 28)
+        
+        self.set_profile_select()
+        
+    def set_profile_select(self):
+        '''this class sets up the profile selection menu'''
+        self.button_list = []
+        for profile in self.profile_list:
+            button = Button(profile['name'], profile, None, self.font, self.selected_color, self.unselected_color)
+            self.button_list.append(button)
+            if len(self.button_list) == 1: self.selected_btn = self.button_list[0]
+            if profile is self.edit_profile or profile is self.new_profile:
+                self.selected_btn = button
+                self.edit_profile = None
+                self.new_profile = None
+        self.button_list.append(Button('New', Profile(), None, self.font, self.selected_color, self.unselected_color))
+        self.button_list.append(Button('Main Menu', MENU_MAIN, None, self.font, self.selected_color, self.unselected_color))
+        
+    def set_profile_edit(self):
+        '''this class sets up the profile edit menu'''
+        self.button_list = []
+        self.add_button(TextInput('Callsign',self.edit_profile['name'], 'none', self.font, self.selected_color, self.unselected_color, False, (self.edit_profile, 'name')))
+        self.add_button(TextInput('Width',self.edit_profile['width'], 'none', self.font, self.selected_color, self.unselected_color, True, (self.edit_profile, 'width')))
+        self.add_button(TextInput('Height',self.edit_profile['height'], 'none', self.font, self.selected_color, self.unselected_color, True, (self.edit_profile, 'height')))
+        self.add_button(('Select Ship...', MENU_SHIP_SELECT, None))
+        self.add_button(Button('Save', 'save', None, self.font, self.selected_color, self.unselected_color))
+        self.add_button(('Cancel', 'cancel', None))
+        self.selected_btn = self.button_list[0]
+    
+    def set_profile_new(self):
+        '''this class sets up the profile new menu'''
+        self.button_list = []
+        self.add_button(TextInput('Callsign', 'newbie', 'none', self.font, self.selected_color, self.unselected_color, False, (self.new_profile, 'name')))
+        self.add_button(Button('Save', 'save', None, self.font, self.selected_color, self.unselected_color))
+        self.add_button(('Cancel', 'cancel', None))
+        self.selected_btn = self.button_list[0]
+        
+    def update(self, event, state):
+        new_state = super(ProfileMenu, self).update(event, state)
+        
+        if isinstance(new_state, Profile):
+            if new_state in self.profile_list:
+                self.edit_profile = new_state
+                self.set_profile_edit()
+            else:
+                self.new_profile = new_state
+                id = -1
+                for pf in self.profile_list:
+                    if int(pf['id']) > id:
+                        id = int(pf['id'])
+                id += 1
+                self.new_profile['id'] = id
+                self.new_profile['height'] = pygame.display.get_surface().get_height()
+                self.new_profile['width'] = pygame.display.get_surface().get_width()
+                
+                self.set_profile_new()
+        elif new_state == 'save':
+            for btn in self.button_list:
+                if btn.attrs['state'] == 'save':
+                    break
+                btn.on_click()
+            
+            if self.new_profile:
+                self.profile_list.append(self.new_profile)
+                self.edit_profile = self.new_profile
+                self.new_profile = None
+                self.set_profile_edit()
+            else:
+                self.set_profile_select()
+            self.profile_save()
+        elif new_state == 'cancel':
+            self.set_profile_select()
+        elif new_state == 'none':
+            pass
+        else:
+            state = new_state
+        return state
+    
+    def draw_buttons(self, draw_surface = None):
+        if draw_surface:
+            self.draw_surface = draw_surface
+        
+        
+        image, draw_rect = Utils.load_image('profile-back.png', -1)
+        draw_rect.topleft = ((self.draw_surface.get_width() - draw_rect.width) * 0.5, (self.draw_surface.get_height() - draw_rect.height) * 0.5)
+        self.draw_surface.blit(image, draw_rect.topleft)
+        
+        self.draw_profile_info(self.draw_surface, (draw_rect.left + 50, draw_rect.top + 50))
+        
+        #super(ProfileMenu, self).draw_buttons(self.draw_surface)
+        
+    def draw_profile_info(self, draw_surface, position):
+        y = position[1]
+        text = []
+        text.append(('large', "Callsign: %s" % self.profile['name']))
+        if float(self.profile['shots-fired']) > 0:
+            accuracy = float(self.profile['shots-hit']) / float(self.profile['shots-fired']) * 100
+        else:
+            accuracy = 0.0
+        text.append(('medium', "Stats:"))
+        text.append(('small', "Shots fired: %i" % int(self.profile['shots-fired'])))
+        text.append(('small', "Shots hit: %i" % int(self.profile['shots-hit'])))
+        text.append(('small', "Accuracy: " + str(int(accuracy)) + "." + str(int((accuracy - int(accuracy)) * 10)) + "%"))
+        text.append(('small', "Kills: %i" % int(self.profile['kills'])))
+        text.append(('small', "Deaths: %i" % int(self.profile['deaths'])))
+        if int(self.profile['deaths']) > 0:
+            ratio = float(self.profile['kills']) / float(self.profile['deaths'])
+        else:
+            ratio = float(self.profile['kills'])
+        text.append(('small', "Ratio: " + str(int(ratio)) + "." + str(int((ratio - int(ratio)) * 10))))
+        
+        for t in text:
+            s = self.fonts[t[0]].render(t[1], 1, self.unselected_color)
+            self.draw_surface.blit(s, (position[0], y))
+            y += self.fonts[t[0]].size(t[1])[1] + 2
         
 class MenuManager(object):
     menuList = None
@@ -555,6 +705,7 @@ class MenuManager(object):
         self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen,
                                    [('Select Mission', MENU_MISSION_SELECT, None),
                                     ('Options', MENU_OPTIONS, None),
+                                    ('Profile', MENU_PROFILE, None),
                                     ('Exit', MENU_EXIT, None)]))
         
         # menu 1 = options menu
@@ -588,6 +739,9 @@ class MenuManager(object):
                 menu.add_button(ShipButton(self.parent, '', MENU_OPTIONS, ship, image, menu.font, menu.selected_color, menu.unselected_color))
                 if 'ship' in self.parent.currentProfile and int(self.parent.currentProfile['ship']) == ship.id:
                     menu.selected_btn = menu.button_list[len(menu.button_list) - 1]
+                    
+        menu = ProfileMenu(self.parent.currentProfile, self.parent.profiles, self.parent.saveProfiles)
+        self.menuList.append(menu)
                 
     def draw(self):
         self.menuList[self.selectedMenu].redraw_all()
@@ -607,20 +761,22 @@ class MenuManager(object):
             self.selectedMenu = -1
         elif(state == MENU_EXIT):
             sys.exit(0)
-        elif(state == MENU_OPTIONS):
+        else:
+            self.selectedMenu = state
+        '''elif(state == MENU_OPTIONS):
             self.selectedMenu = MENU_OPTIONS
         elif(state == MENU_PAUSE):
             self.selectedMenu = MENU_PAUSE
         elif (state == MENU_SHIP_SELECT):
             self.selectedMenu = MENU_SHIP_SELECT
         elif(state == MENU_MISSION_SELECT):
-            self.selectedMenu = MENU_MISSION_SELECT
+            self.selectedMenu = MENU_MISSION_SELECT'''
         #elif(state >= MENU_MISSION):
         #    # mission selected
         #    self.parent.startMission(self.parent.missionList[state - 200])
         
-        self.menuList[self.selectedMenu].set_alignment('center', 'center')
-        self.menuList[self.selectedMenu].set_center(True, True)  
+        #self.menuList[self.selectedMenu].set_alignment('center', 'center')
+        #self.menuList[self.selectedMenu].set_center(True, True)  
         self.menuList[self.selectedMenu].update(
                             pygame.event.Event(EVENT_CHANGE_STATE, key = 0),
                             self.selectedMenu)

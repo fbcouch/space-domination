@@ -11,7 +11,7 @@ Space Domination
 - Persistence
 	- "Pilot" system
 		+ create profiles.xml									3
-		- load "Pilots" from profiles.xml						3
+		+ load "Pilots" from profiles.xml						3
 		- create/select/remove pilots							3
 		+ track pilot's ship									3
 		+ track stats											3
