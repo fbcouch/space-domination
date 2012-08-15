@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<profilelist default="0">
-	<profile shots-hit="473" name="Jamia" kills="9" deaths="1" damage-dealt="3315" height="900" width="1440" damage-taken="585" ship="6" id="0" shots-fired="596"></profile>
-	<profile width="1440" id="1" name="testing1" height="900"></profile>
+<profilelist default="2">
+	<profile shots-hit="473" name="Jamia" kills="9" deaths="1" damage-dealt="3315" height="900" width="1440" ship="6" shots-fired="596" id="0" damage-taken="585"></profile>
+	<profile width="1440" height="900" id="1" name="testing1"></profile>
+	<profile id="2" width="1440" name="newbie" height="900"></profile>
 </profilelist>

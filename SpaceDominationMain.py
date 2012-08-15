@@ -543,7 +543,7 @@ class SpaceDominationMain():
         xml_file = open(filename, "w")
         xmlgen = XMLGenerator(xml_file, 'UTF-8')
         xmlgen.startDocument()
-        xmlgen.startElement('profilelist', {'default': self.currentProfile['id']})
+        xmlgen.startElement('profilelist', {'default': str(self.currentProfile['id'])})
         xml_file.write('\n')
         for profile in self.profiles:
             keys = {}
@@ -559,6 +559,12 @@ class SpaceDominationMain():
         xml_file.close()
         
         self.createDisplay()
+        
+    def setActiveProfile(self, profile):
+        if not profile in self.profiles:
+            self.profiles.append(profile)
+        
+        self.currentProfile = profile
         
 
 class OrderedUpdatesRect(pygame.sprite.OrderedUpdates):
