@@ -52,13 +52,15 @@ class PhysicsEntity(pygame.sprite.Sprite):
         # to brake, we are going to subtract mag from the velocity vector until it becomes 0
         mag = math.sqrt(self.get_vel_sq())
         if mag == 0: return
-        vec = Vec2(mag, math.degrees(math.asin(self.velocity[1] / mag)))
+        vec = Vec2(0,0)#Vec2(mag, math.degrees(math.asin(self.velocity[1] / mag)))
         vec.setXY(self.velocity[0],self.velocity[1])
         vec.magnitude -= brake
         if vec.magnitude < 0:
             self.velocity = (0,0)
         else:
             self.velocity = vec.getXY()
+            
+        
         
     def set_rotation(self, r=0):
         self.image = pygame.transform.rotate(self.original, r)

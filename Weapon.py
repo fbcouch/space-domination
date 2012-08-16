@@ -3,7 +3,9 @@ Created on Jul 4, 2012
 
 @author: Jami
 '''
+from Bullet import Bullet
 from Utils import *
+from Vec2 import Vec2
 from xml.sax import handler, make_parser
 import Utils
 
@@ -19,6 +21,7 @@ class Weapon(object):
     base_damage = 0
     bullet_ticks = 100
     bullet_speed = 20
+    type = "laser" # laser or missile
     
     fire_points = None
     
@@ -38,20 +41,81 @@ class Weapon(object):
             return True
         return False
     
+    def fire(self, time, parent, sprite, rotation, velocity):
+        '''fire the weapon if possible given (time)'''
+        weapon = self
+        bullets = []
+        if self.can_fire(time):
+            if weapon.fire_points and len(weapon.fire_points) > 0:
+                for point in weapon.fire_points:
+                    bullets.append(Bullet())
+            else:
+                bullets.append(Bullet())
+            #bullet = Bullet()
+            n = 0
+            for bullet in bullets:
+                if not weapon.image:
+                    bullet.image, bullet.rect = Utils.load_image(weapon.image, (255,255,255))
+                else:
+                    bullet.image = weapon.image
+                    bullet.rect = bullet.image.get_rect()
+                    
+                bullet.parent = parent
+                
+                if weapon.fire_points and len(weapon.fire_points) > n:
+                    # move the bullet to the specified point
+                    offset = Vec2(0,0)
+                    offset.setXY(weapon.fire_points[n][0] - sprite.original.get_rect().width * 0.5 + bullet.rect.width, weapon.fire_points[n][1] - sprite.original.get_rect().height * 0.5)
+                    offset.theta += rotation
+                    offset = offset.getXY()
+                    bullet.rect.center = sprite.rect.center
+                    bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
+                else:
+                    # move the bullet to the center-front of the ship
+                    bullet.rect.center = sprite.rect.left + sprite.rect.width * 0.5, sprite.rect.top + sprite.rect.height * 0.5
+                    offset = Vec2(sprite.rect.height * 0.5 + bullet.rect.width, rotation)
+                    offset = offset.getXY()
+                    bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
+                
+                bullet.original = bullet.image
+                bullet.set_rotation(rotation)
+                    
+                # match the bullet and ship velocities
+                if not self.type or self.type == 'laser':
+                    vel1 = Vec2(weapon.bullet_speed, rotation)
+                elif self.type == 'missile':
+                    # missiles start with just the ship velocity
+                    vel1 = Vec2(0,0)
+                    bullet.max_vel_sq = (weapon.bullet_speed) **2
+                    # also add some accel to the missile
+                    acc = Vec2(weapon.bullet_speed * 0.1, rotation)
+                    bullet.accel = acc.getXY()
+                    vel2 = Vec2(0,0)
+                    vel2.setXY(velocity[0], velocity[1])
+                    vel1 = vel1.add(vel2)
+                else:
+                    vel1 = Vec2(weapon.bullet_speed, rotation)
+                
+                bullet.velocity = vel1.getXY()#vel1.getXY()
+                
+                
+                
+            
+                # increment weapon stuff
+                weapon.cur_ammo -= 1
+                weapon.last_fire = time
+            
+                # set up the bullet lifetime info
+                bullet.ticks_remaining = weapon.bullet_ticks
+                bullet.damage = weapon.base_damage
+                bullet.type = weapon.type
+                
+                n += 1
+        return bullets
+    
     def set_points(self, pointlist):
         self.fire_points = Utils.parse_pointlist(pointlist)
-        ''''i = 0
-        while i < len(pointlist):
-            f = pointlist.find(";", i)
-            if f == -1:
-                f = len(pointlist)
-            # the next point is defined by [i:f]
-            point = pointlist[i:f]
-            c = point.find(",")
-            if c >= 1: 
-                # we have a valid point, grab everything before c as the "x" value and after as "y"
-                self.fire_points.append((int(point[:c]),int(point[c+1:])))
-            i = f + 1'''
+        
         
     def toXML(self):
         return ("<weapon id='" + str(self.id) + "' name='" + self.name + 
@@ -75,6 +139,7 @@ class Weapon(object):
         returnVal.bullet_speed = self.bullet_speed
         returnVal.image_file = self.image_file
         returnVal.image = self.image
+        returnVal.type = self.type
         return returnVal
     
 class WeaponListXMLParser(handler.ContentHandler):
@@ -104,7 +169,8 @@ class WeaponListXMLParser(handler.ContentHandler):
             weapon.fire_rate = int(attrs.get('rate', '2'))
             weapon.bullet_speed = float(attrs.get('speed', '6'))
             weapon.bullet_ticks = int(attrs.get('life', '10'))
-            weapon.name = attrs.get('name', 'Unnamed Weapon')           
+            weapon.name = attrs.get('name', 'Unnamed Weapon')   
+            weapon.type = attrs.get('type', 'laser')        
             
             weapon.image_file = attrs.get('file','')
             

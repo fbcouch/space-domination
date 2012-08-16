@@ -14,6 +14,7 @@ class Bullet(PhysicsEntity):
     parent = None
     ticks_remaining = 0
     damage = 0
+    type = "laser"
     
     def __init__(self):
         super(Bullet, self).__init__()
@@ -23,8 +24,14 @@ class Bullet(PhysicsEntity):
         
         self.ticks_remaining -= 1;
         
-        if (self.ticks_remaining <= 0 or self.removeSelf):
+        if self.removeSelf:
             self.remove(context)
+        if (self.ticks_remaining <= 0):
+            if self.type == 'missile':
+                self.brake(1)
+            else:
+                self.remove(context)
+                
         
     def remove(self, context = None):
         if(context):

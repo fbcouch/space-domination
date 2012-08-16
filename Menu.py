@@ -699,6 +699,10 @@ class ProfileMenu(Menu):
         if isinstance(new_state, Profile):
             if self.mode == 'select':
                 self.profile = new_state
+                self.profile_set(self.profile)
+                self.current_active = self.profile
+                self.profile_save()
+                
                 self.set_profile_view()
         elif new_state == 'save':
             for btn in self.button_list:
@@ -730,10 +734,7 @@ class ProfileMenu(Menu):
         elif new_state == 'view':
             self.set_profile_view()
         elif new_state == 'select':
-            self.profile_set(self.profile)
-            self.current_active = self.profile
             self.set_profile_select()
-            self.profile_save()
         elif new_state == 'cancel':
             if self.mode == 'ship-select':
                 self.set_profile_edit()
