@@ -101,10 +101,9 @@ class SpaceDominationMain():
         # before anything else, load the profiles
         self.profiles = ProfileXMLParser().loadProfiles(os.path.join('assets','profiles.xml'))
         for profile in self.profiles:
-            if profile['active']:
+            if 'active' in profile and profile['active']:
                 self.currentProfile = profile
                 break
-        
         #initialize managers
         pygame.init()
         random.seed()
@@ -287,8 +286,7 @@ class SpaceDominationMain():
     def startMission(self, mission):
         self.currentMission = self.loadMission(mission[0])
         self.buildMission(self.currentMission)
-        self.gameState = self.GAMESTATE_PAUSED
-        self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
+        self.pause_game()
     
     def buildMission(self, mission):
         #add the trigger list
@@ -611,7 +609,7 @@ class ProfileXMLParser(handler.ContentHandler):
         
     
     def startElement(self, name, attrs):
-        if name == "profiles":
+        if name == "profilelist":
             self.profileList = []
             self.defaultID = int(attrs.get('default',0))
         elif name == "profile":

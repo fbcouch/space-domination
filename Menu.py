@@ -12,6 +12,7 @@ import os
 import pygame
 import random
 import sys
+import traceback
 
 MENU_MAIN = 0 # 0-99 reserved for menu pages
 MENU_OPTIONS = 1
@@ -562,17 +563,24 @@ class ProfileMenu(Menu):
     
     fonts = None
     
-    def __init__(self, profile, profile_list, profile_save, profile_set, draw_surface = None):
+    ship_selector = None
+    
+    ticks = 0
+    
+    context = None
+    
+    def __init__(self, context, draw_surface = None):
         super(ProfileMenu, self).__init__()
         
-        self.profile_list = profile_list
-        self.profile_save = profile_save
-        self.profile_set = profile_set
+        self.context = context
+        self.profile_list = context.profiles
+        self.profile_save = context.saveProfiles
+        self.profile_set = context.setActiveProfile
         if not draw_surface:
             draw_surface = pygame.display.get_surface()
         self.draw_surface = draw_surface
-        self.profile = profile
-        self.current_active = profile
+        self.profile = context.currentProfile
+        self.current_active = context.currentProfile
         
         
         self.fonts = {}
@@ -582,12 +590,23 @@ class ProfileMenu(Menu):
         
         self.set_profile_view()
     
+        menu = PagedMenu(50, 50, 50, 50, 4, draw_surface, [])
+        for ship in context.shipList:
+            if ship.player_flyable:
+                image, rect = Utils.load_image(ship.file, -1)
+                image = pygame.transform.rotate(image, 90)
+                menu.add_button(Button('', ship.id, image, menu.font, menu.selected_color, menu.unselected_color))
+        if len(menu.button_list) > 0:
+            menu.selected_btn = menu.button_list[0]
+        self.ship_selector = menu
+         
     def set_profile_view(self):
         '''this class sets up the profile view buttons'''
         self.button_list = []
         self.button_list.append(Button('Change Profile', 'select', None, self.font, self.selected_color, self.unselected_color))
         self.button_list.append(Button('Edit Profile', 'edit', None, self.font, self.selected_color, self.unselected_color))
         self.button_list.append(Button('New Profile', 'new', None, self.font, self.selected_color, self.unselected_color))
+        self.button_list.append(Button('Delete Profile', 'delete', None, self.font, self.selected_color, self.unselected_color))
         self.button_list.append(Button('Main Menu', MENU_MAIN, None, self.font, self.selected_color, self.unselected_color))
         self.mode = 'view'
         self.orientation = 'horizontal'
@@ -612,6 +631,18 @@ class ProfileMenu(Menu):
         self.set_center(False, True)
         self.h_pad = 20
         self.v_pad = 20
+    
+    def set_ship_select(self):
+        self.mode = 'ship-select'
+        if 'ship' in self.profile:            
+            for btn in self.ship_selector.button_list:
+                if int(self.profile['ship']) == btn.attrs['state']:
+                    self.ship_selector.selected_btn = btn
+        else:
+            if len(self.ship_selector.button_list) > 0:
+                self.ship_selector.selected_btn = self.ship_selector.button_list[0]
+        self.ship_selector.set_alignment('center','center')
+        self.ship_selector.set_center(True, True)
         
     def set_profile_edit(self):
         '''this class sets up the profile edit menu'''
@@ -619,7 +650,7 @@ class ProfileMenu(Menu):
         self.add_button(TextInput('Callsign', self.profile['name'], 'none', self.font, self.selected_color, self.unselected_color, False, (self.profile, 'name')))
         self.add_button(TextInput('Width', self.profile['width'], 'none', self.font, self.selected_color, self.unselected_color, True, (self.profile, 'width')))
         self.add_button(TextInput('Height', self.profile['height'], 'none', self.font, self.selected_color, self.unselected_color, True, (self.profile, 'height')))
-        self.add_button(('Select Ship...', MENU_SHIP_SELECT, None))
+        self.add_button(('Select Ship...', 'ship-select', None))
         self.add_button(Button('Save', 'save', None, self.font, self.selected_color, self.unselected_color))
         self.add_button(('Cancel', 'cancel', None))
         self.selected_btn = self.button_list[0]
@@ -644,29 +675,31 @@ class ProfileMenu(Menu):
         self.h_pad = 20
         self.v_pad = 20
         
+    def set_profile_remove(self):
+        '''this class sets up the profile removal confirmation'''
+        self.button_list = []
+        self.add_button(Button('Confirm Delete of Profile: %s' % self.profile['name'], 'delete', None, self.font, self.selected_color, self.unselected_color))
+        self.add_button(Button('Cancel', 'cancel', None, self.font, self.selected_color, self.unselected_color))
+        self.selected_btn = self.button_list[0]
+        self.mode = 'delete'
+        self.orientation = 'vertical'
+        self.set_alignment('left', 'center')
+        self.set_center(True, True)
+        self.h_pad = 20
+        self.v_pad = 5
+        
     def update(self, event, state):
-        new_state = super(ProfileMenu, self).update(event, state)
+        if self.mode == 'ship-select':
+            new_state = self.ship_selector.update(event, state)
+            if new_state == state:
+                return state
+        else:
+            new_state = super(ProfileMenu, self).update(event, state)
         
         if isinstance(new_state, Profile):
             if self.mode == 'select':
                 self.profile = new_state
                 self.set_profile_view()
-            '''
-            if new_state in self.profile_list:
-                self.edit_profile = new_state
-                self.set_profile_edit()
-            else:
-                self.new_profile = new_state
-                id = -1
-                for pf in self.profile_list:
-                    if int(pf['id']) > id:
-                        id = int(pf['id'])
-                id += 1
-                self.new_profile['id'] = id
-                self.new_profile['height'] = pygame.display.get_surface().get_height()
-                self.new_profile['width'] = pygame.display.get_surface().get_width()
-                
-                self.set_profile_new()'''
         elif new_state == 'save':
             for btn in self.button_list:
                 if btn.attrs['state'] == 'save':
@@ -698,18 +731,47 @@ class ProfileMenu(Menu):
             self.set_profile_view()
         elif new_state == 'select':
             self.profile_set(self.profile)
+            self.current_active = self.profile
             self.set_profile_select()
+            self.profile_save()
         elif new_state == 'cancel':
-            self.profile = self.current_active
-            self.set_profile_view()
-            
+            if self.mode == 'ship-select':
+                self.set_profile_edit()
+            else:
+                self.profile = self.current_active
+                self.set_profile_view()
+        elif new_state == 'ship-select':
+            self.set_ship_select()
+        elif new_state == 'delete':
+            if self.mode == 'delete':
+                # really delete
+                if self.profile in self.profile_list: 
+                    print "removing %s" % self.profile['name']
+                    self.profile_list.remove(self.profile)
+                if len(self.profile_list) > 0:
+                    self.context.currentProfile = self.profile_list[0]
+                else:
+                    self.context.currentProfile = Profile()
+                
+                self.profile = self.context.currentProfile
+                self.current_active = self.context.currentProfile
+                self.profile_save()
+                self.set_profile_view()
+            else:
+                self.set_profile_remove()
+                
         elif new_state == 'none':
             pass
         else:
-            state = new_state
+            if self.mode == 'ship-select':
+                self.profile['ship'] = new_state
+                self.set_profile_edit()
+            else:
+                state = new_state
         return state
     
     def draw_buttons(self, draw_surface = None):
+        self.ticks += 1
         if draw_surface:
             self.draw_surface = draw_surface
         
@@ -725,8 +787,23 @@ class ProfileMenu(Menu):
             self.y_offset = draw_rect.top + draw_rect.height - 50
             
             super(ProfileMenu, self).draw_buttons(self.draw_surface)
-        elif self.mode == 'select' or self.mode == 'edit' or self.mode == 'new':
+            
+            # draw the player's ship
+            if 'ship' in self.profile:
+                image = None
+                for btn in self.ship_selector.button_list:
+                    if btn.attrs['state'] == int(self.profile['ship']):
+                        image = btn.attrs['image'].copy()
+                if image:
+                    image = pygame.transform.rotate(image, self.ticks % 360)
+                    self.draw_surface.blit(image, (draw_rect.center[0] - image.get_rect().center[0], draw_rect.center[1] - image.get_rect().center[1]))
+            
+            
+        elif self.mode == 'select' or self.mode == 'edit' or self.mode == 'new' or self.mode == 'delete':
             super(ProfileMenu, self).draw_buttons(self.draw_surface)
+            
+        elif self.mode == 'ship-select':
+            self.ship_selector.draw_buttons(self.draw_surface)
             
         
     def draw_profile_info(self, draw_surface, position):
@@ -783,11 +860,9 @@ class MenuManager(object):
         # menu 1 = options menu
         self.menuList.append(Menu(50, 50, 20, 5, 'vertical', 100, screen, None))
         menu = self.menuList[len(self.menuList) - 1]
-        menu.add_button(TextInput('Callsign',self.parent.currentProfile['name'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, False, (self.parent.currentProfile, 'name')))
         menu.add_button(TextInput('Width',self.parent.currentProfile['width'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, True, (self.parent.currentProfile, 'width')))
         menu.add_button(TextInput('Height',self.parent.currentProfile['height'], MENU_OPTIONS, menu.font, menu.selected_color, menu.unselected_color, True, (self.parent.currentProfile, 'height')))
-        menu.add_button(('Select Ship...', MENU_SHIP_SELECT, None))
-        menu.add_button(SaveButton(menu, 'Save', MENU_OPTIONS, None, menu.font, menu.selected_color, menu.unselected_color, self.parent.saveProfiles))
+        menu.add_button(SaveButton(menu, 'Apply', MENU_OPTIONS, None, menu.font, menu.selected_color, menu.unselected_color, self.parent.saveProfiles))
         menu.add_button(('Back', MENU_MAIN, None))
         
         # menu 2 = pause menu
@@ -795,6 +870,7 @@ class MenuManager(object):
                                 [('Resume', MENU_RESUME, None),
                                  ('Options', MENU_OPTIONS, None),
                                  ('Exit', MENU_EXIT, None)]))
+        
         # menu 3 = mission menu
         menu = PagedMenu(50, 50, 50, 50, 4, screen, [])
         self.menuList.append(menu)
@@ -812,7 +888,7 @@ class MenuManager(object):
                 if 'ship' in self.parent.currentProfile and int(self.parent.currentProfile['ship']) == ship.id:
                     menu.selected_btn = menu.button_list[len(menu.button_list) - 1]
                     
-        menu = ProfileMenu(self.parent.currentProfile, self.parent.profiles, self.parent.saveProfiles, self.parent.setActiveProfile)
+        menu = ProfileMenu(self.parent)
         self.menuList.append(menu)
                 
     def draw(self):
@@ -833,27 +909,14 @@ class MenuManager(object):
             self.selectedMenu = -1
         elif(state == MENU_EXIT):
             sys.exit(0)
+        elif state == -1:
+            pass
         else:
             self.selectedMenu = state
-        '''elif(state == MENU_OPTIONS):
-            self.selectedMenu = MENU_OPTIONS
-        elif(state == MENU_PAUSE):
-            self.selectedMenu = MENU_PAUSE
-        elif (state == MENU_SHIP_SELECT):
-            self.selectedMenu = MENU_SHIP_SELECT
-        elif(state == MENU_MISSION_SELECT):
-            self.selectedMenu = MENU_MISSION_SELECT'''
-        #elif(state >= MENU_MISSION):
-        #    # mission selected
-        #    self.parent.startMission(self.parent.missionList[state - 200])
-        
-        #self.menuList[self.selectedMenu].set_alignment('center', 'center')
-        #self.menuList[self.selectedMenu].set_center(True, True)  
+
         self.menuList[self.selectedMenu].update(
                             pygame.event.Event(EVENT_CHANGE_STATE, key = 0),
                             self.selectedMenu)
-        
-        
         return self.selectedMenu
     
     def is_active(self):
