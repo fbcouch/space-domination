@@ -20,6 +20,8 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
+from gui.basicmenu import BasicMenu, BasicTextButton
+from gui.gui import GUI
 from hud import HUD
 from profile import Profile
 from pygame.locals import *
@@ -624,6 +626,54 @@ class ProfileXMLParser(handler.ContentHandler):
         
     
 #the main entry point for the program
+def test_gui():
+    pygame.init()
+    window = pygame.display.set_mode((1024, 768))
+    pygame.display.set_caption("Testing GUI")
+    screen = pygame.display.get_surface()
+    background = pygame.Surface(screen.get_size())
+    background = background.convert()
+    background.fill((0,0,0))
+    font = None
+    if pygame.font:
+        font = pygame.font.Font(None, 20)
+    
+    gui = GUI(None)
+    gui.set_active(True)
+    menu = BasicMenu(gui, h_pad=10, v_pad=10)
+    gui.add_child(menu)
+    menu.set_active(True)
+    menu.add_child(BasicTextButton(menu, text = 'Select Mission', select_fxn = menu.mouse_over_callback, callback = gui.generic_click, callback_kwargs = {'target_id': 1}))
+    menu.add_child(BasicTextButton(menu, text = 'Exit', select_fxn = menu.mouse_over_callback, callback = gui.exit_click))
+    gui.add_child(BasicMenu(gui))
+    '''
+    frame = Frame(gui)
+    gui.add_child(frame)
+    frame.set_active(True)
+    
+    testel = TestElement(frame)
+    testel.image = pygame.surface.Surface((100,50))
+    testel.image = testel.image.convert()
+    testel.image.fill((51, 102, 255))
+    testel.rect = testel.image.get_rect()
+    testel.rect.topleft = ((window.get_width() - testel.rect.width) * 0.5, (window.get_height() - testel.rect.height) * 0.5)
+    '''
+    while True:
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                sys.exit(0)
+        
+        if gui.is_active(): gui.update(events)
+        
+        screen.blit(background, (0,0))
+        
+        if gui.is_active(): gui.draw()
+        
+        pygame.display.flip()
+        
+
 if __name__ == "__main__":
-    app = SpaceDominationMain()
-    app.run()
+    test_gui()
+    #app = SpaceDominationMain()
+    #app.run()

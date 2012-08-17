@@ -36,7 +36,8 @@ class Frame(object):
         self.active = active
         
     def add_child(self, child):
-        self.children.append(child)
+        if not child in self.children:
+            self.children.append(child)
         child.parent = self
 
 class GUI(Frame):
@@ -46,6 +47,11 @@ class GUI(Frame):
     parent = None
     children = None
     active = False
+    
+    main_menu = None
+    options_menu = None
+    profile_menu = None
+    mission_menu = None
     
     def __init__(self, parent, **kwargs):
         '''
@@ -61,6 +67,39 @@ class GUI(Frame):
     def draw(self):
         for child in self.children:
             if child.is_active(): child.draw()
+    
+    '''some basic functionality'''        
+    def exit_click(self):
+        '''exit the game'''
+        sys.exit(0)
+    
+    def main_menu_click(self):
+        '''open the main menu'''
+        pass
+    
+    def options_menu_click(self):
+        '''open the options menu'''
+        pass
+    
+    def profile_menu_click(self):
+        '''open the profile menu'''
+        pass
+    
+    def mission_menu_click(self):
+        '''open the mission menu'''
+        pass
+    
+    def generic_click(self, **kwargs):
+        '''generic click with args passed'''
+        if 'target_id' in kwargs:
+            id = int(kwargs.get('target_id', -1))
+            if id > 0 and id < len(self.children):
+                # ID is in the proper range to call up a child
+                for child in self.children:
+                    if self.children.index(child) == id:
+                        child.set_active(True)
+                    else:
+                        child.set_active(False)
             
 class Element(pygame.sprite.Sprite):
     '''abstract class from which gui elements can be constructed'''
@@ -163,43 +202,3 @@ class TestElement(Element):
     def on_click(self):
         self.image.fill((255, 255, 255))
     
-if __name__ == '__main__':
-    pygame.init()
-    window = pygame.display.set_mode((1024, 768))
-    pygame.display.set_caption("Testing GUI")
-    screen = pygame.display.get_surface()
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
-    background.fill((0,0,0))
-    font = None
-    if pygame.font:
-        font = pygame.font.Font(None, 20)
-    
-    gui = GUI(None)
-    gui.set_active(True)
-    
-    frame = Frame(gui)
-    gui.add_child(frame)
-    frame.set_active(True)
-    
-    testel = TestElement(frame)
-    testel.image = pygame.surface.Surface((100,50))
-    testel.image = testel.image.convert()
-    testel.image.fill((51, 102, 255))
-    testel.rect = testel.image.get_rect()
-    testel.rect.topleft = ((window.get_width() - testel.rect.width) * 0.5, (window.get_height() - testel.rect.height) * 0.5)
-    
-    while True:
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                sys.exit(0)
-        
-        if gui.is_active(): gui.update(events)
-        
-        screen.blit(background, (0,0))
-        
-        if gui.is_active(): gui.draw()
-        
-        pygame.display.flip()
-        
