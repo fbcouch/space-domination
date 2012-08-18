@@ -309,6 +309,7 @@ class BasicImageButton(Element):
     callback = None
     callback_kwargs = None
     select_fxn = None
+    unselect_fxn = None
     
     def __init__(self, parent, **kwargs):
         super(BasicImageButton, self).__init__(parent, **kwargs)
@@ -319,6 +320,7 @@ class BasicImageButton(Element):
         self.callback = kwargs.get('callback', None)
         self.callback_kwargs = kwargs.get('callback_kwargs', None)
         self.select_fxn = kwargs.get('select_fxn', None)
+        self.unselect_fxn = kwargs.get('unselect_fxn', None)
         
         self.unselected_image = kwargs.get('unselected_image', image.copy())
         self.selected_image = kwargs.get('selected_image', self.generate_selected_image(self.unselected_image))
@@ -353,4 +355,6 @@ class BasicImageButton(Element):
     
     def on_mouse_off(self):
         self.image = self.unselected_image.copy()
+        if self.unselect_fxn:
+            self.unselect_fxn(self)
         #self.rect = self.image.get_rect()

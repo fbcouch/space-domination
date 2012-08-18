@@ -258,6 +258,6 @@ class MissionListXMLParser(handler.ContentHandler):
             self.inMission = False
     
     def characters(self, content):
-        if self.inMission: self.missionList[len(self.missionList) - 1][3] = content
+        if self.inMission: self.missionList[len(self.missionList) - 1][3] += content
     
     

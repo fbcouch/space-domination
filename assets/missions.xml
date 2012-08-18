@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <missionlist>
-	<mission icon="mission01_icon.png" file="mission01.xml" name="Flight Training">Learn how to pilot your new craft.</mission>
-	<mission icon="mission02_icon.png" file="mission02.xml" name="First Action">While setting up an ambush on an outlying space station, some forward scouts are close to blowing your cover.</mission>
-	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault">Hit the outpost before the scouts are missed and the element of surprise is lost!</mission>
+	<mission icon="mission01_icon.png" file="mission01.xml" name="Flight Training">
+		Learn how to pilot your new craft.
+	</mission>
+	<mission icon="mission02_icon.png" file="mission02.xml" name="First Action">
+		While setting up an ambush on an outlying space station, some forward scouts are close to blowing your cover.
+	</mission>
+	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault">
+		Hit the outpost before the scouts are missed and the element of surprise is lost!
+	</mission>
+	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault" />
+	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault" />
+	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault" />
 </missionlist>
