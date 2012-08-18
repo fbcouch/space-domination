@@ -28,3 +28,4 @@ Some Feedback/TODO:
 - faster laser recharge time
 - refuelable missles?
 - figure out how to warn players they're going off-screen or help them get back on more easily
+- max width/height for screen?

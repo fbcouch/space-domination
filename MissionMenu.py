@@ -3,7 +3,8 @@ Created on Aug 18, 2012
 
 @author: Jami
 '''
-from gui.basicmenu import BasicImageButton, BasicTextButton
+from gui.basicmenu import BasicImageButton, BasicTextButton, \
+    TogglableImageButton
 from gui.gui import Frame, Element
 import Utils
 import pygame
@@ -56,8 +57,8 @@ class MissionMenu(Frame):
             image = pygame.transform.flip(image, True, False)
             arrows_rev.append(image)
         
-        self.next_btn = PageButton(self, arrows, callback = self.next_page_click)
-        self.prev_btn = PageButton(self, arrows_rev, callback = self.prev_page_click)
+        self.next_btn = TogglableImageButton(self, arrows, callback = self.next_page_click)
+        self.prev_btn = TogglableImageButton(self, arrows_rev, callback = self.prev_page_click)
         
         self.back_btn = BasicTextButton(self, text='< Back to Main Menu', callback = parent.main_menu_click, font = self.font)
         
@@ -202,56 +203,3 @@ class MissionMenu(Frame):
     def prev_page_click(self, **kwargs):
         self.page -= 1
     
-class PageButton(Element):
-    
-    disabled_image = None
-    unselected_image = None
-    selected_image = None
-    
-    enabled = False
-    
-    callback = None
-    callback_kwargs = None
-    
-    def __init__(self, parent, sprite_sheet, **kwargs):
-        super(PageButton, self).__init__(parent, **kwargs)
-        
-        self.disabled_image = sprite_sheet[0]
-        self.unselected_image = sprite_sheet[1]
-        self.selected_image = sprite_sheet[2]
-        
-        self.set_enabled(kwargs.get('enabled', False))
-        self.callback = kwargs.get('callback', None)
-        self.callback_kwargs = kwargs.get('callback_kwargs', None)
-    
-    def set_enabled(self, enabled):
-        self.enabled = enabled
-        if self.enabled:
-            self.image = self.unselected_image
-        else:
-            self.image = self.disabled_image
-        self.rect = self.image.get_rect()
-    
-    def is_enabled(self):
-        return self.enabled
-    
-    def on_click(self):
-        if not self.is_enabled(): return
-        if self.callback_kwargs:
-            return self.callback(self.callback_kwargs)
-        else:
-            return self.callback()
-        
-    def on_mouse_over(self):
-        if self.enabled:
-            self.image = self.selected_image
-        else:
-            self.image = self.disabled_image
-        self.rect = self.image.get_rect()
-            
-    def on_mouse_off(self):
-        if self.enabled:
-            self.image = self.unselected_image
-        else:
-            self.image = self.disabled_image
-        self.rect = self.image.get_rect()

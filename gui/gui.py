@@ -23,7 +23,10 @@ class Frame(object):
     
     def update(self, event):
         for child in self.children:
-            if child.is_active(): child.update(event)
+            if child.is_active(): 
+                if child.update(event):
+                    return True
+        return False
     
     def draw(self):
         for child in self.children:
@@ -63,7 +66,9 @@ class GUI(Frame):
     
     def update(self, event):
         for child in self.children:
-            if child.is_active(): child.update(event)
+            if child.is_active(): 
+                if child.update(event):
+                    return True
     
     def draw(self):
         for child in self.children:
@@ -77,7 +82,8 @@ class GUI(Frame):
     def main_menu_click(self):
         '''open the main menu'''
         if self.main_menu in self.children:
-            self.generic_click(target_id = self.children.index(self.main_menu)) 
+            return self.generic_click(target_id = self.children.index(self.main_menu))
+        return False
         '''for child in self.children:
             if child is self.main_menu:
                 child.set_active(True)
@@ -88,20 +94,26 @@ class GUI(Frame):
         
     def options_menu_click(self):
         '''open the options menu'''
-        pass
+        if self.options_menu in self.children:
+            return self.generic_click(target_id = self.children.index(self.options_menu))
+        return False
     
     def profile_menu_click(self):
         '''open the profile menu'''
-        pass
+        if self.profile_menu in self.children:
+            return self.generic_click(target_id = self.children.index(self.profile_menu))
+        return False
     
     def mission_menu_click(self):
         '''open the mission menu'''
         if self.mission_menu in self.children:
-            self.generic_click(target_id = self.children.index(self.mission_menu))
+            return self.generic_click(target_id = self.children.index(self.mission_menu))
+        return False
     
     def pause_menu_click(self):
         if self.pause_menu in self.children:
-            self.generic_click(target_id = self.children.index(self.pause_menu)) 
+            return self.generic_click(target_id = self.children.index(self.pause_menu)) 
+        return False
     
     def generic_click(self, **kwargs):
         '''generic click with args passed'''
@@ -115,6 +127,7 @@ class GUI(Frame):
                     else:
                         child.set_active(False)
             self.set_active(True)
+            return True
             
     def close(self):
         for child in self.children:
@@ -149,24 +162,27 @@ class Element(pygame.sprite.Sprite):
                 # mouse is freshly over the element
                 self.on_mouse_over()
                 self.mouse_over = True
+                return True
             elif self.mouse_over and not self.rect.collidepoint(event.pos):
                 # mouse was on and is leaving the element
                 self.on_mouse_off()
                 self.mouse_over = False
+                return True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 # record where the button was pressed and call on mouse btn down
                 self.set_mouse_btn(event.button, event.pos)
                 self.on_mouse_btn_down(event.button)
+                return True
         elif event.type == pygame.MOUSEBUTTONUP:
             if self.rect.collidepoint(event.pos):
                 self.on_mouse_btn_up(event.button)
                 if self.get_mouse_btn(event.button):
                     # make sure the button was pressed down on this element
-                    self.on_click()
+                    return self.on_click()
                 self.set_mouse_btn(event.button, False)
-                        
-                        
+                return True
+        return False
     
     def set_mouse_btn(self, btn, status):
         self.mouse_btn_down[btn] = status

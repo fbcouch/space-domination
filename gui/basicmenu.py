@@ -4,8 +4,10 @@ Created on Aug 16, 2012
 @author: Jami
 '''
 from gui import Element, Frame
+from pygame.locals import *
 import pygame
 import sys
+import traceback
 
 DEFAULT_SELECTED_COLOR = (255, 0, 0)
 DEFAULT_UNSELECTED_COLOR = (255, 255, 255)
@@ -31,6 +33,8 @@ class BasicMenu(Frame):
     unselected_color = None
     
     selected_btn = None
+    
+    on_close = None
 
     def __init__(self, parent, **kwargs):
         '''
@@ -52,18 +56,26 @@ class BasicMenu(Frame):
         self.v_align = kwargs.get('v_align', 'center')
         self.selected_color = kwargs.get('selected_color', DEFAULT_SELECTED_COLOR)
         self.unselected_color = kwargs.get('unselected_color', DEFAULT_UNSELECTED_COLOR)
+        self.on_close = kwargs.get('on_close', None)
         
+    def add_child(self, child):
+        super(BasicMenu, self).add_child(child)
+        if not self.selected_btn:
+            self.selected_btn = child
+    
     def update(self, event):
-        # TODO implement an updating function
+        return_val = False
+        
         if self.selected_btn is None and len(self.children) > 0:
             self.selected_btn = self.children[0]
         
         if not len(self.children) > 0:
-            return
+            return False
         
         # handle key events
         if event.type == pygame.KEYDOWN:
             sel_item = self.children.index(self.selected_btn)
+            
             if self.orientation == 'vertical':
                 if event.key == pygame.K_UP:
                     if sel_item > 0:
@@ -86,19 +98,32 @@ class BasicMenu(Frame):
                         sel_item += 1
                     else:
                         sel_item = 0
-                        
             if event.key == pygame.K_RETURN:
-                self.selected_btn.on_click()
+                if self.selected_btn:
+                    return self.selected_btn.on_click()
                 
             elif event.key == pygame.K_ESCAPE:
                 self.active = False
-                # TODO callback to the parent here?
+                if self.on_close:
+                    self.on_close()
+            
             self.selected_btn.on_mouse_off()
             self.selected_btn = self.children[sel_item]
-        super(BasicMenu, self).update(event)
+            if not ((self.orientation == 'vertical' and (event.key == pygame.K_UP or event.key == pygame.K_DOWN)) and (self.orientation == 'horizontal' and (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT))):
+                return_val = self.selected_btn.update(event)
+                
+            else:
+                return_val = True
+            self.selected_btn.on_mouse_over()
+            return return_val
+        else:
+            # handle other events
+            return_val = super(BasicMenu, self).update(event)
+            
         
         if self.selected_btn:
             self.selected_btn.on_mouse_over()
+        return return_val
     
     def draw(self):
         draw_surface = pygame.display.get_surface()
@@ -256,6 +281,7 @@ class BasicMenu(Frame):
         if self.selected_btn and child is not self.selected_btn:
             self.selected_btn.on_mouse_off()
         self.selected_btn = child
+        
     
     
 class BasicTextButton(Element):
@@ -358,3 +384,125 @@ class BasicImageButton(Element):
         if self.unselect_fxn:
             self.unselect_fxn(self)
         #self.rect = self.image.get_rect()
+
+class TogglableImageButton(Element):
+    
+    disabled_image = None
+    unselected_image = None
+    selected_image = None
+    
+    enabled = False
+    
+    callback = None
+    callback_kwargs = None
+    
+    def __init__(self, parent, sprite_sheet, **kwargs):
+        super(TogglableImageButton, self).__init__(parent, **kwargs)
+        
+        self.disabled_image = sprite_sheet[0]
+        self.unselected_image = sprite_sheet[1]
+        self.selected_image = sprite_sheet[2]
+        
+        self.set_enabled(kwargs.get('enabled', False))
+        self.callback = kwargs.get('callback', None)
+        self.callback_kwargs = kwargs.get('callback_kwargs', None)
+    
+    def set_enabled(self, enabled):
+        self.enabled = enabled
+        if self.enabled:
+            self.image = self.unselected_image
+        else:
+            self.image = self.disabled_image
+        self.rect = self.image.get_rect()
+    
+    def is_enabled(self):
+        return self.enabled
+    
+    def on_click(self):
+        if not self.is_enabled(): return
+        if self.callback_kwargs:
+            return self.callback(**self.callback_kwargs)
+        else:
+            return self.callback()
+        
+    def on_mouse_over(self):
+        if self.enabled:
+            self.image = self.selected_image
+        else:
+            self.image = self.disabled_image
+        self.rect = self.image.get_rect()
+            
+    def on_mouse_off(self):
+        if self.enabled:
+            self.image = self.unselected_image
+        else:
+            self.image = self.disabled_image
+        self.rect = self.image.get_rect()
+
+class BasicTextInput(Element):
+    
+    label = ''
+    value = ''
+    selected_color = None
+    unselected_color = None
+    
+    font = None
+    callback = None
+    callback_kwargs = None
+    select_fxn = None
+    
+    numbers_only = False
+    
+    keymap = {K_0: '0', K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5', K_6: '6', K_7: '7', K_8: '8', K_9: '9',
+              K_a: 'a', K_b: 'b', K_c: 'c', K_d: 'd', K_e: 'e', K_f: 'f', K_g: 'g', K_h: 'h', K_i: 'i', K_j: 'j', 
+              K_k: 'k', K_l: 'l', K_m: 'm', K_n: 'n', K_o: 'o', K_p: 'p', K_q: 'q', K_r: 'r', K_s: 's', K_t: 't', 
+              K_u: 'u', K_v: 'v', K_w: 'w', K_x: 'x', K_y: 'y', K_z: 'z', K_MINUS: '-', K_UNDERSCORE: '_'}
+    numbers = {K_0: '0', K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5', K_6: '6', K_7: '7', K_8: '8', K_9: '9'}
+    
+    
+    def __init__(self, parent, **kwargs):
+        super(BasicTextInput, self).__init__(parent, **kwargs)
+        
+        self.label = kwargs.get('label', '')
+        self.value = kwargs.get('value', '')
+        self.selected_color = kwargs.get('selected_color', DEFAULT_SELECTED_COLOR)
+        self.unselected_color = kwargs.get('unselected_color', DEFAULT_UNSELECTED_COLOR)
+        self.font = kwargs.get('font', pygame.font.Font(None, 32))
+        self.callback = kwargs.get('callback', None)
+        self.callback_kwargs = kwargs.get('callback_kwargs', None)
+        self.select_fxn = kwargs.get('select_fxn', None)
+        self.numbers_only = bool(kwargs.get('numbers_only', False))
+    
+        self.set_unselected_image()
+        
+    def set_unselected_image(self):
+        self.image = self.font.render("%s: %s" % (self.label, str(self.value)), 1, self.unselected_color)
+        self.rect = self.image.get_rect()
+        
+    def set_selected_image(self):
+        self.image = self.font.render("%s: %s_" % (self.label, str(self.value)), 1, self.selected_color)
+        
+    def on_mouse_over(self):
+        self.set_selected_image()
+        if self.select_fxn:
+            self.select_fxn(self)
+        
+    def on_mouse_off(self):
+        self.set_unselected_image()
+        if self.select_fxn:
+            self.select_fxn(self)
+        
+    def update(self, event):
+        if event.type == pygame.KEYDOWN:
+            if (self.numbers_only and event.key in self.numbers) or (not self.numbers_only and event.key in self.keymap):
+                # valid keystroke
+                self.value = str(self.value) + self.keymap[event.key]
+                return True # event was handled
+            elif event.key == pygame.K_BACKSPACE:
+                if len(str(self.value)) > 0:
+                    self.value = str(self.value)[:len(str(self.value)) - 1]
+                return True # event was handled
+        return super(BasicTextInput, self).update(event)
+    
+    
+    
