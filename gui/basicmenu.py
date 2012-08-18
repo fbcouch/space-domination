@@ -53,7 +53,7 @@ class BasicMenu(Frame):
         self.selected_color = kwargs.get('selected_color', DEFAULT_SELECTED_COLOR)
         self.unselected_color = kwargs.get('unselected_color', DEFAULT_UNSELECTED_COLOR)
         
-    def update(self, events):
+    def update(self, event):
         # TODO implement an updating function
         if self.selected_btn is None and len(self.children) > 0:
             self.selected_btn = self.children[0]
@@ -62,41 +62,40 @@ class BasicMenu(Frame):
             return
         
         # handle key events
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                sel_item = self.children.index(self.selected_btn)
-                if self.orientation == 'vertical':
-                    if event.key == pygame.K_UP:
-                        if sel_item > 0:
-                            sel_item -= 1
-                        else:
-                            sel_item = len(self.children) - 1
-                    elif event.key == pygame.K_DOWN:
-                        if sel_item < len(self.children) - 1:
-                            sel_item += 1
-                        else:
-                            sel_item = 0
-                elif self.orientation == 'horizontal':
-                    if event.key == pygame.K_LEFT:
-                        if sel_item > 0:
-                            sel_item -= 1
-                        else:
-                            sel_item = len(self.children) - 1
-                    elif event.key == pygame.K_RIGHT:
-                        if sel_item < len(self.children) - 1:
-                            sel_item += 1
-                        else:
-                            sel_item = 0
-                            
-                if event.key == pygame.K_RETURN:
-                    self.selected_btn.on_click()
-                    
-                elif event.key == pygame.K_ESCAPE:
-                    self.active = False
-                    # TODO callback to the parent here?
-                self.selected_btn.on_mouse_off()
-                self.selected_btn = self.children[sel_item]
-        super(BasicMenu, self).update(events)
+        if event.type == pygame.KEYDOWN:
+            sel_item = self.children.index(self.selected_btn)
+            if self.orientation == 'vertical':
+                if event.key == pygame.K_UP:
+                    if sel_item > 0:
+                        sel_item -= 1
+                    else:
+                        sel_item = len(self.children) - 1
+                elif event.key == pygame.K_DOWN:
+                    if sel_item < len(self.children) - 1:
+                        sel_item += 1
+                    else:
+                        sel_item = 0
+            elif self.orientation == 'horizontal':
+                if event.key == pygame.K_LEFT:
+                    if sel_item > 0:
+                        sel_item -= 1
+                    else:
+                        sel_item = len(self.children) - 1
+                elif event.key == pygame.K_RIGHT:
+                    if sel_item < len(self.children) - 1:
+                        sel_item += 1
+                    else:
+                        sel_item = 0
+                        
+            if event.key == pygame.K_RETURN:
+                self.selected_btn.on_click()
+                
+            elif event.key == pygame.K_ESCAPE:
+                self.active = False
+                # TODO callback to the parent here?
+            self.selected_btn.on_mouse_off()
+            self.selected_btn = self.children[sel_item]
+        super(BasicMenu, self).update(event)
         
         if self.selected_btn:
             self.selected_btn.on_mouse_over()
@@ -128,7 +127,22 @@ class BasicMenu(Frame):
                     y = y_start
                 
                 #button.draw(draw_surface, x, y, col_widths[col], row_heights[row], self.centered, button is self.selected_btn)
-                button.rect.topleft = (x, y)
+                draw_x = x
+                if self.h_align == 'left':
+                    draw_x = x
+                elif self.h_align == 'center':
+                    draw_x += (col_widths[col] - button.rect.width) * 0.5
+                elif self.h_align == 'right':
+                    draw_x += col_widths[col] - button.rect.width
+                    
+                draw_y = y
+                if self.v_align == 'top':
+                    draw_y = y
+                elif self.v_align == 'center':
+                    draw_y += (row_heights[row] - button.rect.height) * 0.5
+                elif self.v_align == 'bottom':
+                    draw_y += row_heights[row] - button.rect.height
+                button.rect.topleft = (draw_x, draw_y)
                 button.draw()
                 y += row_heights[row] + self.v_pad
                 row += 1
@@ -141,7 +155,22 @@ class BasicMenu(Frame):
                     x = x_start
                 
                 #button.draw(self.draw_surface, x, y, col_widths[col], row_heights[row], self.centered, button is self.selected_btn)
-                button.rect.topleft = (x, y)
+                draw_x = x
+                if self.h_align == 'left':
+                    draw_x = x
+                elif self.h_align == 'center':
+                    draw_x += (col_widths[col] - button.rect.width) * 0.5
+                elif self.h_align == 'right':
+                    draw_x += col_widths[col] - button.rect.width
+                    
+                draw_y = y
+                if self.v_align == 'top':
+                    draw_y = y
+                elif self.v_align == 'center':
+                    draw_y += (row_heights[row] - button.rect.height) * 0.5
+                elif self.v_align == 'bottom':
+                    draw_y += row_heights[row] - button.rect.height
+                button.rect.topleft = (draw_x, draw_y)
                 button.draw()
                 
                 x += col_widths[col] + self.h_pad
@@ -224,9 +253,9 @@ class BasicMenu(Frame):
 
     def mouse_over_callback(self, child):
         '''this allows mouse movement to change the selection as the keyboard does'''
-        if child is not self.selected_btn:
+        if self.selected_btn and child is not self.selected_btn:
             self.selected_btn.on_mouse_off()
-            self.selected_btn = child
+        self.selected_btn = child
     
     
 class BasicTextButton(Element):
@@ -247,7 +276,7 @@ class BasicTextButton(Element):
         self.select_fxn = kwargs.get('select_fxn', None)
         self.callback_kwargs = kwargs.get('callback_kwargs', None)
         if not self.font:
-            self.font = pygame.font.Font(None, 20)
+            self.font = pygame.font.Font(None, 32)
             
         self.selected_image = self.font.render(self.text, 1, kwargs.get('selected_color', DEFAULT_SELECTED_COLOR))
         self.unselected_image = self.font.render(self.text, 1, kwargs.get('unselected_color', DEFAULT_UNSELECTED_COLOR))
@@ -271,4 +300,57 @@ class BasicTextButton(Element):
     def on_mouse_off(self):
         self.image = self.unselected_image.copy()
         self.rect = self.image.get_rect()
+
+class BasicImageButton(Element):
+    
+    image = None
+    selected_image = None
+    unselected_image = None
+    callback = None
+    callback_kwargs = None
+    select_fxn = None
+    
+    def __init__(self, parent, **kwargs):
+        super(BasicImageButton, self).__init__(parent, **kwargs)
+        self.font = kwargs.get('font', None)
+        if not self.font:
+            self.font = pygame.font.Font(None, 32)
+        image = kwargs.get('image', self.font.render("image button", 1, DEFAULT_UNSELECTED_COLOR))
+        self.callback = kwargs.get('callback', None)
+        self.callback_kwargs = kwargs.get('callback_kwargs', None)
+        self.select_fxn = kwargs.get('select_fxn', None)
         
+        self.unselected_image = kwargs.get('unselected_image', image.copy())
+        self.selected_image = kwargs.get('selected_image', self.generate_selected_image(self.unselected_image))
+        
+        self.image = self.unselected_image.copy()
+        self.rect = self.image.get_rect()
+        
+    def generate_selected_image(self, image):
+        '''create a 'selected image' from image'''
+        
+        temp_image = pygame.surface.Surface((image.get_width() + 4, image.get_height() + 4))
+        temp_image = temp_image.convert()
+        temp_image.blit(image, (2,2))
+        temp_image.set_colorkey(temp_image.get_at((0,0)))
+        pygame.gfxdraw.rectangle(temp_image, pygame.rect.Rect(0,0,temp_image.get_width(), temp_image.get_height()), DEFAULT_SELECTED_COLOR)
+        pygame.gfxdraw.rectangle(temp_image, pygame.rect.Rect(1,1,temp_image.get_width()-2, temp_image.get_height()-2), DEFAULT_SELECTED_COLOR)
+        
+        return temp_image
+        
+    def on_click(self):
+        if self.callback:
+            if self.callback_kwargs:
+                return self.callback(**self.callback_kwargs)
+            else:
+                return self.callback()
+    
+    def on_mouse_over(self):
+        self.image = self.selected_image.copy()
+        #self.rect = self.image.get_rect()
+        if self.select_fxn:
+            self.select_fxn(self)
+    
+    def on_mouse_off(self):
+        self.image = self.unselected_image.copy()
+        #self.rect = self.image.get_rect()
