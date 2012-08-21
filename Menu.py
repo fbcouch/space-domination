@@ -4,6 +4,7 @@ Created on Aug 17, 2012
 @author: Jami
 '''
 from MissionMenu import MissionMenu
+from ProfileMenu import ProfileMenu
 from gui.basicmenu import BasicMenu, BasicTextButton, BasicImageButton, \
     BasicTextInput
 from gui.gui import GUI, Frame, Element
@@ -28,7 +29,9 @@ class SpaceDominationGUI(GUI):
         self.mission_menu = MissionMenu(self, self.parent.startMission, missions = self.parent.missionList)
         self.add_child(self.mission_menu)
         
-        # TODO add/set up the profile menu
+        # add/set up the profile menu
+        self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile)
+        self.add_child(self.profile_menu)
         
         # add/set up the options menu
         self.options_menu = BasicMenu(self, h_pad = 5, v_pad = 5, on_close = self.main_menu_click)
@@ -46,6 +49,7 @@ class SpaceDominationGUI(GUI):
         self.pause_menu.add_child(BasicTextButton(self.pause_menu, text = 'Exit', select_fxn = self.pause_menu.mouse_over_callback, callback = self.exit_click))
         
     def apply_options(self):
+        '''apply the height/width options'''
         self.parent.currentProfile['width'] = int(self.options_menu.children[0].value)
         self.parent.currentProfile['height'] = int(self.options_menu.children[1].value)
         self.parent.createDisplay()

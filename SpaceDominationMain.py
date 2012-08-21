@@ -20,6 +20,8 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
+from consts import MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT, VERSION, SPLASH_TIME, \
+    STATE_LOSE_FOCUS
 from gui.basicmenu import BasicMenu, BasicTextButton
 from gui.gui import GUI
 from hud import HUD
@@ -36,13 +38,6 @@ import pygame.gfxdraw
 import random
 import sys
 import xml.sax
-
-VERSION = "0.2"
-SPLASH_TIME = 2000
-STATE_LOSE_FOCUS = 2
-STATE_GAIN_FOCUS = 6
-MIN_WINDOW_WIDTH = 1024
-MIN_WINDOW_HEIGHT = 768
 
 class SpaceDominationMain():
     '''
