@@ -19,6 +19,7 @@ class ProfileMenu(Frame):
     current_profile = None
     profile_list = None
     set_profile_fxn = None
+    save_profiles_fxn = None
     
     profile_view = None
     profile_edit = None
@@ -28,13 +29,14 @@ class ProfileMenu(Frame):
     ship_list = None
     
     
-    def __init__(self, parent, profile, profiles, set_profile, **kwargs):
+    def __init__(self, parent, profile, profiles, set_profile, save_profiles, **kwargs):
         '''Constructor'''
         super(ProfileMenu, self).__init__(parent, **kwargs)
         
         self.current_profile = profile
         self.profile_list = profiles
         self.set_profile_fxn = set_profile
+        self.save_profiles_fxn = save_profiles
         self.ship_list = kwargs.get('shiplist', [])
         
         self.set_profile_view(self.current_profile)
@@ -78,7 +80,7 @@ class ProfileMenu(Frame):
         
         if not self.profile_edit:
             # create the edit menu
-            self.profile_edit = ProfileEdit(self, self.current_profile)
+            self.profile_edit = ProfileEdit(self, self.current_profile, self.save_profiles_fxn)
         else:
             # update the edit menu
             self.profile_edit.set_profile(self.current_profile)
@@ -90,6 +92,36 @@ class ProfileMenu(Frame):
             child.set_active(False)
         
         self.profile_edit.set_active(True)
+        
+    def set_profile_delete(self, profile):
+        if not self.profile_delete:
+            # create the delete menu
+            self.profile_delete = ProfileDelete(self, self.current_profile)
+        else:
+            # update
+            self.profile_delete.set_profile(self.current_profile)
+            
+        if not self.profile_delete in self.children:
+            self.add_child(self.profile_delete)
+            
+        for child in self.children:
+            child.set_active(False)
+            
+        self.profile_delete.set_active(True)
+        
+    def delete_profile(self, pf):
+        if pf in self.profile_list:
+            self.profile_list.remove(pf)
+        
+        if self.current_profile is pf:
+            if len(self.profile_list) > 0:
+                self.current_profile = self.profile_list[0]
+            else:
+                self.current_profile = profile.create_fresh_profile(profiles = self.profile_list)
+                self.profile_list.append(self.current_profile)
+            self.set_profile_fxn(self.current_profile)
+        self.save_profiles_fxn()
+        self.set_profile_view(self.current_profile)    
             
 class ProfileView(Frame):
     '''handles the display of the current profile'''
@@ -190,13 +222,7 @@ class ProfileView(Frame):
         if lb.rect.width > width:
             width = lb.rect.width
             
-        # display the player's ship
-        if 'ship' in self.profile and self.parent.ship_list and int(self.profile['ship']) >= 0 and int(self.profile['ship']) < len(self.parent.ship_list):
-            file = self.parent.ship_list[int(self.profile['ship'])].file
-            image = Utils.load_image(file, -1)[0]
-            lb = ImageLabel(self, image, rotate = True, angle = 90)
-            lb.rect.center = (width + lb.rect.width, (y - self.v_pad) // 2)
-            width += lb.rect.width * 2
+        
             
         items = []
         sel_item = None
@@ -214,6 +240,9 @@ class ProfileView(Frame):
         
         btn = BasicTextButton(self, text = "Delete Profile", font = pygame.font.Font(None, 24), callback = self.set_delete_profile)
         btn.rect.topleft = (400, 50)
+        
+        btn = BasicTextButton(self, text='Main Menu', callback = self.parent.parent.main_menu_click, font = pygame.font.Font(None, 24))
+        btn.rect.topleft = (400, 100)
            
         ds = DropdownSelector(self, items, sel_item, on_select = self.select_profile)
         ds.rect.topleft = (400, 0)
@@ -230,7 +259,16 @@ class ProfileView(Frame):
                     draw_rect.width = child.rect.left + child.rect.width
                 if child.rect.top + child.rect.height > draw_rect.height:
                     draw_rect.height = child.rect.top + child.rect.height
-                    
+        
+        # display the player's ship
+        if 'ship' in self.profile and self.parent.ship_list and int(self.profile['ship']) >= 0 and int(self.profile['ship']) < len(self.parent.ship_list):
+            file = self.parent.ship_list[int(self.profile['ship'])].file
+            image = Utils.load_image(file, -1)[0]
+            lb = ImageLabel(self, image, rotate = True, angle = 90)
+            lb.rect.center = draw_rect.center
+        
+        
+        
         offset_x = (screen.get_rect().width - draw_rect.width) * 0.5
         offset_y = (screen.get_rect().height - draw_rect.height) * 0.5
         for child in self.children:
@@ -243,13 +281,13 @@ class ProfileView(Frame):
         
         if not pf:
             # set up a new profile
-            self.parent.set_profile_edit(profile.create_fresh_profile())
+            self.parent.set_profile_edit(profile.create_fresh_profile(profiles = self.parent.profile_list))
     
     def set_edit_profile(self):
         self.parent.set_profile_edit(self.profile)
     
     def set_delete_profile(self):
-        pass
+        self.parent.set_profile_delete(self.profile)
     
     def set_profile(self, profile):
         self.profile = profile
@@ -296,10 +334,14 @@ class ProfileEdit(Frame):
     profile = None
     v_pad = 0
     
-    def __init__(self, parent, profile, **kwargs):
+    callsign_input = None
+    save_profiles_fxn = None
+    
+    def __init__(self, parent, profile, save_profiles, **kwargs):
         '''Constructor'''
         super(ProfileEdit, self).__init__(parent, **kwargs)
         
+        self.save_profiles_fxn = save_profiles
         self.profile = profile
         self.v_pad = kwargs.get('v_pad', 5)
         
@@ -318,6 +360,7 @@ class ProfileEdit(Frame):
             callsign = self.profile['name']
         cl = BasicTextInput(self, label = "Callsign", value = callsign, font = pygame.font.Font(None, 24))
         cl.rect.topleft = (0, 0)
+        self.callsign_input = cl
         y = cl.rect.top + cl.rect.height + self.v_pad
         
         # display the player's ship
@@ -338,7 +381,7 @@ class ProfileEdit(Frame):
         y += bn.rect.height + self.v_pad
         
         # save
-        bn = BasicTextButton(self, text = "Save Changes", font = pygame.font.Font(None, 24))
+        bn = BasicTextButton(self, text = "Save Changes", font = pygame.font.Font(None, 24), callback = self.save_profile)
         bn.rect.center = cl.rect.center
         bn.rect.top = y
         y += bn.rect.height + self.v_pad
@@ -365,6 +408,57 @@ class ProfileEdit(Frame):
         for child in self.children:
             child.rect.topleft = (child.rect.left + offset_x, child.rect.top + offset_y)
         
+    def set_profile(self, profile):
+        self.profile = profile
+        self.init()
+    
+    def save_profile(self):
+        self.profile['name'] = self.callsign_input.value
+        self.save_profiles_fxn()
+        self.parent.set_profile_view()
+        
+class ProfileDelete(Frame):
+    profile = None
+    v_pad = 0
+    
+    def __init__(self, parent, profile, **kwargs):
+        super(ProfileDelete, self).__init__(parent, **kwargs)
+        self.profile = profile
+        self.v_pad = kwargs.get('v_pad', 5)
+        
+        self.init()
+    
+    def init(self):
+        self.children = []
+        y = 0
+        lb = Label(self, text = "Do you really want to delete profile %s?" % self.profile['name'])
+        y += lb.rect.height + self.v_pad
+        
+        bn = BasicTextButton(self, text = "Yes", callback = self.parent.delete_profile, callback_kwargs = {'pf': self.profile})
+        bn.rect.centerx = lb.rect.centerx
+        bn.rect.top = y
+        y += bn.rect.height + self.v_pad
+        
+        bn = BasicTextButton(self, text = "Cancel", callback = self.parent.set_profile_view)
+        bn.rect.centerx = lb.rect.centerx
+        bn.rect.top = y
+        y += bn.rect.height + self.v_pad
+    
+        screen = pygame.display.get_surface()
+        
+        draw_rect = pygame.rect.Rect(0, 0, 0, 0)
+        for child in self.children:
+            if child.is_active():
+                if child.rect.left + child.rect.width > draw_rect.width:
+                    draw_rect.width = child.rect.left + child.rect.width
+                if child.rect.top + child.rect.height > draw_rect.height:
+                    draw_rect.height = child.rect.top + child.rect.height
+                    
+        offset_x = (screen.get_rect().width - draw_rect.width) * 0.5
+        offset_y = (screen.get_rect().height - draw_rect.height) * 0.5
+        for child in self.children:
+            child.rect.topleft = (child.rect.left + offset_x, child.rect.top + offset_y)
+    
     def set_profile(self, profile):
         self.profile = profile
         self.init()

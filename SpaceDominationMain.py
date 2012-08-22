@@ -101,6 +101,13 @@ class SpaceDominationMain():
             if 'active' in profile and profile['active']:
                 self.currentProfile = profile
                 break
+        
+        if not self.currentProfile:
+            if len(self.profiles) > 0:
+                self.currentProfile = self.profiles[0]
+            else:
+                self.setActiveProfile(profile.create_fresh_profile(id = 0))
+        
         #initialize managers
         pygame.init()
         random.seed()

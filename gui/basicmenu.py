@@ -103,7 +103,7 @@ class BasicMenu(Frame):
                     return self.selected_btn.on_click()
                 
             elif event.key == pygame.K_ESCAPE:
-                self.active = False
+                #self.active = False
                 if self.on_close:
                     self.on_close()
             

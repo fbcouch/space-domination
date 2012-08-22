@@ -63,7 +63,7 @@ class SpaceDominationGUI(GUI):
         if self.profile_menu and self.profile_menu in self.children:
             self.children.remove(self.profile_menu)
         
-        self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile, shiplist = self.parent.shipList)
+        self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile, self.parent.saveProfiles, shiplist = self.parent.shipList)
         self.add_child(self.profile_menu)
         
         super(SpaceDominationGUI, self).profile_menu_click()

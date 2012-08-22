@@ -21,8 +21,17 @@ def create_profile_from_attrs(attrs, default_id = -1):
     return profile
     
     
-def create_fresh_profile():
+def create_fresh_profile(**kwargs):
+    list = kwargs.get('profiles', None)
+    id = kwargs.get('id', -1)
+    if id == -1 and list:
+        for p in list:
+            if 'id' in p and int(p['id']) > id:
+                id = int(p['id'])
+        id += 1
+    
     profile = Profile()
+    profile['id'] = id
     profile['name'] = 'newbie'
     profile['ship'] = 0
     profile['width'] = pygame.display.get_surface().get_width()
