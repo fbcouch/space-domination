@@ -30,8 +30,8 @@ class SpaceDominationGUI(GUI):
         self.add_child(self.mission_menu)
         
         # add/set up the profile menu
-        self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile, shiplist = self.parent.shipList)
-        self.add_child(self.profile_menu)
+        #self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile, shiplist = self.parent.shipList)
+        #self.add_child(self.profile_menu)
         
         # add/set up the options menu
         self.options_menu = BasicMenu(self, h_pad = 5, v_pad = 5, on_close = self.main_menu_click)
@@ -58,6 +58,15 @@ class SpaceDominationGUI(GUI):
         self.options_menu.children[1].value = self.parent.currentProfile['height']
         self.options_menu.children[0].set_unselected_image()
         self.options_menu.children[1].set_unselected_image()
+        
+    def profile_menu_click(self):
+        if self.profile_menu and self.profile_menu in self.children:
+            self.children.remove(self.profile_menu)
+        
+        self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile, shiplist = self.parent.shipList)
+        self.add_child(self.profile_menu)
+        
+        super(SpaceDominationGUI, self).profile_menu_click()
 
 class PauseMenu(BasicMenu):
     

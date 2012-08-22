@@ -31,3 +31,6 @@ Some Feedback/TODO:
 - max width/height for screen?
 - check if mouseover is returning true? (should be false...)
 - possibility of using ion cannons to disable ships then salvage for upgrades
+- keyboard controls for all menus
+- quit mission option
+- flipping fighter

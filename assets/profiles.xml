@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<profilelist default="1">
-	<profile shots-hit="3496" name="Jami" kills="80" deaths="5" damage-dealt="25545" height="900" width="1440" damage-taken="3960" ship="6" id="0" shots-fired="4882"></profile>
-	<profile shots-hit="1157" name="testing1" kills="35" deaths="9" damage-dealt="9205" height="900" width="1440" ship="0" shots-fired="1865" id="1" damage-taken="2905"></profile>
+<profilelist default="0">
+	<profile shots-hit="3519" name="Jami" kills="82" deaths="5" damage-dealt="25755" height="900" width="1440" damage-taken="3960" ship="6" id="0" shots-fired="4937"></profile>
+	<profile shots-hit="1430" name="testing1" kills="40" deaths="9" damage-dealt="11045" height="900" width="1440" ship="0" shots-fired="2209" id="1" damage-taken="3200"></profile>
 </profilelist>

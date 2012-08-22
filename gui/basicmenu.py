@@ -319,13 +319,13 @@ class BasicTextButton(Element):
     
     def on_mouse_over(self):
         self.image = self.selected_image.copy()
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center = self.rect.center)
         if self.select_fxn:
             self.select_fxn(self)
     
     def on_mouse_off(self):
         self.image = self.unselected_image.copy()
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center = self.rect.center)
 
 class BasicImageButton(Element):
     
@@ -472,15 +472,17 @@ class BasicTextInput(Element):
         self.callback_kwargs = kwargs.get('callback_kwargs', None)
         self.select_fxn = kwargs.get('select_fxn', None)
         self.numbers_only = bool(kwargs.get('numbers_only', False))
-    
+        self.rect = pygame.rect.Rect(0, 0, 0, 0)
+        
         self.set_unselected_image()
         
     def set_unselected_image(self):
         self.image = self.font.render("%s: %s" % (self.label, str(self.value)), 1, self.unselected_color)
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(topleft = self.rect.topleft)
         
     def set_selected_image(self):
         self.image = self.font.render("%s: %s_" % (self.label, str(self.value)), 1, self.selected_color)
+        self.rect = self.image.get_rect(topleft = self.rect.topleft)
         
     def on_mouse_over(self):
         self.set_selected_image()
@@ -497,10 +499,12 @@ class BasicTextInput(Element):
             if (self.numbers_only and event.key in self.numbers) or (not self.numbers_only and event.key in self.keymap):
                 # valid keystroke
                 self.value = str(self.value) + self.keymap[event.key]
+                self.set_selected_image()
                 return True # event was handled
             elif event.key == pygame.K_BACKSPACE:
                 if len(str(self.value)) > 0:
                     self.value = str(self.value)[:len(str(self.value)) - 1]
+                    self.set_selected_image()
                 return True # event was handled
         return super(BasicTextInput, self).update(event)
     
