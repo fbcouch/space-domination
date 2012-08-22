@@ -30,7 +30,7 @@ class SpaceDominationGUI(GUI):
         self.add_child(self.mission_menu)
         
         # add/set up the profile menu
-        self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile)
+        self.profile_menu = ProfileMenu(self, self.parent.currentProfile, self.parent.profiles, self.parent.setActiveProfile, shiplist = self.parent.shipList)
         self.add_child(self.profile_menu)
         
         # add/set up the options menu

@@ -310,7 +310,7 @@ class BasicTextButton(Element):
         self.image = self.unselected_image.copy()
         self.rect = self.image.get_rect()
         
-    def on_click(self):
+    def on_click(self, **kwargs):
         if self.callback:
             if self.callback_kwargs:
                 return self.callback(**self.callback_kwargs)
@@ -366,7 +366,7 @@ class BasicImageButton(Element):
         
         return temp_image
         
-    def on_click(self):
+    def on_click(self, **kwargs):
         if self.callback:
             if self.callback_kwargs:
                 return self.callback(**self.callback_kwargs)
@@ -418,7 +418,7 @@ class TogglableImageButton(Element):
     def is_enabled(self):
         return self.enabled
     
-    def on_click(self):
+    def on_click(self, **kwargs):
         if not self.is_enabled(): return
         if self.callback_kwargs:
             return self.callback(**self.callback_kwargs)

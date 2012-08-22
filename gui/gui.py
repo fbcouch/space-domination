@@ -179,7 +179,7 @@ class Element(pygame.sprite.Sprite):
                 self.on_mouse_btn_up(event.button)
                 if self.get_mouse_btn(event.button):
                     # make sure the button was pressed down on this element
-                    return self.on_click()
+                    return self.on_click(button = event.button, pos = event.pos)
                 self.set_mouse_btn(event.button, False)
                 return True
         return False
@@ -196,7 +196,7 @@ class Element(pygame.sprite.Sprite):
     def draw(self):
         pygame.display.get_surface().blit(self.image, self.rect.topleft)
     
-    def on_click(self):
+    def on_click(self, **kwargs):
         pass
     
     def on_mouse_over(self):
@@ -236,6 +236,6 @@ class TestElement(Element):
     def on_mouse_btn_up(self, button):
         self.image.fill((51, 102, 255))
         
-    def on_click(self):
+    def on_click(self, **kwargs):
         self.image.fill((255, 255, 255))
     
