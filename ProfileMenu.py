@@ -5,6 +5,7 @@ Created on Aug 20, 2012
 '''
 from consts import MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH
 from gui.gui import Frame, Element
+from profile import Profile
 import Utils
 import consts
 import math
@@ -64,6 +65,23 @@ class ProfileMenu(Frame):
         
         self.profile_view.set_active(True)
         
+    def set_profile_edit(self, profile):
+        if profile not in self.profile_list:
+            self.profile_list.append(profile)
+            self.current_profile = profile
+            self.set_profile_fxn(self.current_profile)
+        
+        if not self.profile_edit:
+            # create the edit menu
+            self.profile_edit = ProfileEdit(self, self.current_profile)
+        else:
+            # update the edit menu
+            self.profile_edit.set_profile(self.current_profile)
+        
+        if not self.profile_edit in self.children:
+            self.add_child(self.profile_edit)
+        
+        self.profile_view.set_active(True)
             
 class ProfileView(Frame):
     '''handles the display of the current profile'''
@@ -179,6 +197,8 @@ class ProfileView(Frame):
             items.append(item)
             if profile is self.profile:
                 sel_item = item
+                
+        items.append(("New profile...", Profile()))
             
             
         ds = DropdownSelector(self, items, sel_item, on_select = self.select_profile)
@@ -201,8 +221,11 @@ class ProfileView(Frame):
     
     def select_profile(self, **kwargs):
         profile = kwargs.get('value', None)
-        if profile:
+        if profile and profile in self.parent.profile_list:
             self.parent.set_profile_view(profile)
+        elif profile:
+            self.parent.set_profile_edit(profile)
+            
     
     def set_profile(self, profile):
         self.profile = profile
@@ -244,7 +267,29 @@ class ProfileView(Frame):
         
         pygame.gfxdraw.rectangle(screen, pygame.rect.Rect(draw_rect.left - 5, draw_rect.top - 5, draw_rect.width + 10, draw_rect.height + 10), (51, 102, 255))
         
+class ProfileEdit(Frame):
     
+    profile = None
+    v_pad = 0
+    
+    def __init__(self, parent, profile, **kwargs):
+        '''Constructor'''
+        super(ProfileEdit, self).__init__(parent, **kwargs)
+        
+        self.profile = profile
+        self.v_pad = kwargs.get('v_pad', 50)
+        
+        self.init()
+        
+    def init(self):
+        '''initializes the view'''
+        
+        width = 0
+        x = 0
+        y = 0
+
+
+
 class Label(Element):
     '''displays static text'''
     
@@ -362,7 +407,7 @@ class DropdownSelector(Element):
     def on_click(self, **kwargs):
         
         if self.expanded:
-            # TODO test where the click landed
+            
             y = self.rect.top
             pos = kwargs.get('pos', (-1, -1))
             for item in self.item_list:

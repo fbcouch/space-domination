@@ -27,10 +27,10 @@ class Bullet(PhysicsEntity):
         if self.removeSelf:
             self.remove(context)
         if (self.ticks_remaining <= 0):
-            if self.type == 'missile':
-                self.brake(1)
-            else:
-                self.remove(context)
+            #if self.type == 'missile':
+            #    self.brake(1)
+            #else:
+            self.remove(context)
                 
         
     def remove(self, context = None):
