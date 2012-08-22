@@ -45,8 +45,9 @@ class SpaceDominationGUI(GUI):
         self.pause_menu = PauseMenu(self, self.parent.unpause_game, h_pad = 5, v_pad = 5)
         self.add_child(self.pause_menu)
         BasicTextButton(self.pause_menu, text = 'Resume', select_fxn = self.pause_menu.mouse_over_callback, callback = self.parent.unpause_game)
-        self.pause_menu.add_child(BasicTextButton(self.pause_menu, text = 'Options', select_fxn = self.pause_menu.mouse_over_callback, callback = self.options_menu_click))
-        self.pause_menu.add_child(BasicTextButton(self.pause_menu, text = 'Exit', select_fxn = self.pause_menu.mouse_over_callback, callback = self.exit_click))
+        BasicTextButton(self.pause_menu, text = 'Quit Mission', select_fxn = self.pause_menu.mouse_over_callback, callback = self.parent.quit_mission)
+        BasicTextButton(self.pause_menu, text = 'Options', select_fxn = self.pause_menu.mouse_over_callback, callback = self.options_menu_click)
+        BasicTextButton(self.pause_menu, text = 'Exit', select_fxn = self.pause_menu.mouse_over_callback, callback = self.exit_click)
         
     def apply_options(self):
         '''apply the height/width options'''

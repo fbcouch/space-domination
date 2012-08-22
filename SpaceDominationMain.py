@@ -262,6 +262,10 @@ class SpaceDominationMain():
     def unpause_game(self):
         self.gameState = self.GAMESTATE_RUNNING
         self.menuManager.close()
+        
+    def quit_mission(self):
+        self.gameState = self.GAMESTATE_GAMEOVER
+        self.menuManager.main_menu_click()
     
     def setKey(self, key, val): self.keys[key] = val
         
@@ -303,6 +307,8 @@ class SpaceDominationMain():
         self.foregroundSpriteGroup = OrderedUpdatesRect() #pygame.sprite.OrderedUpdates()
         self.physics = Physics()
         self.messageList = []
+        for key in self.keys: 
+            self.setKey(key, 0)
         
         #convert spawns to player or enemy
         for spawn in mission.spawnList:
@@ -355,6 +361,8 @@ class SpaceDominationMain():
             tempBg.image, tempBg.rect = Utils.load_image(bg.filename)
             tempBg.rect.topleft = (bg.x, bg.y)
             self.backgroundSpriteGroup.add(tempBg)
+            
+        self.updateTriggers()
         
     
     def linkTriggers(self, spawn, ship):
@@ -439,7 +447,7 @@ class SpaceDominationMain():
         
         elif self.gameState == self.GAMESTATE_GAMEOVER:
             for sprite in self.foregroundSpriteGroup:
-                sprite.update(self)
+                if isinstance(sprite, Particle): sprite.update(self)
             
             self.updateTriggers()
                 

@@ -9,12 +9,9 @@ from gui.gui import Frame, Element
 import Utils
 import pygame
 
-class MissionMenu(Frame):
-    '''Frame implementation to display the mission selection menu'''
+class PagedMenu(Frame):
     
-    mission_start = None
-    
-    missions = None
+    items = None # list of tuples (image, value)
     page = 1
     num_per_page = 4
     
@@ -22,32 +19,28 @@ class MissionMenu(Frame):
     prev_btn = None
     page_indicator = None
     back_btn = None
-    
-    name_label = None
-    desc_label = None
-    
+
     h_pad = 0
     v_pad = 0
     
-    selected_mission = None
-    title_color = None
-    desc_color = None
-    desc_max_width = 1024
+    selected_item = None
     
     font = None
     
-    def __init__(self, parent, mission_start, **kwargs):
-        super(MissionMenu, self).__init__(parent, **kwargs)
+    item_callback = None
+    back_btn_callback = None
+    back_btn_text = ""
+    
+    def __init__(self, parent, **kwargs):
+        super(PagedMenu, self).__init__(parent, **kwargs)
         
-        self.mission_start = mission_start
         self.num_per_page = int(kwargs.get('per_page', 4))
         self.h_pad = int(kwargs.get('h_pad', 50))
         self.v_pad = int(kwargs.get('v_pad', 10))
-        self.missions = kwargs.get('missions', [])
-        self.build_from_mission_list()
-        self.title_color = kwargs.get('title_color', (255, 255, 100))
-        self.desc_color = kwargs.get('desc_color', (200, 200, 200))
-        self.desc_max_width = int(kwargs.get('desc_width', 1024))
+        self.items = kwargs.get('items', [])
+        self.item_callback = kwargs.get('item_callback', None)
+        self.build_from_list()
+        
         self.font = kwargs.get('font', pygame.font.Font(None, 24))
         
         arrows = Utils.load_sprite_sheet('arrows.png', 69, 100, -1)
@@ -60,19 +53,22 @@ class MissionMenu(Frame):
         self.next_btn = TogglableImageButton(self, arrows, callback = self.next_page_click)
         self.prev_btn = TogglableImageButton(self, arrows_rev, callback = self.prev_page_click)
         
-        self.back_btn = BasicTextButton(self, text='< Back to Main Menu', callback = parent.main_menu_click, font = self.font)
+        self.back_btn_callback = kwargs.get('back_btn_callback', None)
+        self.back_text = kwargs.get('back_btn_text', 'Back')
         
-    def build_from_mission_list(self, missions = None):
-        '''build the mission list using the list of mission...'''
-        if missions:
-            self.missions = missions
+        
+        self.back_btn = BasicTextButton(self, text = self.back_text, callback = self.back_btn_callback, font = self.font)
+        
+    def build_from_list(self, items = None):
+        '''build the menu using a list of items...'''
+        if items:
+            self.items = items
         
         n = 0
-        for mission in self.missions:
-            # add a button to the child list for each mission
+        for item in self.items:
+            # add a button to the child list for each item
             n += 1
-            
-            self.add_child(BasicImageButton(self, image = mission[1], select_fxn = self.mouse_over_callback, unselect_fxn = self.mouse_off_callback, callback = self.mission_click, callback_kwargs = {'mission':mission}))
+            self.add_child(BasicImageButton(self, image = item[0], select_fxn = self.mouse_over_callback, unselect_fxn = self.mouse_off_callback, callback = self.item_callback, callback_kwargs = {'value': item[1]}))
     
     def update(self, event):
         #super(MissionMenu, self).update(event)
@@ -83,20 +79,20 @@ class MissionMenu(Frame):
         
         start_i = (self.page - 1) * self.num_per_page
         end_i = self.page * self.num_per_page
-        if end_i > len(self.missions): end_i = len(self.missions)
+        if end_i > len(self.items): end_i = len(self.items)
         
         for i in range(start_i, end_i):
             self.children[i].update(event)
         
-        if len(self.children) > len(self.missions):
-            for i in range(len(self.missions), len(self.children)):
+        if len(self.children) > len(self.items):
+            for i in range(len(self.items), len(self.children)):
                 self.children[i].update(event)
         
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.parent.main_menu_click()
+            self.back_btn_callback()
     
     def get_num_pages(self):
-        num_pages = len(self.missions) / float(self.num_per_page)
+        num_pages = len(self.items) / float(self.num_per_page)
         if num_pages > int(num_pages): num_pages = int(num_pages) + 1
         return num_pages
     
@@ -122,7 +118,7 @@ class MissionMenu(Frame):
         
         start_i = (self.page - 1) * self.num_per_page
         end_i = self.page * self.num_per_page
-        if end_i > len(self.missions): end_i = len(self.missions)
+        if end_i > len(self.items): end_i = len(self.items)
         
         # first, calculate the draw rect
         draw_rect = pygame.rect.Rect(0,0,0,0)
@@ -163,12 +159,66 @@ class MissionMenu(Frame):
         self.back_btn.rect.topleft = (x, y)
         self.back_btn.draw()
         
+        return draw_rect
+            
+        
+    def mouse_over_callback(self, child):
+        pass
+        
+    def mouse_off_callback(self, child):
+        pass
+        
+    def next_page_click(self, **kwargs):
+        self.page += 1
+    
+    def prev_page_click(self, **kwargs):
+        self.page -= 1
+    
+class MissionMenu(PagedMenu):
+    '''Frame implementation to display the mission selection menu'''
+    
+    mission_start = None
+    missions = None
+    
+    name_label = None
+    desc_label = None
+    
+    selected_mission = None
+    title_color = None
+    desc_color = None
+    desc_max_width = 1024
+    
+    def __init__(self, parent, mission_start, **kwargs):
+        
+        if not 'back_btn_text' in kwargs: kwargs['back_btn_text'] =  '< Back to Main Menu'
+        if not 'back_btn_callback' in kwargs: kwargs['back_btn_callback'] = parent.main_menu_click
+        if not 'item_callback' in kwargs: kwargs['item_callback'] = self.mission_click
+        self.missions = kwargs.get('missions', None)
+        if self.missions:
+            items = []
+            for mission in self.missions:
+                items.append((mission[1], mission))
+            kwargs['items'] = items
+        
+        super(MissionMenu, self).__init__(parent, **kwargs)
+        
+        self.mission_start = mission_start
+        self.title_color = kwargs.get('title_color', (255, 255, 100))
+        self.desc_color = kwargs.get('desc_color', (200, 200, 200))
+        self.desc_max_width = int(kwargs.get('desc_width', 1024))
+        
+    def draw(self):
+        '''draws the mission selection screen'''
+        draw_rect = super(MissionMenu, self).draw()
+        screen = pygame.display.get_surface()
+        
         # draw the mission info
         if self.selected_mission:
             y = draw_rect.top + draw_rect.height + self.v_pad * 3
             size = self.font.size(self.selected_mission[2])
             x = (screen.get_width() - size[0]) * 0.5
             screen.blit(self.font.render(self.selected_mission[2], 1, self.title_color), (x, y))
+            if x < draw_rect.left: draw_rect.left = x
             
             # break the description up into lines if necessary
             y += size[1] + self.v_pad
@@ -183,23 +233,20 @@ class MissionMenu(Frame):
             for line in lines:
                 screen.blit(self.font.render(line, 1, self.desc_color), (x, y))
                 y += self.font.size(line)[1]
+                if x < draw_rect.left: draw_rect.left = x
+            draw_rect.height = y - draw_rect.top
+        return draw_rect
             
         
     def mouse_over_callback(self, child):
-        self.selected_mission = child.callback_kwargs.get('mission', None)
+        self.selected_mission = child.callback_kwargs.get('value', None)
         
     def mouse_off_callback(self, child):
-        if self.selected_mission is child.callback_kwargs.get('mission', None): self.selected_mission = None
+        if self.selected_mission is child.callback_kwargs.get('value', None): self.selected_mission = None
     
     def mission_click(self, **kwargs):
-        mission = kwargs.get('mission', None)
+        mission = kwargs.get('value', None)
         self.parent.close()
         if mission and self.mission_start and mission in self.missions:
             self.mission_start(mission)
         
-    def next_page_click(self, **kwargs):
-        self.page += 1
-    
-    def prev_page_click(self, **kwargs):
-        self.page -= 1
-    
