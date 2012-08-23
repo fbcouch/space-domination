@@ -4,7 +4,7 @@ Created on Aug 20, 2012
 @author: Jami
 '''
 from consts import MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH
-from gui.basicmenu import BasicTextInput, BasicTextButton
+from gui.basicmenu import BasicTextInput, BasicTextButton, PagedMenu
 from gui.gui import Frame, Element
 from profile import Profile
 import Utils
@@ -25,6 +25,7 @@ class ProfileMenu(Frame):
     profile_edit = None
     profile_add = None
     profile_delete = None
+    profile_shipselect = None
     
     ship_list = None
     
@@ -109,6 +110,21 @@ class ProfileMenu(Frame):
             
         self.profile_delete.set_active(True)
         
+    def set_profile_shipselect(self, profile):
+        if not self.profile_shipselect:
+            # create the ship selection menu
+            self.profile_shipselect = ShipSelectMenu(self, self.ship_list, self.current_profile)
+        else:
+            self.profile_shipselect.set_profile(self.current_profile)
+            
+        if not self.profile_shipselect in self.children:
+            self.add_child(self.profile_shipselect)
+            
+        for child in self.children:
+            child.set_active(False)
+        
+        self.profile_shipselect.set_active(True)
+        
     def delete_profile(self, pf):
         if pf in self.profile_list:
             self.profile_list.remove(pf)
@@ -121,7 +137,17 @@ class ProfileMenu(Frame):
                 self.profile_list.append(self.current_profile)
             self.set_profile_fxn(self.current_profile)
         self.save_profiles_fxn()
-        self.set_profile_view(self.current_profile)    
+        self.set_profile_view(self.current_profile)   
+        
+    def get_ship_image(self, profile):
+        if not profile:
+            profile = self.current_profile
+            
+        if 'ship' in profile and self.ship_list and int(profile['ship']) >= 0 and int(profile['ship']) < len(self.ship_list):
+            file = self.ship_list[int(profile['ship'])].file
+            image = Utils.load_image(file, -1)[0]
+            return image
+        return None 
             
 class ProfileView(Frame):
     '''handles the display of the current profile'''
@@ -261,9 +287,8 @@ class ProfileView(Frame):
                     draw_rect.height = child.rect.top + child.rect.height
         
         # display the player's ship
-        if 'ship' in self.profile and self.parent.ship_list and int(self.profile['ship']) >= 0 and int(self.profile['ship']) < len(self.parent.ship_list):
-            file = self.parent.ship_list[int(self.profile['ship'])].file
-            image = Utils.load_image(file, -1)[0]
+        image = self.parent.get_ship_image(self.profile)
+        if image:
             lb = ImageLabel(self, image, rotate = True, angle = 90)
             lb.rect.center = draw_rect.center
         
@@ -329,6 +354,8 @@ class ProfileView(Frame):
         
         pygame.gfxdraw.rectangle(screen, pygame.rect.Rect(draw_rect.left - 5, draw_rect.top - 5, draw_rect.width + 10, draw_rect.height + 10), (51, 102, 255))
         
+        
+        
 class ProfileEdit(Frame):
     
     profile = None
@@ -364,18 +391,20 @@ class ProfileEdit(Frame):
         y = cl.rect.top + cl.rect.height + self.v_pad
         
         # display the player's ship
-        if 'ship' in self.profile and self.parent.ship_list and int(self.profile['ship']) >= 0 and int(self.profile['ship']) < len(self.parent.ship_list):
-            file = self.parent.ship_list[int(self.profile['ship'])].file
-            image = Utils.load_image(file, -1)[0]
+        image = self.parent.get_ship_image(self.profile)
+        if image:
             lb = ImageLabel(self, image, rotate = True, angle = 90)
+            
             lb.rect.left = cl.rect.left + (cl.rect.width - lb.rect.width) * 0.5
-            lb.rect.top = cl.rect.top + cl.rect.height + self.v_pad
-            y = lb.rect.top + lb.rect.height + self.v_pad
+            dim = lb.rect.height
+            if lb.rect.width > dim: dim = lb.rect.width
+            lb.rect.top = cl.rect.top + cl.rect.height + self.v_pad + dim - lb.rect.height
+            y = lb.rect.top + lb.rect.height + self.v_pad + dim - lb.rect.height
             
         
         
         # ship selector
-        bn = BasicTextButton(self, text = "Select Ship...", font = pygame.font.Font(None, 24))
+        bn = BasicTextButton(self, text = "Select Ship...", font = pygame.font.Font(None, 24), callback = self.set_shipselect)
         bn.rect.center = cl.rect.center
         bn.rect.top = y
         y += bn.rect.height + self.v_pad
@@ -416,6 +445,9 @@ class ProfileEdit(Frame):
         self.profile['name'] = self.callsign_input.value
         self.save_profiles_fxn()
         self.parent.set_profile_view()
+        
+    def set_shipselect(self):
+        self.parent.set_profile_shipselect(self.profile)
         
 class ProfileDelete(Frame):
     profile = None
@@ -462,6 +494,37 @@ class ProfileDelete(Frame):
     def set_profile(self, profile):
         self.profile = profile
         self.init()
+
+class ShipSelectMenu(PagedMenu):
+    shiplist = None
+    profile = None
+    
+    def __init__(self, parent, shiplist, profile, **kwargs):
+        
+        if not 'back_btn_text' in kwargs: kwargs['back_btn_text'] = "< Back"
+        if not 'back_btn_callback' in kwargs: kwargs['back_btn_callback'] = self.back_click
+        if not 'item_callback' in kwargs: kwargs['item_callback'] = self.ship_click
+        self.shiplist = shiplist
+        if self.shiplist:
+            items = []
+            for ship in self.shiplist:
+                if ship.player_flyable: items.append((Utils.load_image(ship.file, -1)[0], ship.id))
+            kwargs['items'] = items
+        
+        super(ShipSelectMenu, self).__init__(parent, **kwargs)
+        
+        self.profile = profile
+        
+    def ship_click(self, **kwargs):
+        id = kwargs.get('value', 0)
+        self.profile['ship'] = id
+        self.parent.set_profile_edit(self.profile)
+        
+    def back_click(self, **kwargs):
+        self.parent.set_profile_edit(self.profile)
+
+    def set_profile(self, pf):
+        self.profile = pf
 
 class Label(Element):
     '''displays static text'''

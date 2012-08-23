@@ -160,20 +160,20 @@ class Element(pygame.sprite.Sprite):
             #print "MOUSEMOTION pos (%s), rel (%s), buttons (%s)" % (event.pos, event.rel, event.buttons)
             if not self.mouse_over and self.rect.collidepoint(event.pos):
                 # mouse is freshly over the element
-                self.on_mouse_over()
+                returnval = self.on_mouse_over()
                 self.mouse_over = True
-                return True
+                return returnval
             elif self.mouse_over and not self.rect.collidepoint(event.pos):
                 # mouse was on and is leaving the element
-                self.on_mouse_off()
+                returnval = self.on_mouse_off()
                 self.mouse_over = False
-                return True
+                return returnval
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 # record where the button was pressed and call on mouse btn down
-                self.set_mouse_btn(event.button, event.pos)
+                returnval = self.set_mouse_btn(event.button, event.pos)
                 self.on_mouse_btn_down(event.button)
-                return True
+                return returnval
         elif event.type == pygame.MOUSEBUTTONUP:
             if self.rect.collidepoint(event.pos):
                 self.on_mouse_btn_up(event.button)
@@ -181,7 +181,7 @@ class Element(pygame.sprite.Sprite):
                     # make sure the button was pressed down on this element
                     return self.on_click(button = event.button, pos = event.pos)
                 self.set_mouse_btn(event.button, False)
-                return True
+                return False
         return False
     
     def set_mouse_btn(self, btn, status):
