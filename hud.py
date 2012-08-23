@@ -79,7 +79,11 @@ class HUD(object):
             
         for tg in secondary:
             tgstr = tg.display_text
-            screen.blit(font.render(tgstr,1,(255,0,0)), (screen.get_width() - maxwidth, y))
+            if tg.completed:
+                color = (0, 255, 0)
+            else:
+                color = (255, 0, 0)
+            screen.blit(font.render(tgstr,1,color), (screen.get_width() - maxwidth, y))
             y += 20
     
     def display_messages(self, screen, messages):

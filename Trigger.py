@@ -59,7 +59,9 @@ class Trigger(object):
         if self.condition == "destroy-class":
             if context:
                 count = len(self.get_attached(context.shipSpriteGroup))
-                if count == 0: self.completed = True
+                if count == 0: 
+                    self.completed = True
+                    self.display_text = self.orig_display_text
                 else:
                     self.display_text = self.orig_display_text + " (" + str(count) + " remain)"
         

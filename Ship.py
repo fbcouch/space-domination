@@ -14,6 +14,7 @@ from Weapon import Weapon
 from pygame.locals import *
 from xml.sax import handler, make_parser
 import Utils
+import consts
 import math
 import os
 import pygame
@@ -36,6 +37,7 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     player_flyable = False
     
     engine_points = None
+    engine_color = None
     
     weapons = None
     
@@ -74,7 +76,7 @@ class Ship(PhysicsEntity):
     hard_points = None
     
     engine_points = None
-    
+    engine_color = None
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(Ship, self).__init__()
@@ -84,7 +86,8 @@ class Ship(PhysicsEntity):
         self.set_position(x,y)
         self.set_rotation(r)
         self.stats = {'kills': 0, 'shots-fired': 0, 'shots-hit': 0, 'damage-dealt': 0, 'damage-taken': 0, 'damaged-by': {}}
-        
+        if self.engine_points and not self.engine_color:
+            self.engine_color = consts.COLOR_ORANGE
         
         #if not parent is None: parent.add(self)
         self.parent = parent
@@ -110,6 +113,7 @@ class Ship(PhysicsEntity):
         self.max_shields = self.shields
         self.team = proto.team
         
+        
         if not proto.image:
             try:
                 self.image, self.rect = Utils.load_image(self.file, -1)
@@ -132,7 +136,9 @@ class Ship(PhysicsEntity):
                 
         if proto.engine_points:
             self.engine_points = Utils.parse_pointlist(proto.engine_points)
-            
+        
+        if proto.engine_color and proto.engine_color in consts.colors:
+            self.engine_color = consts.colors[proto.engine_color]
 
      
     def fire_weapon(self, time):
@@ -187,7 +193,7 @@ class Ship(PhysicsEntity):
         if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0):
             for ep in self.engine_points:
                 #engine_glow = Particle(load_sprite_sheet('glowengine1_10.png', 10, 10, colorkey = -1), interval = 1)
-                engine_glow = GlowParticle('circle', 10, (250, 100, 0), 100, interval = 2)
+                engine_glow = GlowParticle('circle', 10, self.engine_color, 100, interval = 2)
                 
                 offset = Vec2(0,0)
                 offset.setXY(ep[0] - 0.5 * self.original.get_rect().width, ep[1] - 0.5 * self.original.get_rect().height)
@@ -291,6 +297,7 @@ class ShipListXMLParser(handler.ContentHandler):
             self.ship.turn = int(attrs.get('turn', 5))
             self.ship.armor = int(attrs.get('armor', 0))
             self.ship.engine_points = attrs.get('engines', '')
+            self.ship.engine_color = attrs.get('engine-color', None)
             self.ship.player_flyable = attrs.get('flyable', False)
             
             self.ship.file = attrs.get('file','')
