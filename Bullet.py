@@ -28,9 +28,9 @@ class Bullet(PhysicsEntity):
             self.remove(context)
         if (self.ticks_remaining <= 0):
             if self.type == 'missile':
-                self.brake(1)
-            else:
-                self.remove(context)
+                explosion = Particle(load_sprite_sheet('explosion3.png', 100, 100, colorkey = -1), target = self)
+                context.foregroundSpriteGroup.add(explosion)
+            self.remove(context)
                 
         
     def remove(self, context = None):

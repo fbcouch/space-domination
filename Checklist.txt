@@ -3,7 +3,7 @@ Space Domination
 
 - Weapons
 	+ basic Weapon class				
-		- refactor fire weapon to the weapon class				3
+		+ refactor fire weapon to the weapon class				3
 		
 - Options
 	- Custom hotkeys											3
@@ -28,3 +28,9 @@ Some Feedback/TODO:
 - faster laser recharge time
 - refuelable missles?
 - figure out how to warn players they're going off-screen or help them get back on more easily
+- max width/height for screen?
+- possibility of using ion cannons to disable ships then salvage for upgrades
+- keyboard controls for all menus
+- flipping fighter
+- options menu needs to return to pause menu while in game
+- damage decay of lasers?

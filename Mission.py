@@ -217,6 +217,7 @@ class MissionXMLParser(handler.ContentHandler):
         
 class MissionListXMLParser(handler.ContentHandler):
     missionList = None
+    inMission = False
     
     def __init__(self):
         handler.ContentHandler.__init__(self)
@@ -245,12 +246,18 @@ class MissionListXMLParser(handler.ContentHandler):
                 mission.append(image)
             else:
                 mission.append(None)
+                
+            mission.append(attrs.get('name',''))
+            mission.append('') # description
             self.missionList.append(mission)
+            
+            self.inMission = True
     
     def endElement(self, name):
-        pass
+        if name == "mission":
+            self.inMission = False
     
     def characters(self, content):
-        pass
+        if self.inMission: self.missionList[len(self.missionList) - 1][3] += content
     
     

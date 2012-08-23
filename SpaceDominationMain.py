@@ -11,7 +11,7 @@ Code and assets released under GPL3.0
 '''
 
 from AIShip import AIShip, StationShip
-from Menu import MenuManager
+from Menu import SpaceDominationGUI
 from Mission import *
 from Particle import Particle
 from Physics import *
@@ -20,6 +20,10 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
+from consts import MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT, VERSION, SPLASH_TIME, \
+    STATE_LOSE_FOCUS
+from gui.basicmenu import BasicMenu, BasicTextButton
+from gui.gui import GUI
 from hud import HUD
 from profile import Profile
 from pygame.locals import *
@@ -34,13 +38,6 @@ import pygame.gfxdraw
 import random
 import sys
 import xml.sax
-
-VERSION = "0.2"
-SPLASH_TIME = 2000
-STATE_LOSE_FOCUS = 2
-STATE_GAIN_FOCUS = 6
-MIN_WINDOW_WIDTH = 1024
-MIN_WINDOW_HEIGHT = 768
 
 class SpaceDominationMain():
     '''
@@ -104,6 +101,13 @@ class SpaceDominationMain():
             if 'active' in profile and profile['active']:
                 self.currentProfile = profile
                 break
+        
+        if not self.currentProfile:
+            if len(self.profiles) > 0:
+                self.currentProfile = self.profiles[0]
+            else:
+                self.setActiveProfile(profile.create_fresh_profile(id = 0))
+        
         #initialize managers
         pygame.init()
         random.seed()
@@ -162,12 +166,15 @@ class SpaceDominationMain():
         self.HUD = HUD()
         
         # load the menus
-        self.menuManager = MenuManager(self.screen, self)
+        #self.menuManager = MenuManager(self.screen, self)
+        self.menuManager = SpaceDominationGUI(self)
         
         
         self.gameState = SpaceDominationMain.GAMESTATE_NONE
         self.menuBackground = load_image("background.PNG")[0]
-        self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+        #self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+        self.menuManager.set_active(True)
+        self.menuManager.main_menu_click()
         # TODO: show the menu
         # eventually the menu will lead to...
         #self.gameState = SpaceDominationMain.GAMESTATE_RUNNING
@@ -178,14 +185,16 @@ class SpaceDominationMain():
         rect_list = []
         while True:
             # handle input
-            for event in pygame.event.get():
+            events = pygame.event.get()
+            
+            for event in events:
                 if event.type == QUIT:
                     sys.exit(0)
+                elif self.menuManager.is_active():
+                    self.menuManager.update(event)
+                
                 elif event.type == KEYDOWN:
-                    if self.menuManager.is_active():
-                        self.menuManager.update(event)
-                        if self.menuManager.selectedMenu == -1 and self.gameState == self.GAMESTATE_PAUSED: self.gameState = self.GAMESTATE_RUNNING
-                    elif event.key == K_ESCAPE:
+                    if event.key == K_ESCAPE:
                         if self.gameState == self.GAMESTATE_RUNNING:
                             self.pause_game()
                     # movement
@@ -223,12 +232,6 @@ class SpaceDominationMain():
                         if self.gameState == self.GAMESTATE_RUNNING:
                             self.pause_game()
                         
-                        
-                elif self.menuManager.is_active() and (event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP):
-                    if self.menuManager.is_active():
-                        self.menuManager.update(event)
-                        if self.menuManager.selectedMenu == -1 and self.gameState == self.GAMESTATE_PAUSED: self.gameState = self.GAMESTATE_RUNNING
-                        
                 
                 '''elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -238,8 +241,7 @@ class SpaceDominationMain():
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         self.setKey("fire", 0)'''
-
-            
+                
             # clear the background (blit a blank screen) then draw everything in the background then the sprite groups then the foreground group
             self.screen.blit(self.background, (0,0))
             
@@ -255,7 +257,15 @@ class SpaceDominationMain():
     
     def pause_game(self):
         self.gameState = self.GAMESTATE_PAUSED
-        self.menuManager.menu_state_parse(Menu.MENU_PAUSE)
+        self.menuManager.pause_menu_click()
+        
+    def unpause_game(self):
+        self.gameState = self.GAMESTATE_RUNNING
+        self.menuManager.close()
+        
+    def quit_mission(self):
+        self.gameState = self.GAMESTATE_GAMEOVER
+        self.menuManager.main_menu_click()
     
     def setKey(self, key, val): self.keys[key] = val
         
@@ -297,6 +307,8 @@ class SpaceDominationMain():
         self.foregroundSpriteGroup = OrderedUpdatesRect() #pygame.sprite.OrderedUpdates()
         self.physics = Physics()
         self.messageList = []
+        for key in self.keys: 
+            self.setKey(key, 0)
         
         #convert spawns to player or enemy
         for spawn in mission.spawnList:
@@ -349,6 +361,8 @@ class SpaceDominationMain():
             tempBg.image, tempBg.rect = Utils.load_image(bg.filename)
             tempBg.rect.topleft = (bg.x, bg.y)
             self.backgroundSpriteGroup.add(tempBg)
+            
+        self.updateTriggers()
         
     
     def linkTriggers(self, spawn, ship):
@@ -393,12 +407,12 @@ class SpaceDominationMain():
             if self.updateTriggers():
                 # player completed all primary objectives - mission should end with a victory status now
                 self.gameState = self.GAMESTATE_GAMEOVER
-                self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+                self.menuManager.main_menu_click()
                 
             if not self.playerShip in self.shipSpriteGroup:
                 # player ship died - game over :(
                 self.gameState = self.GAMESTATE_GAMEOVER
-                self.menuManager.menu_state_parse(Menu.MENU_MAIN)
+                self.menuManager.main_menu_click()
             
             if self.gameState == self.GAMESTATE_GAMEOVER:
                 # TODO the game is ending, save the profile stats
@@ -433,7 +447,7 @@ class SpaceDominationMain():
         
         elif self.gameState == self.GAMESTATE_GAMEOVER:
             for sprite in self.foregroundSpriteGroup:
-                sprite.update(self)
+                if isinstance(sprite, Particle): sprite.update(self)
             
             self.updateTriggers()
                 
@@ -563,8 +577,7 @@ class SpaceDominationMain():
             self.profiles.append(profile)
         
         self.currentProfile = profile
-        
-
+    
 class OrderedUpdatesRect(pygame.sprite.OrderedUpdates):
     '''
     extension of pygame.sprite.OrderedUpdates with a draw function that 
@@ -624,6 +637,54 @@ class ProfileXMLParser(handler.ContentHandler):
         
     
 #the main entry point for the program
+def test_gui():
+    pygame.init()
+    window = pygame.display.set_mode((1024, 768))
+    pygame.display.set_caption("Testing GUI")
+    screen = pygame.display.get_surface()
+    background = pygame.Surface(screen.get_size())
+    background = background.convert()
+    background.fill((0,0,0))
+    font = None
+    if pygame.font:
+        font = pygame.font.Font(None, 20)
+    
+    gui = GUI(None)
+    gui.set_active(True)
+    menu = BasicMenu(gui, h_pad=10, v_pad=10)
+    gui.add_child(menu)
+    menu.set_active(True)
+    menu.add_child(BasicTextButton(menu, text = 'Select Mission', select_fxn = menu.mouse_over_callback, callback = gui.generic_click, callback_kwargs = {'target_id': 1}))
+    menu.add_child(BasicTextButton(menu, text = 'Exit', select_fxn = menu.mouse_over_callback, callback = gui.exit_click))
+    gui.add_child(BasicMenu(gui))
+    '''
+    frame = Frame(gui)
+    gui.add_child(frame)
+    frame.set_active(True)
+    
+    testel = TestElement(frame)
+    testel.image = pygame.surface.Surface((100,50))
+    testel.image = testel.image.convert()
+    testel.image.fill((51, 102, 255))
+    testel.rect = testel.image.get_rect()
+    testel.rect.topleft = ((window.get_width() - testel.rect.width) * 0.5, (window.get_height() - testel.rect.height) * 0.5)
+    '''
+    while True:
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                sys.exit(0)
+        
+        if gui.is_active(): gui.update(events)
+        
+        screen.blit(background, (0,0))
+        
+        if gui.is_active(): gui.draw()
+        
+        pygame.display.flip()
+        
+
 if __name__ == "__main__":
+    #test_gui()
     app = SpaceDominationMain()
     app.run()

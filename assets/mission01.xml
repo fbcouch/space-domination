@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mission>
+<mission width="2000" height="2000" background-style="tiled" background-file="default_background.png">
 <background file="default_background.png" x="512.0" y="0.0" scale="1.0" />
 <background file="default_background.png" x="0.0" y="512.0" scale="1.0" />
 <background file="default_background.png" x="512.0" y="512.0" scale="1.0" />
