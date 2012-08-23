@@ -445,6 +445,7 @@ class PagedMenu(Frame):
         self.back_btn.rect.topleft = (x, y)
         self.back_btn.draw()
         
+        draw_rect.height += draw_rect.top - y
         draw_rect.top = y
         
         

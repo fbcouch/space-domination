@@ -267,14 +267,11 @@ class ProfileView(Frame):
         btn = BasicTextButton(self, text = "Delete Profile", font = pygame.font.Font(None, 24), callback = self.set_delete_profile)
         btn.rect.topleft = (400, 50)
         
-        btn = BasicTextButton(self, text='Main Menu', callback = self.parent.parent.main_menu_click, font = pygame.font.Font(None, 24))
-        btn.rect.topleft = (400, 100)
+        btn = BasicTextButton(self, text= 'Select & Return to Main Menu', callback = self.parent.parent.main_menu_click, font = pygame.font.Font(None, 24))
+        #btn.rect.topleft = (0, -btn.rect.height - self.v_pad)
            
         ds = DropdownSelector(self, items, sel_item, on_select = self.select_profile)
         ds.rect.topleft = (400, 0)
-        
-        
-        
         
         screen = pygame.display.get_surface()
         
@@ -292,7 +289,7 @@ class ProfileView(Frame):
             lb = ImageLabel(self, image, rotate = True, angle = 90)
             lb.rect.center = draw_rect.center
         
-        
+        btn.rect.bottomright = draw_rect.bottomright
         
         offset_x = (screen.get_rect().width - draw_rect.width) * 0.5
         offset_y = (screen.get_rect().height - draw_rect.height) * 0.5
@@ -352,7 +349,7 @@ class ProfileView(Frame):
             if child.is_active():
                 child.draw()
         
-        pygame.gfxdraw.rectangle(screen, pygame.rect.Rect(draw_rect.left - 5, draw_rect.top - 5, draw_rect.width + 10, draw_rect.height + 10), (51, 102, 255))
+        #pygame.gfxdraw.rectangle(screen, pygame.rect.Rect(draw_rect.left - 5, draw_rect.top - 5, draw_rect.width + 10, draw_rect.height + 10), (51, 102, 255))
         
         
         
@@ -447,6 +444,8 @@ class ProfileEdit(Frame):
         self.parent.set_profile_view()
         
     def set_shipselect(self):
+        self.profile['name'] = self.callsign_input.value
+        self.save_profiles_fxn()
         self.parent.set_profile_shipselect(self.profile)
         
 class ProfileDelete(Frame):
