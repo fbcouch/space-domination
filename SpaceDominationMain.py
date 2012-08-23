@@ -31,6 +31,7 @@ from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
 import Menu
 import Utils
+import consts
 import os
 import profile
 import pygame
@@ -475,8 +476,11 @@ class SpaceDominationMain():
                 bgimg = self.currentMission.background_image
                 # set the offset to start at the closest tiling position to the top/left of the current area
                 offset = [-1 * render[0], -1 * render[1]]
-                offset[0] = int(offset[0] / bgimg.get_width()) * bgimg.get_width()
-                offset[1] = int(offset[1] / bgimg.get_height()) * bgimg.get_height()
+                # set up parralax
+                offset[0] -= (bgimg.get_width() - consts.PARALLAX * render[0] % bgimg.get_width())
+                offset[1] -= (bgimg.get_height() - consts.PARALLAX * render[1] % bgimg.get_height())
+                #offset[0] = int(offset[0] / bgimg.get_width()) * bgimg.get_width()
+                #offset[1] = int(offset[1] / bgimg.get_height()) * bgimg.get_height()
                 start = [offset[0], offset[1]]
                 end = [-1 * render[0] + self.screen.get_width(), -1 * render[1] + self.screen.get_height()]
                 # render the tiles until off the screen

@@ -3,7 +3,7 @@ Created on Aug 20, 2012
 
 @author: Jami
 '''
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 
 MIN_WINDOW_WIDTH = 1024
 MIN_WINDOW_HEIGHT = 768
@@ -18,3 +18,5 @@ COLOR_GREEN = (0, 250, 0)
 COLOR_BLUE = (0, 0, 250)
 
 colors = {'orange': COLOR_ORANGE, 'red': COLOR_RED, 'green': COLOR_GREEN, 'blue': COLOR_BLUE}
+
+PARALLAX = 0.7 # set to less than 1 for parallax
