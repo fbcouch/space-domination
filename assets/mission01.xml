@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mission width="2000" height="2000" background-style="tiled" background-file="default_background.png">
-<background file="default_background.png" x="512.0" y="0.0" scale="1.0" />
-<background file="default_background.png" x="0.0" y="512.0" scale="1.0" />
-<background file="default_background.png" x="512.0" y="512.0" scale="1.0" />
-<background file="default_background.png" x="0.0" y="0.0" scale="1.0" />
-<background file="default_background.png" x="1024.0" y="0.0" scale="1.0" />
-<background file="default_background.png" x="1024.0" y="512.0" scale="1.0" />
+
 <playerspawn x="265.0" y="447.0" rot="30.0" >
 	<trigger id="3" type="objective-primary" condition="survive-attached" display-text="You must survive the mission." />
 </playerspawn>
