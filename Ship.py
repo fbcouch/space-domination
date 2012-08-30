@@ -71,7 +71,7 @@ class Ship(PhysicsEntity):
     weapons = None
     selected_weapon = 0
     
-    ticks_for_regen = 30
+    ticks_for_regen = 30.0
     
     hard_points = None
     
@@ -163,13 +163,13 @@ class Ship(PhysicsEntity):
     def get_position(self):
         return (self.rect.left, self.rect.top)
    
-    def update(self, context = None):
-        super(Ship, self).update(context)
+    def update(self, context = None, timestep = 1):
+        super(Ship, self).update(context, timestep)
         
         #for pt in self.hard_points:
         #    pt.update(context)
         
-        if self.ticks_for_regen == 0:
+        if self.ticks_for_regen <= 0:
             # health regen
             self.health += self.hregen
             if self.health > self.max_health:
@@ -186,14 +186,14 @@ class Ship(PhysicsEntity):
                 if wp.cur_ammo > wp.max_ammo:
                     wp.cur_ammo = wp.max_ammo
             
-            self.ticks_for_regen = 30
+            self.ticks_for_regen = 30.0
         else:
-            self.ticks_for_regen -= 1
+            self.ticks_for_regen -= timestep
         
         if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0):
             for ep in self.engine_points:
                 #engine_glow = Particle(load_sprite_sheet('glowengine1_10.png', 10, 10, colorkey = -1), interval = 1)
-                engine_glow = GlowParticle('circle', 10, self.engine_color, 100, interval = 2)
+                engine_glow = GlowParticle('circle', 10, self.engine_color, 100, interval = 1)
                 
                 offset = Vec2(0,0)
                 offset.setXY(ep[0] - 0.5 * self.original.get_rect().width, ep[1] - 0.5 * self.original.get_rect().height)

@@ -26,14 +26,15 @@ class Physics(object):
         
     
     
-    def updatePhysics(self, context = None):
+    def updatePhysics(self, context = None, timestep = 1):
         t1 = pygame.time.get_ticks()
+        counts = 0
         i=0
         while i < len(self.physicsChildren):
             pChild = self.physicsChildren[i]                      
             
             # accelerate
-            newVelocity = pChild.velocity[0] + pChild.accel[0], pChild.velocity[1] + pChild.accel[1]
+            newVelocity = pChild.velocity[0] + pChild.accel[0] * timestep, pChild.velocity[1] + pChild.accel[1] * timestep
             
             pChild.velocity = newVelocity
             
@@ -49,33 +50,19 @@ class Physics(object):
                     pChild.velocity = vel.getXY()
             
             
-            pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
-            
-            # Collision Detection:
-            j = i + 1
-            while j < len(self.physicsChildren): # check from the current sprite to the end of the list
-                pCollide = self.physicsChildren[j]
-                # test if these two collide by rect:
-                if pygame.sprite.collide_rect(pChild,pCollide):
-                    # the rectangles overlap, therefore check if colored pixels overlap:
-                    if pygame.sprite.collide_mask(pChild,pCollide):
-                        # this is a real collision
-                        
-                        if pChild.can_collide(pCollide) and pCollide.can_collide(pChild):
-                            pChild.collide(pCollide, context)
-                            pCollide.collide(pChild, context)
-                        
-                j+=1
+            pChild.rect.topleft = pChild.rect.left + pChild.velocity[0] * timestep, pChild.rect.top + pChild.velocity[1] * timestep
                     
             i+=1
         
-        '''# testing RDC
-        collision_groups = self.collisionDetection(self.physicsChildren, 10)
+        # Collision detection by Recursive Dimensional Clustering
+        collision_groups = self.collisionDetection(self.physicsChildren, 5)
+        # now brute-force the groups
         for gp in collision_groups:
             i = 0
-            for i in range(0, len(gp['members'])):
+            while i < len(gp['members']):
                 pChild = gp['members'][i]
-                for j in range(i+1, len(gp['members'])):
+                j = i + 1
+                while j < len(gp['members']):
                     pCollide = gp['members'][j]
                     if pygame.sprite.collide_rect(pChild, pCollide):
                         # the two rects collide
@@ -84,28 +71,30 @@ class Physics(object):
                             if pChild.can_collide(pCollide) and pCollide.can_collide(pChild):
                                 pChild.collide(pCollide, context)
                                 pCollide.collide(pChild, context)
+                    counts += 1
                     j += 1
-                i += 1'''
+                i += 1
         t2 = pygame.time.get_ticks()
-        print str(t2-t1) + " / " + str(len(self.physicsChildren))
+        #print str(t2-t1) + " / " + str(len(self.physicsChildren)) + " / " + str(counts)
+        print timestep
         return
     
     def collisionDetection(self, collide_list, group_size):
         '''use recursive dimensional clustering to speed up collision detection (I think this is what slows us down when there are lots of bullets flying)
            collide_list is obviously a list of PhysicsEntities, group_size is the maximum number of objects a group can have before it gets brute-forced'''
         
-        parents = self.subdivide(collide_list, 0, group_size)
-        children = []
-        for g in parents:
-            children.extend(self.subdivide(g['members'], 1, group_size))
+        return self.subdivide(collide_list, 0, group_size)
+        #children = []
+        #for g in parents:
+        #    children.extend(self.subdivide(g['members'], 1, group_size))
         
-        parents = children
-        children = []
-        for g in parents:
-            children.extend(self.subdivide(g['members'], 0, group_size))
+        #parents = children
+        #children = []
+        #for g in parents:
+        #    children.extend(self.subdivide(g['members'], 0, group_size))
         
         
-        return children
+        #return children
         
     def subdivide(self, collide_list, axis, group_size):
         '''recursive function that stops when the current group is <= group_size'''
@@ -157,7 +146,7 @@ class Physics(object):
             if len(g['members']) <= group_size:
                 returnval.append(g)
             else:
-                returnval.extend(self.subdivide(g['members'], axis, group_size))
+                returnval.extend(self.subdivide(g['members'], (axis + 1) % 2, group_size))
             
         return returnval
             

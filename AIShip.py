@@ -32,8 +32,8 @@ class AIShip(Ship):
             self.area_size = self.weapons[self.selected_weapon].bullet_speed * self.weapons[self.selected_weapon].bullet_ticks
         self.waypoint = self.update_waypoint()
         
-    def update(self, context = None):
-        super(AIShip, self).update(context)
+    def update(self, context = None, timestep = 1):
+        super(AIShip, self).update(context, timestep)
         
         if self.collide_risk(context.shipSpriteGroup):
             self.update_waypoint()
@@ -47,7 +47,7 @@ class AIShip(Ship):
             
             # TODO next add a bit of noise to account for difficulty
             
-            angle = self.face_target(target)
+            angle = self.face_target(target, timestep)
             
             bullet = None
             
@@ -85,14 +85,14 @@ class AIShip(Ship):
                 self.waypoint = self.update_waypoint()
             
             # we are not near the target (or didn't give a context)
-            self.face_target(self.waypoint)
+            self.face_target(self.waypoint, timestep)
             
         # accelerate toward target
         self.accelerate(self.speed * 0.25)
             
             
             
-    def face_target(self, target):
+    def face_target(self, target, timestep = 1):
   
         dx = target[0] - self.rect.left
         dy = target[1] - self.rect.top
@@ -105,10 +105,10 @@ class AIShip(Ship):
         elif dT < -180:
             dT += 360
         
-        if dT > self.turn: 
-            self.set_rotation((self.get_rotation() + self.turn) % 360)
-        elif dT < -1 * self.turn:
-            self.set_rotation((self.get_rotation() - self.turn) % 360)
+        if dT > self.turn * timestep: 
+            self.set_rotation((self.get_rotation() + self.turn * timestep) % 360)
+        elif dT < -1 * self.turn * timestep:
+            self.set_rotation((self.get_rotation() - self.turn * timestep) % 360)
         else:
             self.set_rotation(targetAngle)
             
@@ -146,7 +146,7 @@ class StationShip(AIShip):
         self.waypoint = (x, y)
         self.area_size = 500
         
-    def update(self, context = None):
+    def update(self, context = None, timestep = 1):
         super(AIShip, self).update(context)
         
         if not self.initialized:

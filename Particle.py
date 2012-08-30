@@ -14,13 +14,13 @@ class Particle(PhysicsEntity):
     spriteList = None
     currentSprite = 0
     interval = 0
-    counts = 0
+    counts = 0.0
     
     onRemove = None
     
     target = None
 
-    def __init__(self, spriteList = None, interval = 1, onRemove = None, target = None):
+    def __init__(self, spriteList = None, interval = 0.5, onRemove = None, target = None):
         '''
         Constructor
         '''
@@ -38,10 +38,10 @@ class Particle(PhysicsEntity):
             self.rect = pygame.rect.Rect(0,0,0,0)
         
     
-    def update(self, context):
+    def update(self, context, timestep = 1):
         
         
-        self.counts += 1
+        self.counts += timestep
         if self.counts >= self.interval:
             self.currentSprite += 1
             if self.currentSprite < len(self.spriteList): # still more images, continue looping
@@ -52,7 +52,7 @@ class Particle(PhysicsEntity):
             else: # no more images, call on-remove and remove self
                 self.remove(context)
             
-            self.counts = 0
+            self.counts -= self.interval
             
         if self.target != None and self.rect != None:
             # TODO I seriously doubt this works...need to edit this so it works and add it to a separate function
@@ -102,8 +102,8 @@ class GlowParticle(Particle):
         self.rect = self.spriteList.get_rect()
         self.set_rotation(self.rotation)
         
-    def update(self, context):
-        self.counts += 1
+    def update(self, context, timestep = 1):
+        self.counts += timestep
         if self.counts >= self.interval:
             # subtract step from alpha and apply it to the surface
             self.alpha -= self.step
@@ -113,7 +113,7 @@ class GlowParticle(Particle):
                 self.remove(context)
             
             # reset the counts
-            self.counts = 0
+            self.counts -= self.interval
         
         if self.target and self.rect:
             # work on this

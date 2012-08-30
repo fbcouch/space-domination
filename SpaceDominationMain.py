@@ -21,7 +21,7 @@ from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
 from consts import MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT, VERSION, SPLASH_TIME, \
-    STATE_LOSE_FOCUS
+    STATE_LOSE_FOCUS, FRAMERATE
 from gui.basicmenu import BasicMenu, BasicTextButton
 from gui.gui import GUI
 from hud import HUD
@@ -382,7 +382,7 @@ class SpaceDominationMain():
         return primObjComplete
     
     def gameLoop(self):
-        dt = self.clock.tick(30)
+        dt = self.clock.tick(consts.FRAMERATE)
         self.timeTotal += dt
         
         # display the FPS
@@ -391,19 +391,23 @@ class SpaceDominationMain():
             
         if self.gameState == self.GAMESTATE_RUNNING:
             # do physics
-            if pygame.time.get_ticks() - self.lastTick > 33:
-                self.physics.updatePhysics(self)
-                self.lastTick = pygame.time.get_ticks()
+            if self.lastTick == 0: self.lastTick = pygame.time.get_ticks()
+            #if pygame.time.get_ticks() - self.lastTick > 33:
+            #    self.physics.updatePhysics(self)
+            #    self.lastTick = pygame.time.get_ticks()
+            timestep = float(dt) * consts.GAMESPEED * 0.001
+            self.physics.updatePhysics(self, timestep)
+            
                 
             # update all sprites
             for sprite in self.backgroundSpriteGroup:
                 sprite.update(self)
             
             for sprite in self.shipSpriteGroup:
-                sprite.update(self)
+                sprite.update(self, timestep)
         
             for sprite in self.foregroundSpriteGroup:
-                sprite.update(self)
+                sprite.update(self, timestep)
 
             if self.updateTriggers():
                 # player completed all primary objectives - mission should end with a victory status now

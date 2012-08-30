@@ -78,7 +78,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     ' update(context)
     ' @param context is the main game manager that exposes variables that may be needed by the update function
     '''
-    def update(self, context = None):
+    def update(self, context = None, timestep = 1):
         pass
     
     def remove(self):

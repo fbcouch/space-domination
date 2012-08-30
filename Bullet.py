@@ -12,17 +12,17 @@ import pygame
 class Bullet(PhysicsEntity):
     
     parent = None
-    ticks_remaining = 0
+    ticks_remaining = 0.0
     damage = 0
     type = "laser"
     
     def __init__(self):
         super(Bullet, self).__init__()
     
-    def update(self, context = None):
+    def update(self, context = None, timestep = 1):
         super(Bullet, self).update(context)
         
-        self.ticks_remaining -= 1;
+        self.ticks_remaining -= timestep;
         
         if self.removeSelf:
             self.remove(context)
