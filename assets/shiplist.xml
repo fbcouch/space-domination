@@ -8,7 +8,7 @@
 		<weapon id="1" />
 	</ship>
 	<ship id="2" name="" file="block1.png" health="100" hregen="0" shields="0" sregen="0" speed="0" turn="0" armor="0" />
-	<ship id="3" name="" file="base-enemy1.png" health="100" hregen="0" shields="0" sregen="2" speed="8" turn="4" armor="0" engines="5,32;5,48" engine-color="red" flyable="True">
+	<ship id="3" name="" file="base-enemy1.png" health="100" hregen="0" shields="0" sregen="2" speed="8" turn="4" armor="0" engines="5,32;5,48" engine-color="blue" flyable="True">
 		<weapon id="1" points="45,35;45,45" />
 	</ship>
 	<ship id="4" name="laser-turret-1" file="laser-turret1.png" health="100" hregen="0"

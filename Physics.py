@@ -27,7 +27,7 @@ class Physics(object):
     
     
     def updatePhysics(self, context = None):
-        
+        t1 = pygame.time.get_ticks()
         i=0
         while i < len(self.physicsChildren):
             pChild = self.physicsChildren[i]                      
@@ -50,26 +50,6 @@ class Physics(object):
             
             
             pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
-            '''
-            if pChild.get_vel_sq() > 0:
-                # new way of physics updating
-                cur_vel = Vec2(0,0)
-                cur_vel.setXY(pChild.velocity[0], pChild.velocity[1])
-                
-                cur_accel = Vec2(0,0)
-                cur_accel.setXY(pChild.accel[0], pChild.accel[1])
-                
-                new_vel = cur_vel.add(cur_accel)
-                if new_vel.magnitude*new_vel.magnitude > pChild.max_vel_sq:
-                    # our speed is too large, so clamp the magnitude to the max vel
-                    new_vel.magnitude = math.sqrt(pChild.max_vel_sq)
-                
-                pChild.velocity = new_vel.getXY()
-            else:
-                pChild.velocity = (pChild.accel[0],pChild.accel[1])
-            
-            pChild.rect.topleft = pChild.rect.left + pChild.velocity[0], pChild.rect.top + pChild.velocity[1]
-            '''
             
             # Collision Detection:
             j = i + 1
@@ -88,8 +68,116 @@ class Physics(object):
                 j+=1
                     
             i+=1
+        
+        '''# testing RDC
+        collision_groups = self.collisionDetection(self.physicsChildren, 10)
+        for gp in collision_groups:
+            i = 0
+            for i in range(0, len(gp['members'])):
+                pChild = gp['members'][i]
+                for j in range(i+1, len(gp['members'])):
+                    pCollide = gp['members'][j]
+                    if pygame.sprite.collide_rect(pChild, pCollide):
+                        # the two rects collide
+                        if pygame.sprite.collide_mask(pChild, pCollide):
+                            # this is a real collision
+                            if pChild.can_collide(pCollide) and pCollide.can_collide(pChild):
+                                pChild.collide(pCollide, context)
+                                pCollide.collide(pChild, context)
+                    j += 1
+                i += 1'''
+        t2 = pygame.time.get_ticks()
+        print str(t2-t1) + " / " + str(len(self.physicsChildren))
         return
     
+    def collisionDetection(self, collide_list, group_size):
+        '''use recursive dimensional clustering to speed up collision detection (I think this is what slows us down when there are lots of bullets flying)
+           collide_list is obviously a list of PhysicsEntities, group_size is the maximum number of objects a group can have before it gets brute-forced'''
+        
+        parents = self.subdivide(collide_list, 0, group_size)
+        children = []
+        for g in parents:
+            children.extend(self.subdivide(g['members'], 1, group_size))
+        
+        parents = children
+        children = []
+        for g in parents:
+            children.extend(self.subdivide(g['members'], 0, group_size))
+        
+        
+        return children
+        
+    def subdivide(self, collide_list, axis, group_size):
+        '''recursive function that stops when the current group is <= group_size'''
+        if len(collide_list) <= group_size:
+            return [{'members': collide_list}]
+            
+        
+        collide_list = self.sortChildren(collide_list, axis)
+        
+        groups = []
+        for i in range(0, len(collide_list)):
+            child = collide_list[i]
+            if axis == 0:
+                if len(groups) == 0:
+                    # no groups, start a new one!
+                    groups.append({'min': child.rect.left, 'max': child.rect.left + child.rect.width, 'members': [child]})
+                else:
+                    foundgroup = False
+                    for g in groups:
+                        if (child.rect.left <= g['max'] and child.rect.left >= g['min']) or (child.rect.left + child.rect.width <= g['max'] and child.rect.left + child.rect.width >= g['min']):
+                            # it goes in this group!
+                            g['members'].append(child)
+                            if child.rect.left < g['min']: g['min'] = child.rect.left
+                            if child.rect.left + child.rect.width > g['max']: g['max'] = child.rect.left + child.rect.width
+                            foundgroup = True
+                    if not foundgroup:
+                        groups.append({'min': child.rect.left, 'max': child.rect.left + child.rect.width, 'members': [child]})
+                        
+            else:
+                if len(groups) == 0:
+                    groups.append({'min': child.rect.top, 'max': child.rect.top + child.rect.height, 'members': [child]})
+                else:
+                    foundgroup = False
+                    for g in groups:
+                        if (child.rect.top <= g['max'] and child.rect.top >= g['min']) or (child.rect.top + child.rect.height <= g['max'] and child.rect.top + child.rect.height >= g['min']):
+                            # it goes in this group!
+                            g['members'].append(child)
+                            if child.rect.top < g['min']: g['min'] = child.rect.top
+                            if child.rect.top + child.rect.height > g['max']: g['max'] = child.rect.top + child.rect.height
+                            foundgroup = True
+                    if not foundgroup:
+                        groups.append({'min': child.rect.top, 'max': child.rect.top + child.rect.height, 'members': [child]})
+        
+        if len(groups) == 1:
+            return groups
+        
+        returnval = []
+        for g in groups:
+            if len(g['members']) <= group_size:
+                returnval.append(g)
+            else:
+                returnval.extend(self.subdivide(g['members'], axis, group_size))
+            
+        return returnval
+            
+    def sortChildren(self, sort_list, axis):
+        newlist = []
+        for s in sort_list:
+            for n in newlist:
+                if axis == 0:
+                    if s is not n and s.rect.left < n.rect.left:
+                        newlist.insert(newlist.index(n), s)
+                        break
+                else:
+                    if s is not n and s.rect.top < n.rect.top:
+                        newlist.insert(newlist.index(n), s)
+                        break
+                
+            if not s in newlist:
+                newlist.append(s)
+                
+        return newlist
     
     def getChildren(self):
         return self.physicsChildren
@@ -98,6 +186,23 @@ class Physics(object):
         if not pentity is None:
             self.physicsChildren.append(pentity)
             
+    
+    def testRDC(self):
+        rectlist = []
+        one = pygame.sprite.Sprite()
+        one.rect = pygame.rect.Rect(0,0,20,20)
+        rectlist.append(one)
+        
+        one = pygame.sprite.Sprite()
+        one.rect = pygame.rect.Rect(10, 10, 20, 20)
+        rectlist.append(one)
+        
+        one = pygame.sprite.Sprite()
+        one.rect = pygame.rect.Rect(40, 40, 20, 20)
+        rectlist.append(one)
+        
+        print self.collisionDetection(rectlist, 1)
+    
     # i need to get vec2 working properly, so I'm going to write a method to test it.
     def testVec2(self):
         '''
@@ -191,4 +296,7 @@ class Physics(object):
         tv = Vec2(0,0).setXY(xy[0], xy[1])
         print "Test (x,y) to (m,a): (" + str(xy[0]) + "," + str(xy[1]) + ") --> (" + str(tv.magnitude) + "," + str(tv.theta) + ")" 
         return
-            
+
+if __name__ == "__main__":
+    p = Physics()
+    p.testRDC()
