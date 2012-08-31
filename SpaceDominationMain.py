@@ -398,6 +398,9 @@ class SpaceDominationMain():
             timestep = float(dt) * consts.GAMESPEED * 0.001
             self.physics.updatePhysics(self, timestep)
             
+            vel = Vec2(0,0)
+            vel.setXY(*self.playerShip.velocity)
+            print "Ship: %f / Vel: %f / timestep: %f" % (self.playerShip.get_rotation(), vel.theta, timestep)
                 
             # update all sprites
             for sprite in self.backgroundSpriteGroup:

@@ -64,7 +64,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
         
     def set_rotation(self, r=0):
         self.image = pygame.transform.rotate(self.original, r)
-        self.rotation = r
+        self.rotation = float(r) % 360.0
         self.rect = self.image.get_rect(center = self.rect.center)
         
     def get_rotation(self):

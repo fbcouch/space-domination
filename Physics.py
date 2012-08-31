@@ -76,7 +76,6 @@ class Physics(object):
                 i += 1
         t2 = pygame.time.get_ticks()
         #print str(t2-t1) + " / " + str(len(self.physicsChildren)) + " / " + str(counts)
-        print timestep
         return
     
     def collisionDetection(self, collide_list, group_size):
