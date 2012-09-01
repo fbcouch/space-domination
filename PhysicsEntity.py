@@ -18,6 +18,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     mass = 0            # TODO implement momentum in collisions
     
     rotation = 0        # important for acceleration stuff
+    position = (0.0, 0.0) # important for floating point physics
     
     removeSelf = False
     
@@ -34,18 +35,15 @@ class PhysicsEntity(pygame.sprite.Sprite):
         
     def accelerate_r(self, mag = 0, r = 0):
         # basically, we add the vector (mag, rotation) to the current accel value
-        
         jerk = Vec2(mag, r)
         accel = Vec2(0,0)
         accel.setXY(self.accel[0], self.accel[1])
         
         new_accel = accel.add(jerk)
-        
-        if new_accel.magnitude * new_accel.magnitude <= self.max_accel_sq:
+        if new_accel.magnitude * new_accel.magnitude > self.max_accel_sq:
             new_accel.magnitude = math.sqrt(self.max_accel_sq)
+        self.accel = new_accel.getXY()
         
-        self.accel = accel.getXY()
-       
        
        
     def brake(self, brake = 0):
@@ -63,9 +61,11 @@ class PhysicsEntity(pygame.sprite.Sprite):
         
         
     def set_rotation(self, r=0):
-        self.image = pygame.transform.rotate(self.original, r)
         self.rotation = float(r) % 360.0
+        self.image = pygame.transform.rotate(self.original, int(r))
+        cp = self.rect.copy()
         self.rect = self.image.get_rect(center = self.rect.center)
+        self.position = (self.position[0] - cp.left + self.rect.left, self.position[1] - cp.top + self.rect.top)
         
     def get_rotation(self):
         return self.rotation
@@ -79,7 +79,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     ' @param context is the main game manager that exposes variables that may be needed by the update function
     '''
     def update(self, context = None, timestep = 1):
-        pass
+        self.rect.topleft = self.position
     
     def remove(self):
         pass

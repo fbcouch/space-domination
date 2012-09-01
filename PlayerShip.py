@@ -16,7 +16,7 @@ class PlayerShip(Ship):
         super(PlayerShip,self).__init__(x, y, r, proto, parent, context)
         
         
-    def update(self, context = None, timestep = 1):
+    def update(self, context = None, timestep = 1.0):
         super(PlayerShip, self).update(context, timestep)
         if context:
             if(context.keys["accel"]): self.accelerate(self.speed * 0.25) 
@@ -25,8 +25,8 @@ class PlayerShip(Ship):
             
             if not (context.keys["accel"] or context.keys["brake"]): self.accel = (0,0)
             
-            if(context.keys["turnLeft"]): self.set_rotation(self.get_rotation() + 5 * timestep)
-            if(context.keys["turnRight"]): self.set_rotation(self.get_rotation() - 5 * timestep)
+            if(context.keys["turnLeft"]): self.set_rotation(self.get_rotation() + 5.0 * timestep)
+            if(context.keys["turnRight"]): self.set_rotation(self.get_rotation() - 5.0 * timestep)
             
             if(context.keys["fire"]): 
                 bullet = self.fire_weapon(context.timeTotal)

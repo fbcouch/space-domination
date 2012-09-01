@@ -70,12 +70,15 @@ class Weapon(object):
                     offset = offset.getXY()
                     bullet.rect.center = sprite.rect.center
                     bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
+                    bullet.position = bullet.rect.topleft
+                    
                 else:
                     # move the bullet to the center-front of the ship
                     bullet.rect.center = sprite.rect.left + sprite.rect.width * 0.5, sprite.rect.top + sprite.rect.height * 0.5
                     offset = Vec2(sprite.rect.height * 0.5 + bullet.rect.width, rotation)
                     offset = offset.getXY()
                     bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
+                    bullet.position = bullet.rect.topleft
                 
                 bullet.original = bullet.image
                 bullet.set_rotation(rotation)

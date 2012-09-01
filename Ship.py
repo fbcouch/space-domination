@@ -158,10 +158,11 @@ class Ship(PhysicsEntity):
         return None
     
     def set_position(self, x, y):
+        self.position = (x, y)
         self.rect.topleft = x, y
         
     def get_position(self):
-        return (self.rect.left, self.rect.top)
+        return self.position#(self.rect.left, self.rect.top)
    
     def update(self, context = None, timestep = 1):
         super(Ship, self).update(context, timestep)

@@ -21,5 +21,5 @@ colors = {'orange': COLOR_ORANGE, 'red': COLOR_RED, 'green': COLOR_GREEN, 'blue'
 
 PARALLAX = 1.0 # set to less than 1 for parallax
 
-FRAMERATE = 30 # frames per second for drawing
-GAMESPEED = 30 # frames per second for the game to run
+FRAMERATE = 60 # frames per second for drawing
+GAMESPEED = 20 # frames per second for the game to run

@@ -396,11 +396,12 @@ class SpaceDominationMain():
             #    self.physics.updatePhysics(self)
             #    self.lastTick = pygame.time.get_ticks()
             timestep = float(dt) * consts.GAMESPEED * 0.001
+            
             self.physics.updatePhysics(self, timestep)
             
             vel = Vec2(0,0)
             vel.setXY(*self.playerShip.velocity)
-            print "Ship: %f / Vel: %f / timestep: %f" % (self.playerShip.get_rotation(), vel.theta, timestep)
+            #print "Ship: %f / Vel: %f (%f, %f) / timestep: %f" % (self.playerShip.get_rotation(), vel.theta, self.playerShip.velocity[0], self.playerShip.velocity[1], timestep)
                 
             # update all sprites
             for sprite in self.backgroundSpriteGroup:
@@ -523,13 +524,10 @@ class SpaceDominationMain():
                     for hp in sprite.hard_points:
                         self.screen.blit(self.defaultfont.render("%i/%i" % (int(hp.health), int(hp.max_health)), 1, (0, 250, 0)),
                                          (hp.rect.left + render[0], hp.rect.top + hp.rect.height + render[1]))
-                                                                 
-                #if not sprite == self.playerShip:
-                #    pygame.gfxdraw.box(self.screen, pygame.rect.Rect(sprite.waypoint[0] - 5 + render[0], sprite.waypoint[1] - 5 + render[1], 10, 10), (51, 102, 255))
-        
+                                                        
         
             self.HUD.draw(self.screen, self, render)
-            
+                
             
             if self.gameState == self.GAMESTATE_GAMEOVER:
                 if self.updateTriggers():
@@ -538,7 +536,7 @@ class SpaceDominationMain():
                 else:
                     text_surf = self.largefont.render("MISSION FAILED", 1, (255, 0, 0))
                     self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
-        
+            
         return True
     
     def createDisplay(self):

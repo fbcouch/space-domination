@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <profilelist default="0">
-	<profile shots-hit="6016" name="jami" kills="166" deaths="29" damage-dealt="41280" height="900" width="1440" ship="6" shots-fired="8964" id="0" damage-taken="10735"></profile>
-	<profile shots-hit="1753" name="testing1" kills="55" deaths="12" damage-dealt="13610" height="900" width="1440" damage-taken="4505" ship="0" id="1" shots-fired="2719"></profile>
-	<profile shots-hit="361" name="newbie" kills="28" deaths="6" damage-dealt="3230" height="900" width="1440" damage-taken="1465" ship="0" id="2" shots-fired="860"></profile>
+	<profile shots-hit="6616" name="jami" kills="192" deaths="44" damage-dealt="46370" height="900" width="1440" damage-taken="14215" ship="6" id="0" shots-fired="9807"></profile>
+	<profile shots-hit="1944" name="testing1" kills="72" deaths="13" damage-dealt="14850" height="900" width="1440" ship="0" shots-fired="3132" id="1" damage-taken="5600"></profile>
+	<profile shots-hit="361" name="newbie" kills="28" deaths="6" damage-dealt="3230" height="900" width="1440" ship="0" shots-fired="860" id="2" damage-taken="1465"></profile>
 </profilelist>

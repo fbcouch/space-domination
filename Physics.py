@@ -33,25 +33,37 @@ class Physics(object):
         while i < len(self.physicsChildren):
             pChild = self.physicsChildren[i]                      
             
+            accel = Vec2(0,0)
+            accel.setXY(pChild.accel[0], pChild.accel[1])
+            accel.magnitude *= timestep
+            accel = accel.getXY()
             # accelerate
-            newVelocity = pChild.velocity[0] + pChild.accel[0] * timestep, pChild.velocity[1] + pChild.accel[1] * timestep
+            
+            newVelocity = pChild.velocity[0] + accel[0], pChild.velocity[1] + accel[1]
+            
             
             pChild.velocity = newVelocity
             
-            # get the velocity in the current direction of movement
+            # clamp the velocity to the max
             if pChild.get_vel_sq() > 0:
                 vel = Vec2(0,0)
                 vel.setXY(pChild.velocity[0], pChild.velocity[1])
-            
-                vel.theta = pChild.rotation
                 
                 if vel.magnitude*vel.magnitude > pChild.max_vel_sq:
                     vel.magnitude = math.sqrt(pChild.max_vel_sq)
-                    pChild.velocity = vel.getXY()
+                pChild.velocity = vel.getXY()
+                
             
+            pos = (pChild.position[0], pChild.position[1])
             
-            pChild.rect.topleft = pChild.rect.left + pChild.velocity[0] * timestep, pChild.rect.top + pChild.velocity[1] * timestep
-                    
+            vel = Vec2(0,0)
+            vel.setXY(pChild.velocity[0], pChild.velocity[1])
+            vel.magnitude *= timestep
+            vel = vel.getXY()
+            
+            pChild.position = (pChild.position[0] + vel[0], pChild.position[1] + vel[1])
+            pChild.rect.topleft = pChild.position
+            
             i+=1
         
         # Collision detection by Recursive Dimensional Clustering
@@ -75,7 +87,6 @@ class Physics(object):
                     j += 1
                 i += 1
         t2 = pygame.time.get_ticks()
-        #print str(t2-t1) + " / " + str(len(self.physicsChildren)) + " / " + str(counts)
         return
     
     def collisionDetection(self, collide_list, group_size):
@@ -83,17 +94,6 @@ class Physics(object):
            collide_list is obviously a list of PhysicsEntities, group_size is the maximum number of objects a group can have before it gets brute-forced'''
         
         return self.subdivide(collide_list, 0, group_size)
-        #children = []
-        #for g in parents:
-        #    children.extend(self.subdivide(g['members'], 1, group_size))
-        
-        #parents = children
-        #children = []
-        #for g in parents:
-        #    children.extend(self.subdivide(g['members'], 0, group_size))
-        
-        
-        #return children
         
     def subdivide(self, collide_list, axis, group_size):
         '''recursive function that stops when the current group is <= group_size'''
