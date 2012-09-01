@@ -2,7 +2,7 @@
 <weaponlist>
 	<weapon id="0" name="Laser (Red)" file="laser-red1.png" ammo="100" regen="5" damage="5" rate="100" speed="25" life="100" type="laser" />
 	<weapon id="1" name="Laser (Green)" file="laser-green1.png" ammo="100" regen="2" damage="5" rate="150" speed="25" life="100" type="laser" />
-	<weapon id="2" name="Missile" file="missile1.png" ammo="5" regen="0" damage="100" rate="1000" speed="15" life="100" type="missile" />
+	<weapon id="2" name="Missile" file="missile1.png" ammo="5" regen="0" damage="100" rate="1000" speed="15" life="100" type="missile" engines="1,10" engine-color="red" />
 	<weapon id="3" name="Laser Turret 1" file="laser-green1.png" ammo="100" regen="2" damage="5" rate="500" speed="25" life="100" type="laser" />
-	<weapon id="4" name="Missile Turret 1" file="missile1.png" ammo="1" damage="50" regen="0.1" rate="1000" speed="10" life="100" type="missile" />
+	<weapon id="4" name="Missile Turret 1" file="missile1.png" ammo="1" damage="50" regen="0.1" rate="1000" speed="10" life="100" type="missile" engines="1,10" engine-color="red" />
 </weaponlist>

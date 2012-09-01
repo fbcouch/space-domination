@@ -3,6 +3,7 @@ Created on Aug 14, 2012
 
 @author: Jami
 '''
+import consts
 import pygame
 
 class Profile(dict):
@@ -34,7 +35,12 @@ def create_fresh_profile(**kwargs):
     profile['id'] = id
     profile['name'] = 'newbie'
     profile['ship'] = 0
-    profile['width'] = pygame.display.get_surface().get_width()
-    profile['height'] = pygame.display.get_surface().get_height()
+    disp = pygame.display.get_surface()
+    if disp:
+        profile['width'] = pygame.display.get_surface().get_width()
+        profile['height'] = pygame.display.get_surface().get_height()
+    else:
+        profile['width'] = consts.MIN_WINDOW_WIDTH
+        profile['height'] = consts.MIN_WINDOW_HEIGHT
     
     return profile

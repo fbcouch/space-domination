@@ -8,6 +8,7 @@ from Utils import *
 from Vec2 import Vec2
 from xml.sax import handler, make_parser
 import Utils
+import consts
 
 class Weapon(object):
     id = 0
@@ -27,6 +28,9 @@ class Weapon(object):
     
     image_file = None
     image = None
+    
+    engines = None
+    engine_color = None
     
     def __init__(self):
         pass
@@ -79,6 +83,10 @@ class Weapon(object):
                     offset = offset.getXY()
                     bullet.rect.topleft = bullet.rect.left + offset[0], bullet.rect.top + offset[1]
                     bullet.position = bullet.rect.topleft
+                
+                if self.engines:
+                    bullet.engine_points = self.engines
+                    bullet.engine_color = self.engine_color
                 
                 bullet.original = bullet.image
                 bullet.set_rotation(rotation)
@@ -143,6 +151,8 @@ class Weapon(object):
         returnVal.image_file = self.image_file
         returnVal.image = self.image
         returnVal.type = self.type
+        returnVal.engines = self.engines
+        returnVal.engine_color = self.engine_color
         return returnVal
     
 class WeaponListXMLParser(handler.ContentHandler):
@@ -173,7 +183,16 @@ class WeaponListXMLParser(handler.ContentHandler):
             weapon.bullet_speed = float(attrs.get('speed', '6'))
             weapon.bullet_ticks = int(attrs.get('life', '10'))
             weapon.name = attrs.get('name', 'Unnamed Weapon')   
-            weapon.type = attrs.get('type', 'laser')        
+            weapon.type = attrs.get('type', 'laser')    
+            engines = attrs.get('engines', None)
+            
+            if engines:
+                weapon.engines = Utils.parse_pointlist(engines)
+            color = attrs.get('engine-color', 'orange')
+            if color in consts.colors:
+                weapon.engine_color = consts.colors[color]
+            else:
+                weapon.engine_color = consts.COLOR_ORANGE
             
             weapon.image_file = attrs.get('file','')
             

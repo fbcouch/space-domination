@@ -24,11 +24,16 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     parent = None
     
+    engine_points = None
+    engine_color = None
+    
     def __init__(self):
         super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
         self.image = None
         self.rect = None
         self.original = None
+        
+        
         
     def accelerate(self, mag = 0):
         self.accelerate_r(mag, self.rotation)
@@ -80,6 +85,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     '''
     def update(self, context = None, timestep = 1):
         self.rect.topleft = self.position
+        
     
     def remove(self):
         pass

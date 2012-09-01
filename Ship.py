@@ -75,8 +75,7 @@ class Ship(PhysicsEntity):
     
     hard_points = None
     
-    engine_points = None
-    engine_color = None
+    
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(Ship, self).__init__()
@@ -86,8 +85,7 @@ class Ship(PhysicsEntity):
         self.set_position(x,y)
         self.set_rotation(r)
         self.stats = {'kills': 0, 'shots-fired': 0, 'shots-hit': 0, 'damage-dealt': 0, 'damage-taken': 0, 'damaged-by': {}}
-        if self.engine_points and not self.engine_color:
-            self.engine_color = consts.COLOR_ORANGE
+        
         
         #if not parent is None: parent.add(self)
         self.parent = parent

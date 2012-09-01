@@ -40,7 +40,7 @@ import random
 import sys
 import xml.sax
 
-class SpaceDominationMain():
+class SpaceDominationMain(object):
     '''
     classdocs
     '''
@@ -98,9 +98,9 @@ class SpaceDominationMain():
         '''
         # before anything else, load the profiles
         self.profiles = ProfileXMLParser().loadProfiles(os.path.join('assets','profiles.xml'))
-        for profile in self.profiles:
-            if 'active' in profile and profile['active']:
-                self.currentProfile = profile
+        for p in self.profiles:
+            if 'active' in p and p['active']:
+                self.currentProfile = p
                 break
         
         if not self.currentProfile:
@@ -108,6 +108,7 @@ class SpaceDominationMain():
                 self.currentProfile = self.profiles[0]
             else:
                 self.setActiveProfile(profile.create_fresh_profile(id = 0))
+                self.saveProfiles()
         
         #initialize managers
         pygame.init()

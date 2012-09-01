@@ -3,9 +3,10 @@ Created on Jul 4, 2012
 
 @author: Jami
 '''
-from Particle import Particle
+from Particle import Particle, GlowParticle
 from PhysicsEntity import PhysicsEntity
 from Utils import load_sprite_sheet
+from Vec2 import Vec2
 import pygame
 
 
@@ -23,6 +24,19 @@ class Bullet(PhysicsEntity):
         super(Bullet, self).update(context)
         
         self.ticks_remaining -= timestep;
+        
+        if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0):
+            for ep in self.engine_points:
+                #engine_glow = Particle(load_sprite_sheet('glowengine1_10.png', 10, 10, colorkey = -1), interval = 1)
+                engine_glow = GlowParticle('circle', 10, self.engine_color, 100, interval = 1)
+                
+                offset = Vec2(0,0)
+                offset.setXY(ep[0] - 0.5 * self.original.get_rect().width, ep[1] - 0.5 * self.original.get_rect().height)
+                offset.theta += self.rotation
+                offset = offset.getXY()
+                engine_glow.rect.center = (self.rect.center[0] + offset[0], self.rect.center[1] + offset[1])
+                engine_glow.set_rotation(self.rotation)
+                context.foregroundSpriteGroup.add(engine_glow)
         
         if self.removeSelf:
             self.remove(context)
