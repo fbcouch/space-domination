@@ -9,7 +9,7 @@ Space Domination
 	- Custom hotkeys											3
 		
 - Persistence
-	- "Pilot" system
+	+ "Pilot" system
 		+ create profiles.xml									3
 		+ load "Pilots" from profiles.xml						3
 		+ create/select/remove pilots							3

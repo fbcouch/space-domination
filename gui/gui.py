@@ -81,6 +81,9 @@ class GUI(Frame):
     
     def main_menu_click(self):
         '''open the main menu'''
+        if self.parent and self.parent.gameState == self.parent.GAMESTATE_PAUSED and self.pause_menu and self.pause_menu in self.children:
+            return self.generic_click(target_id = self.children.index(self.pause_menu))
+        
         if self.main_menu in self.children:
             return self.generic_click(target_id = self.children.index(self.main_menu))
         return False
