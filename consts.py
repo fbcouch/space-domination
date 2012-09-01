@@ -3,7 +3,7 @@ Created on Aug 20, 2012
 
 @author: Jami
 '''
-VERSION = "0.2.2"
+VERSION = "0.3"
 
 MIN_WINDOW_WIDTH = 1024
 MIN_WINDOW_HEIGHT = 768

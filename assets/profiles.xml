@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<profilelist default="1">
-	<profile shots-hit="6865" name="jami" kills="205" deaths="48" damage-dealt="47900" height="900" width="1440" damage-taken="15180" ship="6" id="0" shots-fired="10234"></profile>
-	<profile shots-hit="2131" name="testing1" kills="92" deaths="21" damage-dealt="17115" height="900" width="1440" ship="0" shots-fired="3517" id="1" damage-taken="8015"></profile>
-	<profile shots-hit="361" name="newbie" kills="28" deaths="6" damage-dealt="3230" height="900" width="1440" ship="0" shots-fired="860" id="2" damage-taken="1465"></profile>
+<profilelist default="0">
+	<profile width="1024" ship="0" id="0" name="newbie" height="768"></profile>
 </profilelist>
