@@ -35,21 +35,24 @@ class Weapon(object):
     def __init__(self):
         pass
     
-    def can_fire(self, time):
+    def can_fire(self):
         
         if not self.fire_points or len(self.fire_points) == 0: 
             points = 1
         else:
             points = len(self.fire_points)
-        if (self.cur_ammo >= points and time > self.last_fire + self.fire_rate):
+        if (self.cur_ammo >= points and self.last_fire > self.fire_rate):
             return True
         return False
+    
+    def update(self, context, timestep = 1):
+        self.last_fire += timestep
     
     def fire(self, time, parent, sprite, rotation, velocity):
         '''fire the weapon if possible given (time)'''
         weapon = self
         bullets = []
-        if self.can_fire(time):
+        if self.can_fire():
             if weapon.fire_points and len(weapon.fire_points) > 0:
                 for point in weapon.fire_points:
                     bullets.append(Bullet())
@@ -114,7 +117,7 @@ class Weapon(object):
             
                 # increment weapon stuff
                 weapon.cur_ammo -= 1
-                weapon.last_fire = time
+                weapon.last_fire = 0
             
                 # set up the bullet lifetime info
                 bullet.ticks_remaining = weapon.bullet_ticks

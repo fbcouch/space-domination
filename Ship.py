@@ -143,7 +143,7 @@ class Ship(PhysicsEntity):
         '''
         fire_weapon(self, time): fires the currently selected weapon, if possible
         '''   
-        if(self.selected_weapon < len(self.weapons) and self.weapons[self.selected_weapon].can_fire(time)):
+        if(self.selected_weapon < len(self.weapons) and self.weapons[self.selected_weapon].can_fire()):
             
             # increment the stats
             if self.parent and self in self.parent.hard_points:
@@ -167,7 +167,9 @@ class Ship(PhysicsEntity):
         
         #for pt in self.hard_points:
         #    pt.update(context)
-        
+        for wp in self.weapons:
+            wp.update(context, timestep)
+            
         if self.ticks_for_regen <= 0:
             # health regen
             self.health += self.hregen
