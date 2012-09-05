@@ -72,12 +72,24 @@ class MissionMenu(PagedMenu):
             draw_rect.height = y - draw_rect.top
         return draw_rect
             
+    def update(self, event):
+        if super(MissionMenu, self).update(event):
+            return True
         
+        
+        return False
+    
+    
+    
+    
     def mouse_over_callback(self, child):
+        if self.selected_item and self.selected_item is not child:
+            self.selected_item.on_mouse_off()
         self.selected_mission = child.callback_kwargs.get('value', None)
+        self.selected_item = child
         
     def mouse_off_callback(self, child):
-        if self.selected_mission is child.callback_kwargs.get('value', None): self.selected_mission = None
+        pass#if self.selected_mission is child.callback_kwargs.get('value', None): self.selected_mission = None
     
     def mission_click(self, **kwargs):
         mission = kwargs.get('value', None)

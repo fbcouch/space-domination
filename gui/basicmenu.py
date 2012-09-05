@@ -362,8 +362,27 @@ class PagedMenu(Frame):
             for i in range(len(self.items), len(self.children)):
                 self.children[i].update(event)
         
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.back_btn_callback()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.back_btn_callback()
+                return True
+            elif event.key == pygame.K_RIGHT or event.key == pygame.K_DOWN:
+                item = self.get_next_btn(self.selected_item)
+                if self.selected_item: self.selected_item.on_mouse_off()
+                item.on_mouse_over()
+                self.selected_item = item
+                
+                return True
+            elif event.key == pygame.K_UP or event.key == pygame.K_LEFT:
+                item = self.get_prev_btn(self.selected_item)
+                if self.selected_item: self.selected_item.on_mouse_off()
+                item.on_mouse_over()
+                self.selected_item = item
+                return True
+            elif event.key == pygame.K_RETURN:
+                self.selected_item.on_click()
+                return True
+        return False
     
     def get_num_pages(self):
         num_pages = len(self.items) / float(self.num_per_page)
@@ -450,8 +469,56 @@ class PagedMenu(Frame):
         
         
         return draw_rect
+    
+    
+    
+    def get_next_btn(self, current):
+        if current is None:
+            if len(self.children) > 0: return self.children[0]
+            return None
+        if current is self.next_btn:
+            return self.back_btn
+        elif current is self.back_btn and self.prev_btn.is_enabled():
+            return self.prev_btn
+        elif current is self.prev_btn or current is self.back_btn:
+            # set to the first item displayed
+            return self.children[(self.page - 1) * self.num_per_page]
+        else:
+            new_i = self.children.index(current) + 1
             
-        
+            if new_i >= self.page * self.num_per_page or new_i >= len(self.children) - 3:
+                if self.next_btn.is_enabled():
+                    return self.next_btn
+                else:
+                    return self.back_btn
+                
+            return self.children[new_i]
+    
+    def get_prev_btn(self, current):
+        if current is None:
+            if len(self.children) > 0: return self.children[0]
+            return None
+        if current is self.prev_btn:
+            return self.back_btn
+        elif current is self.back_btn and self.next_btn.is_enabled():
+            return self.next_btn
+        elif current is self.next_btn or current is self.back_btn:
+            # set to the last item displayed
+            i = self.page * self.num_per_page - 1
+            if i >= len(self.children) - 4:
+                i = len(self.children) - 4
+                
+            return self.children[i]
+        else:
+            new_i = self.children.index(current) - 1
+
+            if new_i < (self.page - 1) * self.num_per_page:
+                if self.prev_btn.is_enabled():
+                    return self.prev_btn
+                else:
+                    return self.back_btn
+            return self.children[new_i]
+    
     def mouse_over_callback(self, child):
         pass
         

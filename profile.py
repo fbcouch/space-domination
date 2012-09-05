@@ -40,7 +40,7 @@ def create_fresh_profile(**kwargs):
         profile['width'] = pygame.display.get_surface().get_width()
         profile['height'] = pygame.display.get_surface().get_height()
     else:
-        profile['width'] = consts.MIN_WINDOW_WIDTH
-        profile['height'] = consts.MIN_WINDOW_HEIGHT
+        profile['width'] = consts.DEFAULT_WINDOW_WIDTH
+        profile['height'] = consts.DEFAULT_WINDOW_HEIGHT
     
     return profile
