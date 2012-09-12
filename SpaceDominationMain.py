@@ -20,6 +20,7 @@ from PlayerShip import PlayerShip
 from Ship import Ship, PShip, Weapon, ShipListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
+from campaign import CampaignManager
 from consts import MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT, VERSION, SPLASH_TIME, \
     STATE_LOSE_FOCUS, FRAMERATE
 from gui.basicmenu import BasicMenu, BasicTextButton
@@ -91,6 +92,9 @@ class SpaceDominationMain(object):
     currentProfile = None
     
     HUD = None
+    
+    # Campaign manager
+    campaignMgr = None
     
     def __init__(self):
         '''
@@ -166,6 +170,9 @@ class SpaceDominationMain(object):
         
         # load the HUD
         self.HUD = HUD()
+        
+        # load the Campaign mangager
+        self.campaignMgr = CampaignManager(self)
         
         # load the menus
         #self.menuManager = MenuManager(self.screen, self)

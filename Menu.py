@@ -21,6 +21,7 @@ class SpaceDominationGUI(GUI):
         self.main_menu = BasicMenu(self, h_pad = 5, v_pad = 5)
         self.add_child(self.main_menu)
         self.main_menu.add_child(BasicTextButton(self.main_menu, text = 'Select Mission', select_fxn = self.main_menu.mouse_over_callback, callback = self.mission_menu_click))
+        self.main_menu.add_child(BasicTextButton(self.main_menu, text = 'Campaigns', select_fxn = self.main_menu.mouse_over_callback, callback = parent.campaignMgr.create_new_random))
         self.main_menu.add_child(BasicTextButton(self.main_menu, text = 'Profiles', select_fxn = self.main_menu.mouse_over_callback, callback = self.profile_menu_click))
         self.main_menu.add_child(BasicTextButton(self.main_menu, text = 'Options', select_fxn = self.main_menu.mouse_over_callback, callback = self.options_menu_click))
         self.main_menu.add_child(BasicTextButton(self.main_menu, text = 'Exit', select_fxn = self.main_menu.mouse_over_callback, callback = self.exit_click))

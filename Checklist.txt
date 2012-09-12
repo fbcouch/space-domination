@@ -1,23 +1,18 @@
 Space Domination
 																Target Release
-
-- Weapons
-	+ basic Weapon class				
-		+ refactor fire weapon to the weapon class				3
 		
 - Options
-	- Custom hotkeys											3
+	- Custom hotkeys											4?
 		
 - Persistence
-	+ "Pilot" system
-		+ create profiles.xml									3
-		+ load "Pilots" from profiles.xml						3
-		+ create/select/remove pilots							3
-		+ track pilot's ship									3
-		+ track stats											3
 	- Upgrades
 		- allow player to acquire better weapons, etc			4
 	- Campaign missions											4
+		- create gui
+		- assign planets to factions
+		- assign starting values to planets
+		- campaign AI?
+		
 	
 - Campaign/Mission Editor										5
 - Cooperative Play												6
@@ -26,7 +21,6 @@ Space Domination
 Some Feedback/TODO:
 - revisit adding velocity of ship to velocity of bullets
 - faster laser recharge time
-- refuelable missles?
 - figure out how to warn players they're going off-screen or help them get back on more easily
 - max width/height for screen?
 - possibility of using ion cannons to disable ships then salvage for upgrades
