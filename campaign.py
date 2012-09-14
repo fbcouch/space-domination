@@ -3,6 +3,9 @@ Created on Sep 12, 2012
 
 @author: Jami
 '''
+from Mission import Mission, Spawn
+from Ship import Ship
+from Trigger import CreateTrigger
 from gui.basicmenu import BasicImageButton
 from gui.gui import Frame
 import Utils
@@ -116,7 +119,7 @@ class CampaignManager(object):
         return Planet(names[random.randint(0, len(names) - 1)], files[random.randint(0, len(files) - 1)])
     
     def show_display(self, parent):
-        self.display = CampaignMenu(parent, campaign = self.currentCampaign, manager = self)
+        self.display = CampaignMenu(parent, campaign = self.currentCampaign, manager = self, ship_list = self.context.shipList, mission_start = self.context.startMission)
         parent.add_child(self.display)
         self.display.set_active(True)
         
@@ -173,11 +176,16 @@ class CampaignMenu(Frame):
     
     background = None
     
+    mission_start = None
+    ship_list = None
+    
     def __init__(self, parent, **kwargs):
         super(CampaignMenu, self).__init__(parent, **kwargs)
         
         self.manager = kwargs.get('manager', None)
         self.campaign = kwargs.get('campaign', None)
+        self.mission_start = kwargs.get('mission_start', None)
+        self.ship_list = kwargs.get('ship_list', None)
         if self.manager and not self.campaign:
             self.campaign = self.manager.create_new_random()
             self.manager.currentCampaign = self.campaign
@@ -189,7 +197,7 @@ class CampaignMenu(Frame):
         initializes stuff - should be called whenever the campaign changes
         '''
         for p in self.campaign.planets:
-            PlanetButton(self, planet = p)
+            PlanetButton(self, planet = p, callback = self.planet_click, callback_kwargs = {'value': p})
         
     def draw(self):
         
@@ -229,6 +237,60 @@ class CampaignMenu(Frame):
         
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.parent.main_menu_click()
+            
+    def planet_click(self, **kwargs):
+        '''
+        for right now, lets randomly generate a mission based on the planet's strength value - assuming that the player is on the "red" team
+        TODO change this to actually interact with the planets in some way?
+        '''
+        
+        planet = kwargs.get('value', None)
+        if not planet: return
+        
+        # we have a planet, so let's construct a mission
+        
+        mission = Mission()
+        mission.background_file = 'default_background.png'
+        mission.background_style = 'tiled'
+        mission.width = 10000
+        mission.height = 10000
+        
+        proto = self.ship_list[3]
+        # for now, lets start by scattering strength * 5 fighters around the map
+        for i in range(0, planet.strength * 5 + 1):
+            conflicts = True
+            while conflicts:
+                x = random.randint(0, mission.width)
+                y = random.randint(0, mission.height)
+                conflicts = False
+                for s in mission.spawnList:
+                    if s.x**2 + s.y**2 - x**2 + y**2 < 300**2:
+                        conflicts = True
+            sp = Spawn()
+            if i == 0: 
+                sp.id = -1
+                sp.type = 'player'
+                sp.team = Ship.TEAM_DEFAULT_FRIENDLY
+            else:
+                sp.id = 3
+                sp.proto = proto
+                sp.team = Ship.TEAM_DEFAULT_ENEMY
+            sp.x = x
+            sp.y = y 
+            sp.r = random.randint(0, 360)
+            sp.tag = 'primary'
+            if i == 0:
+                sp.tag = 'self'
+                
+            if not mission.spawnList: mission.spawnList = []
+            mission.spawnList.append(sp)
+            
+        if not mission.triggerList: mission.triggerList = []
+        mission.triggerList.append(CreateTrigger(0, 'objective-primary', 'destroy-class', "", 'primary', display_text = 'Destroy the enemy fighters'))
+        mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'survive-attached', "", '', display_text = 'You must survive!'))
+        mission.triggerList[len(mission.triggerList) - 1].parent = mission.spawnList[0]
+        
+        self.mission_start(mission)
         
 class PlanetButton(BasicImageButton):
     planet = None

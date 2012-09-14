@@ -37,7 +37,7 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     player_flyable = False
     
     engine_points = None
-    engine_color = None
+    engine_color = "orange"
     
     weapons = None
     

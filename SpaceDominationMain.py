@@ -303,7 +303,10 @@ class SpaceDominationMain(object):
         return MissionXMLParser().loadMission(filename)
     
     def startMission(self, mission):
-        self.currentMission = self.loadMission(mission[0])
+        if isinstance(mission, Mission):
+            self.currentMission = mission
+        else:
+            self.currentMission = self.loadMission(mission[0])
         self.buildMission(self.currentMission)
         self.pause_game()
     
