@@ -179,6 +179,11 @@ class CampaignMenu(Frame):
     mission_start = None
     ship_list = None
     
+    save_btn = None
+    load_btn = None
+    back_btn = None
+    new_btn = None
+    
     def __init__(self, parent, **kwargs):
         super(CampaignMenu, self).__init__(parent, **kwargs)
         
@@ -199,8 +204,38 @@ class CampaignMenu(Frame):
         for p in self.campaign.planets:
             PlanetButton(self, planet = p, callback = self.planet_click, callback_kwargs = {'value': p})
         
-    def draw(self):
+        offset, block_size = self.get_offset_and_block_size()
         
+        left = offset[0] + offset[2]
+        top = offset[1]
+        
+        # back button
+        img = Utils.load_image("back.png", -1)[0]
+        self.back_btn = BasicImageButton(self, selected_image = img, unselected_image = img, callback = self.back_btn_click)
+        self.back_btn.rect.topleft = (left - self.back_btn.rect.width, top)
+        top += self.back_btn.rect.height + 2
+        
+        # new button
+        img = Utils.load_image("new.png", -1)[0]
+        self.new_btn = BasicImageButton(self, selected_image = img, unselected_image = img, callback = self.new_btn_click)
+        self.new_btn.rect.topleft = (left - self.new_btn.rect.width, top)
+        top += self.new_btn.rect.height + 2
+        
+        # load button
+        img = Utils.load_image("load.png", -1)[0]
+        self.load_btn = BasicImageButton(self, selected_image = img, unselected_image = img, callback = self.load_btn_click)
+        self.load_btn.rect.topleft = (left - self.load_btn.rect.width, top)
+        top += self.load_btn.rect.height + 2
+        
+        # save button
+        img = Utils.load_image("save.png", -1)[0]
+        self.save_btn = BasicImageButton(self, selected_image = img, unselected_image = img, callback = self.save_btn_click)
+        self.save_btn.rect.topleft = (left - self.save_btn.rect.width, top)
+        top += self.save_btn.rect.height + 2
+        
+        
+        
+    def get_offset_and_block_size(self):
         width = pygame.display.get_surface().get_width() 
         if width > consts.DEFAULT_WINDOW_WIDTH:
             width = consts.DEFAULT_WINDOW_WIDTH
@@ -209,10 +244,7 @@ class CampaignMenu(Frame):
         if height > consts.DEFAULT_WINDOW_HEIGHT:
             height = consts.DEFAULT_WINDOW_HEIGHT
         
-        offset = ((pygame.display.get_surface().get_width() - width) * 0.5, (pygame.display.get_surface().get_height() - height) * 0.5) 
-        self.background = pygame.surface.Surface((width, height))
-        self.background.fill((0,0,0), self.background.get_rect())
-        pygame.gfxdraw.rectangle(self.background, self.background.get_rect(), consts.COLOR_ORANGE)
+        offset = ((pygame.display.get_surface().get_width() - width) * 0.5, (pygame.display.get_surface().get_height() - height) * 0.5, width, height)
         
         if self.campaign.boardSize[0] > 0:
             width /= self.campaign.boardSize[0]
@@ -226,10 +258,25 @@ class CampaignMenu(Frame):
             
         block_size = (width, height)
         
+        
+        return offset, block_size
+        
+        
+    def draw(self):
+        offset, block_size = self.get_offset_and_block_size()
+        
+        self.background = pygame.surface.Surface((offset[2], offset[3]))
+        self.background.fill((0,0,0), self.background.get_rect())
+        pygame.gfxdraw.rectangle(self.background, self.background.get_rect(), consts.COLOR_ORANGE)
+        
+        
+        
         pygame.display.get_surface().blit(self.background, offset)
         for c in self.children:
             if isinstance(c, PlanetButton):
                 c.rect.topleft = offset[0] + c.planet.boardPosition[0] * block_size[0], offset[1] + c.planet.boardPosition[1] * block_size[1]
+                c.draw()
+            else:
                 c.draw()
             
     def update(self, event):
@@ -237,7 +284,26 @@ class CampaignMenu(Frame):
         
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.parent.main_menu_click()
-            
+    
+    def back_btn_click(self, **kwargs):
+        self.parent.main_menu_click()
+    
+    def save_btn_click(self, **kwargs):
+        pass
+    
+    def load_btn_click(self, **kwargs):
+        pass
+    
+    def new_btn_click(self, **kwargs):
+        
+        self.set_active(False)
+        self.manager.create_new_random()
+        self.manager.currentCampaign = self.manager.campaignList[len(self.manager.campaignList) - 1]
+        self.manager.show_display(self.parent)
+    
+    def test(self, who):
+        print "test!"
+        
     def planet_click(self, **kwargs):
         '''
         for right now, lets randomly generate a mission based on the planet's strength value - assuming that the player is on the "red" team
@@ -342,7 +408,11 @@ class PlanetButton(BasicImageButton):
         else:
             self.image = self.unselected_image
         
-        
+    def on_mouse_over(self):
+        pass
+    
+    def on_mouse_off(self):
+        pass
         
     
     

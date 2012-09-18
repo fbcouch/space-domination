@@ -17,6 +17,10 @@ DIFFICULTY_EASY = 2
 COLLIDE_MULTIPLIER = 10
 DEFAULT_AREA_SIZE = 500
 
+FORMATION_DEFAULT = [(0,0), (-100, -100), (-100, 100), (-200, -200), (-200, 200), (-200, 0)]
+
+
+
 class AIShip(Ship):
     home_position = None
     waypoint = None
@@ -198,4 +202,34 @@ class StationShip(AIShip):
             hit_hp.collide(physicsEntity, context)
         else:
             return super(StationShip, self).collide(physicsEntity, context)
+
+class Squadron(object):
+    ships = None
+    angle = None
+    squad_target = None
+    formation = None
+    
+    def __init__(self):
+        self.ships = []
+        self.angle = 0
+        self.squad_target = (0, 0)
+        self.formation = FORMATION_DEFAULT
+    
+    def append(self, ship):
+        if not ship in self.ships:
+            self.ships.append(ship)
+            
+    def remove(self, ship):
+        if ship in self.ships:
+            self.ships.remove(ship)
+    
+    def get_target_position(self, ship):
+        if ship in self.ships and self.ships.index(ship) == 0:
+            # if we are the leader
+            return self.squad_target
+        elif ship in self.ships:
+            # not the leader
+            # TODO calculate the target position from the squad formation and position in the squad
+        
+        
         
