@@ -12,7 +12,12 @@ Space Domination
 		- assign planets to factions
 		- assign starting values to planets
 		- campaign AI?
-		
+		- TODO need to implement save/load
+		+ TODO finish squadron setup
+		- TODO more robust mission generation
+		- TODO persistence
+		- TODO allies
+		- TODO fix AI collision avoidance
 	
 - Campaign/Mission Editor										5
 - Cooperative Play												6

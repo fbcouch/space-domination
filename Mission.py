@@ -72,6 +72,8 @@ class Spawn(object):
     proto = None
     hard_points = None
     
+    squad = None
+    
     def __init__(self):
         self.hard_points = []
     

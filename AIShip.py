@@ -17,7 +17,7 @@ DIFFICULTY_EASY = 2
 COLLIDE_MULTIPLIER = 10
 DEFAULT_AREA_SIZE = 500
 
-FORMATION_DEFAULT = [(0,0), (-100, -100), (-100, 100), (-200, -200), (-200, 200), (-200, 0)]
+FORMATION_DEFAULT = [(0,0), (-200, -200), (-200, 200), (-400, -400), (-400, 400), (-400, 0)]
 
 
 
@@ -27,9 +27,12 @@ class AIShip(Ship):
     area_size = DEFAULT_AREA_SIZE
     max_facing_angle = 5
     
-    def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
+    squad = None
+    
+    def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None, squad = None):
         super(AIShip,self).__init__(x, y, r, proto, parent, context)
         
+        self.squad = None
         self.home_position = (x, y)
         
         if len(self.weapons) > 0 and self.selected_weapon < len(self.weapons):
@@ -38,20 +41,34 @@ class AIShip(Ship):
         
     def update(self, context = None, timestep = 1):
         super(AIShip, self).update(context, timestep)
+        if self.removeSelf and self.squad:
+            self.squad.remove(self)
+            self.squad = None
+            
+        
         
         if self.collide_risk(context.shipSpriteGroup):
-            self.update_waypoint()
+            self.waypoint = self.update_waypoint()
         elif context and len(self.weapons) > 0 and self.distance_to_sq(context.playerShip.rect) < self.area_size * self.area_size:
             # we are near the target - face & attack it!
             target = context.playerShip.rect.center
             # adjust for the velocity of the target and the distance to it
             dist = math.sqrt(self.distance_to_sq(context.playerShip.rect))
             time = float(dist) / float(self.weapons[self.selected_weapon].bullet_speed)
-            target = (target[0] + context.playerShip.velocity[0] * time, target[1] + context.playerShip.velocity[1])
+            target = (target[0] + context.playerShip.velocity[0] * time, target[1] + context.playerShip.velocity[1] * time)
+            
+            if self.squad:
+                if self.squad.is_leader(self):
+                    self.squad.squad_target = target
+                self.waypoint = self.squad.get_target_position(self)
+            else:
+                self.waypoint = target
             
             # TODO next add a bit of noise to account for difficulty
             
-            angle = self.face_target(target, timestep)
+            angle = self.face_target(self.waypoint, timestep)
+            
+            x, angle = self.get_angle_to_target(target)
             
             bullet = None
             
@@ -83,31 +100,33 @@ class AIShip(Ship):
                 for bt in bullet:
                     context.physics.addChild(bt)
                     context.foregroundSpriteGroup.add(bt)
+            
+            
                 
         else:
             if self.rect.collidepoint(self.waypoint):
                 self.waypoint = self.update_waypoint()
+                
+            if self.squad:
+                if self.squad.is_leader(self):
+                    self.squad.squad_target = self.waypoint
+                self.waypoint = self.squad.get_target_position(self)
+                
             
             # we are not near the target (or didn't give a context)
             self.face_target(self.waypoint, timestep)
             
         # accelerate toward target
         self.accelerate(self.speed * 0.25)
+        
+        
             
             
             
     def face_target(self, target, timestep = 1):
   
-        dx = target[0] - self.rect.left
-        dy = target[1] - self.rect.top
-        angle = Vec2(0,0)
-        angle.setXY(dx, dy)
-        targetAngle = (angle.theta) % 360
-        dT = targetAngle - self.get_rotation()
-        if dT > 180:
-            dT = dT - 360
-        elif dT < -180:
-            dT += 360
+        targetAngle, dT = self.get_angle_to_target(target)
+        
         
         if dT > self.turn * timestep: 
             self.set_rotation((self.get_rotation() + self.turn * timestep) % 360)
@@ -117,6 +136,21 @@ class AIShip(Ship):
             self.set_rotation(targetAngle)
             
         return dT
+    
+    def get_angle_to_target(self, target):
+        dx = target[0] - self.rect.left
+        dy = target[1] - self.rect.top
+        angle = Vec2(0,0)
+        angle.setXY(dx, dy)
+        targetAngle = (angle.theta) % 360
+        
+        dT = targetAngle - self.get_rotation()
+        if dT > 180:
+            dT = dT - 360
+        elif dT < -180:
+            dT += 360
+            
+        return targetAngle, dT
 
     def distance_to_sq(self, targetRect = None):
         if targetRect:
@@ -133,7 +167,7 @@ class AIShip(Ship):
         for ship in shiplist:
             if ship is self:
                 continue
-            if self.distance_to_sq(ship.rect) < self.max_vel_sq * COLLIDE_MULTIPLIER * COLLIDE_MULTIPLIER:
+            if self.distance_to_sq(ship.rect) < self.max_vel_sq * COLLIDE_MULTIPLIER ** 2:
                 if self.will_collide(ship, COLLIDE_MULTIPLIER):
                     return True
         
@@ -226,10 +260,24 @@ class Squadron(object):
     def get_target_position(self, ship):
         if ship in self.ships and self.ships.index(ship) == 0:
             # if we are the leader
+            
             return self.squad_target
         elif ship in self.ships:
             # not the leader
             # TODO calculate the target position from the squad formation and position in the squad
-        
+            i = self.ships.index(ship)
+            if i < len(self.formation):
+                angle = self.ships[0].get_rotation()
+                offset = Vec2(0, 0)
+                offset.setXY(self.formation[i][0], self.formation[i][1])
+                offset.theta += angle
+                offset = offset.getXY()
+                
+                return (self.ships[0].rect.center[0] + offset[0], self.ships[0].rect.center[1] + offset[1])
+                
+    def is_leader(self, ship):
+        if self.ships and ship in self.ships and self.ships.index(ship) == 0:
+            return True
+        return False
         
         

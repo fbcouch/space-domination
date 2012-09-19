@@ -3,6 +3,7 @@ Created on Sep 12, 2012
 
 @author: Jami
 '''
+from AIShip import Squadron
 from Mission import Mission, Spawn
 from Ship import Ship
 from Trigger import CreateTrigger
@@ -318,11 +319,12 @@ class CampaignMenu(Frame):
         mission = Mission()
         mission.background_file = 'default_background.png'
         mission.background_style = 'tiled'
-        mission.width = 10000
-        mission.height = 10000
+        mission.width = 4000
+        mission.height = 4000
         
         proto = self.ship_list[3]
         # for now, lets start by scattering strength * 5 fighters around the map
+        squad = Squadron()
         for i in range(0, planet.strength * 5 + 1):
             conflicts = True
             while conflicts:
@@ -341,6 +343,9 @@ class CampaignMenu(Frame):
                 sp.id = 3
                 sp.proto = proto
                 sp.team = Ship.TEAM_DEFAULT_ENEMY
+                if i % 5 == 1:
+                    squad = Squadron()
+                sp.squad = squad
             sp.x = x
             sp.y = y 
             sp.r = random.randint(0, 360)

@@ -350,7 +350,9 @@ class SpaceDominationMain(object):
                             tempShip.hard_points.append(hpt)
                     
                     self.linkTriggers(spawn, tempShip)
-            
+                if spawn.squad:
+                    spawn.squad.append(tempShip)
+                    tempShip.squad = spawn.squad
             self.shipSpriteGroup.add(tempShip)
             self.foregroundSpriteGroup.add(tempShip.hard_points)
             self.physics.addChild(tempShip)
@@ -535,6 +537,11 @@ class SpaceDominationMain(object):
                     for hp in sprite.hard_points:
                         self.screen.blit(self.defaultfont.render("%i/%i" % (int(hp.health), int(hp.max_health)), 1, (0, 250, 0)),
                                          (hp.rect.left + render[0], hp.rect.top + hp.rect.height + render[1]))
+                
+                if isinstance(sprite, AIShip):
+                    rect = pygame.rect.Rect(0,0,10,10)
+                    rect.center = (sprite.waypoint[0] + render[0], sprite.waypoint[1] + render[1])
+                    pygame.gfxdraw.box(self.screen, rect, (0, 0, 250))
                                                         
         
             self.HUD.draw(self.screen, self, render)

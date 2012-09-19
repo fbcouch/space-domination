@@ -211,7 +211,7 @@ class Ship(PhysicsEntity):
         
     def remove(self, context = None):
         #traceback.print_stack()
-        
+        self.removeSelf = True
         if context:
             if self in context.physics.physicsChildren: context.physics.physicsChildren.remove(self)
             if self in context.shipSpriteGroup: context.shipSpriteGroup.remove(self)
