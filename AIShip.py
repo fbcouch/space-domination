@@ -7,6 +7,7 @@ from Bullet import Bullet
 from PhysicsEntity import PhysicsEntity
 from Ship import Ship, PShip
 from Vec2 import Vec2
+import consts
 import math
 import pygame
 import random
@@ -14,7 +15,7 @@ import random
 DIFFICULTY_HARD = 0
 DIFFICULTY_NORMAL = 1
 DIFFICULTY_EASY = 2
-COLLIDE_MULTIPLIER = 10
+COLLIDE_MULTIPLIER = 100
 DEFAULT_AREA_SIZE = 500
 
 FORMATION_DEFAULT = [(0,0), (-200, -200), (-200, 200), (-400, -400), (-400, 400), (-400, 0)]
@@ -46,9 +47,30 @@ class AIShip(Ship):
             self.squad = None
             
         
+        self.engine_color = consts.COLOR_BLUE
+        collide = self.collide_risk(context.shipSpriteGroup)
+        if collide: 
+            self.engine_color = consts.COLOR_RED
+            x, angle = self.get_angle_to_target(collide.rect.center)
+            dist = self.distance_to_sq(collide.rect)
+            
+            
+            if angle >= 0:
+                # turn right
+                self.set_rotation((self.get_rotation() - self.turn * timestep) % 360)
+            else:
+                # turn left
+                self.set_rotation((self.get_rotation() + self.turn * timestep) % 360)
         
-        if self.collide_risk(context.shipSpriteGroup):
-            self.waypoint = self.update_waypoint()
+            if dist < self.get_vel_sq() * COLLIDE_MULTIPLIER ** 2 * 0.5 and math.fabs(angle) < 180:
+                # stop
+                self.brake(self.speed * 0.5)
+            else:
+                # accelerate toward target
+                self.accelerate(self.speed * 0.25)
+                
+                
+                
         elif context and len(self.weapons) > 0 and self.distance_to_sq(context.playerShip.rect) < self.area_size * self.area_size:
             # we are near the target - face & attack it!
             target = context.playerShip.rect.center
@@ -101,7 +123,8 @@ class AIShip(Ship):
                     context.physics.addChild(bt)
                     context.foregroundSpriteGroup.add(bt)
             
-            
+            # accelerate toward target
+            self.accelerate(self.speed * 0.25)
                 
         else:
             if self.rect.collidepoint(self.waypoint):
@@ -116,8 +139,10 @@ class AIShip(Ship):
             # we are not near the target (or didn't give a context)
             self.face_target(self.waypoint, timestep)
             
-        # accelerate toward target
-        self.accelerate(self.speed * 0.25)
+            # accelerate toward target
+            self.accelerate(self.speed * 0.25)
+            
+        
         
         
             
@@ -167,12 +192,14 @@ class AIShip(Ship):
         for ship in shiplist:
             if ship is self:
                 continue
-            if self.distance_to_sq(ship.rect) < self.max_vel_sq * COLLIDE_MULTIPLIER ** 2:
+            dist = self.distance_to_sq(ship.rect)
+            if self.distance_to_sq(ship.rect) < COLLIDE_MULTIPLIER ** 3 * 0.25:
+                
                 if self.will_collide(ship, COLLIDE_MULTIPLIER):
-                    return True
+                    return ship
         
         # no collision risks, return false
-        return False
+        return None
 
 class StationShip(AIShip):
     

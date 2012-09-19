@@ -17,7 +17,7 @@ Space Domination
 		- TODO more robust mission generation
 		- TODO persistence
 		- TODO allies
-		- TODO fix AI collision avoidance
+		+ TODO fix AI collision avoidance
 	
 - Campaign/Mission Editor										5
 - Cooperative Play												6
