@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mission width="2000" height="2000" background-style="tiled" background-file="default_background.png">
 
-<playerspawn x="265.0" y="447.0" rot="0.0" >
-	<trigger id="3" type="objective-primary" condition="survive-attached" display-text="You must survive the mission." />
-</playerspawn>
-<enemy id="2" x="81.0" y="93.0" rot="0.0" tag="prim" />
-<enemy id="2" x="582.0" y="110.0" rot="0.0" tag="prim" />
-<trigger id="1" condition="mission-start" message-title="Trainer" message-body="Try out your controls! Use LEFT and RIGHT to rotate, UP to accelerate, and DOWN to brake. SPACE to FIRE!" />
-<trigger id="2" type="objective-primary" condition="destroy-class" tag="prim" display-text="Destroy the crates!" message-title="Trainer" message-body="Great job, kid! We'll have you out there against the alliance soon enough." />
+	<playerspawn x="1000.0" y="1000.0" rot="0.0" >
+		<trigger id="3" type="objective-primary" condition="survive-attached" display-text="You must survive the mission." />
+	</playerspawn>
+
+	<enemy id="2" x="850.0" y="800.0" rot="45.0" tag="prim" />
+	<enemy id="2" x="1125.0" y="800.0" rot="45.0" tag="prim" />
+	<enemy id="2" x="900.0" y="600.0" rot="0.0" tag="prim" />
+	<enemy id="2" x="1100.0" y="600.0" rot="0.0" tag="prim" />
+	<enemy id="2" x="850.0" y="400.0" rot="45.0" tag="prim" />
+	<enemy id="2" x="1125.0" y="400.0" rot="45.0" tag="prim" />
+
+	<trigger id="1" condition="mission-start" message-title="Trainer" message-body="Try out your controls! Use LEFT and RIGHT to rotate, UP to accelerate, and DOWN to brake. SPACE to FIRE!" />
+	<trigger id="2" type="objective-primary" condition="destroy-class" tag="prim" display-text="Destroy the crates!" message-title="Trainer" message-body="Great job, kid! We'll have you out there against the alliance soon enough." />
 
 </mission>

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mission width="2000" height="2000" background-style="tiled" background-file="default_background.png">
 	
-	<playerspawn x="100" y="1000" rot="0.0" >
+	<playerspawn x="150" y="1000" rot="0.0" >
 		<trigger id="3" type="objective-primary" condition="survive-attached" display-text="You must survive the mission." />
 	</playerspawn>
 	
-	<enemy id="3" x="1000.0" y="700.0" rot="180.0" tag="prim" />
-	<enemy id="3" x="1000.0" y="1300.0" rot="180.0" tag="prim" />
+	<enemy id="3" x="1200.0" y="800.0" rot="270.0" tag="prim" />
+	<enemy id="3" x="1200.0" y="1400.0" rot="90.0" tag="prim" />
 	
 	<trigger id="1" condition="mission-start" message-title="Trainer" message-body="All right kid, it looks like some enemy scouts have happened upon us. Take them out before they can report back!" />
 	<trigger id="2" type="objective-primary" condition="destroy-class" tag="prim" display-text="Destroy the enemy scouts!" message-title="Trainer" message-body="Great job, kid! Hopefully we can strike before they're missed." />
