@@ -7,6 +7,7 @@ from AIShip import Squadron
 from Mission import Mission, Spawn
 from Ship import Ship
 from Trigger import CreateTrigger
+from Vec2 import Vec2
 from gui.basicmenu import BasicImageButton
 from gui.gui import Frame
 import Utils
@@ -150,6 +151,8 @@ class Planet(object):
     faction = None
     strength = 0
     
+    mission = None
+    
     def __init__(self, name = "default", imgfile = None, pos = None):
         '''
         Constructor
@@ -168,6 +171,82 @@ class Planet(object):
         except SystemExit, e:
             print "Class Planet: could not load image"
         
+    def get_mission(self, ship_list):
+        if not self.mission:
+            # generate a mission
+            self.mission = self.create_mission(ship_list)
+            
+        for tg in self.mission.triggerList:
+            tg.completed = False
+            
+        self.mission.triggerList[len(self.mission.triggerList) - 1].parent = self.mission.spawnList[0]
+        return self.mission
+    
+    def create_mission(self, ship_list):
+        mission = Mission()
+        mission.background_file = 'default_background.png'
+        mission.background_style = 'tiled'
+        mission.width = 5000
+        mission.height = 5000
+        
+        proto = ship_list[3]
+        # add a player spawn randomly
+        sp = Spawn()
+        sp.id = -1
+        sp.type = "player"
+        sp.team = Ship.TEAM_DEFAULT_FRIENDLY
+        sp.x = random.randint(mission.width * 0.25, mission.width * 0.75)
+        sp.y = random.randint(mission.height * 0.25, mission.height * 0.75)
+        sp.r = random.randint(0, 360)
+        sp.tag = "self"
+        if not mission.spawnList: mission.spawnList = []
+        mission.spawnList.append(sp)
+        
+        squad = Squadron()
+        for i in range(0, self.strength * 3):
+            if i % 3 == 0:
+                squad = Squadron()
+                squad.angle = random.randint(0, 360)
+                conflicts = True
+                while conflicts:
+                    x = random.randint(0, mission.width)
+                    y = random.randint(0, mission.height)
+                    conflicts = False
+                    for s in mission.spawnList:
+                        if s.x**2 + s.y**2 - x**2 + y**2 < 1000**2:
+                            conflicts = True
+                squad.squad_target = (x, y)
+            else:
+                offset = Vec2(0, 0)
+                offset.setXY(squad.formation[i % 3][0], squad.formation[i % 3][1])
+                offset.theta += squad.angle
+                offset = offset.getXY()
+                
+                x = squad.squad_target[0] + offset[0] 
+                y = squad.squad_target[1] + offset[1]
+            sp = Spawn()
+        
+            sp.id = 3
+            sp.proto = proto
+            sp.team = Ship.TEAM_DEFAULT_ENEMY
+            
+            sp.squad = squad
+            sp.x = x
+            sp.y = y 
+            sp.r = squad.angle
+            sp.tag = 'primary'
+                
+            if not mission.spawnList: mission.spawnList = []
+            mission.spawnList.append(sp)
+            
+        if not mission.triggerList: mission.triggerList = []
+        mission.triggerList.append(CreateTrigger(0, 'objective-primary', 'destroy-class', "", 'primary', display_text = 'Destroy the enemy fighters'))
+        mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'survive-attached', "", '', display_text = 'You must survive!'))
+        mission.triggerList[len(mission.triggerList) - 1].parent = mission.spawnList[0]
+        
+        return mission
+    
+    
 class CampaignMenu(Frame):
     '''
     This will handle the major menu interactions that the player has with the campaign system 
@@ -314,53 +393,10 @@ class CampaignMenu(Frame):
         planet = kwargs.get('value', None)
         if not planet: return
         
-        # we have a planet, so let's construct a mission
+        # get the mission
+        mission = planet.get_mission(self.ship_list)
         
-        mission = Mission()
-        mission.background_file = 'default_background.png'
-        mission.background_style = 'tiled'
-        mission.width = 4000
-        mission.height = 4000
-        
-        proto = self.ship_list[3]
-        # for now, lets start by scattering strength * 5 fighters around the map
-        squad = Squadron()
-        for i in range(0, planet.strength * 5 + 1):
-            conflicts = True
-            while conflicts:
-                x = random.randint(0, mission.width)
-                y = random.randint(0, mission.height)
-                conflicts = False
-                for s in mission.spawnList:
-                    if s.x**2 + s.y**2 - x**2 + y**2 < 300**2:
-                        conflicts = True
-            sp = Spawn()
-            if i == 0: 
-                sp.id = -1
-                sp.type = 'player'
-                sp.team = Ship.TEAM_DEFAULT_FRIENDLY
-            else:
-                sp.id = 3
-                sp.proto = proto
-                sp.team = Ship.TEAM_DEFAULT_ENEMY
-                if i % 5 == 1:
-                    squad = Squadron()
-                sp.squad = squad
-            sp.x = x
-            sp.y = y 
-            sp.r = random.randint(0, 360)
-            sp.tag = 'primary'
-            if i == 0:
-                sp.tag = 'self'
-                
-            if not mission.spawnList: mission.spawnList = []
-            mission.spawnList.append(sp)
-            
-        if not mission.triggerList: mission.triggerList = []
-        mission.triggerList.append(CreateTrigger(0, 'objective-primary', 'destroy-class', "", 'primary', display_text = 'Destroy the enemy fighters'))
-        mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'survive-attached', "", '', display_text = 'You must survive!'))
-        mission.triggerList[len(mission.triggerList) - 1].parent = mission.spawnList[0]
-        
+        # start the mission
         self.mission_start(mission)
         
 class PlanetButton(BasicImageButton):
@@ -405,7 +441,6 @@ class PlanetButton(BasicImageButton):
         if self.image is self.selected_image:
             selected = True
             
-        
         self.unselected_image = img
         self.selected_image = self.generate_selected_image(img)
         if selected:

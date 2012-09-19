@@ -62,12 +62,13 @@ class AIShip(Ship):
                 # turn left
                 self.set_rotation((self.get_rotation() + self.turn * timestep) % 360)
         
-            if dist < self.get_vel_sq() * COLLIDE_MULTIPLIER ** 2 * 0.5 and math.fabs(angle) < 180:
+            if dist < self.get_vel_sq() * COLLIDE_MULTIPLIER ** 2 * 0.5 and math.fabs(angle) < 20:
                 # stop
                 self.brake(self.speed * 0.5)
             else:
+                pass
                 # accelerate toward target
-                self.accelerate(self.speed * 0.25)
+            self.accelerate(self.speed * 0.25)
                 
                 
                 
