@@ -71,6 +71,16 @@ class Trigger(object):
             else:
                 self.completed = True
                 
+        if self.condition == "survive-class":
+            if context:
+                count = len(self.get_attached(context.shipSpriteGroup))
+                if count == 0:
+                    self.completed = False
+                    self.display_text = self.orig_display_text
+                else:
+                    self.display_text = self.orig_display_text + " (" + str(count) + " remain)"
+                    self.completed = True
+                
     
         if not completed and self.completed and context:
             if self.message_title and self.message_body:

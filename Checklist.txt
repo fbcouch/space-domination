@@ -16,8 +16,8 @@ Space Domination
 		+ TODO finish squadron setup
 		- TODO more robust mission generation
 		- TODO persistence
-		- TODO allies
-		+ TODO fix AI collision avoidance
+		+ TODO allies
+		- TODO improve AI collision avoidance
 	
 - Campaign/Mission Editor										5
 - Cooperative Play												6
@@ -35,3 +35,9 @@ Some Feedback/TODO:
 - damage decay of lasers?
 
 - BUG: check to see if engine-trail bug exists in 0.3 - add back default engine color
+
+Mission wish list:
+- allies
+- time-dependent spawns
+- mission time-limit
+- death trigger spawn

@@ -5,6 +5,7 @@ Created on Jun 24, 2012
 '''
 
 from Vec2 import Vec2
+import consts
 import math
 import pygame
 
@@ -26,6 +27,9 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     engine_points = None
     engine_color = None
+    
+    target = None
+    collider = None
     
     def __init__(self):
         super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
@@ -86,6 +90,15 @@ class PhysicsEntity(pygame.sprite.Sprite):
     def update(self, context = None, timestep = 1):
         self.rect.topleft = self.position
         
+    def distance_to_sq(self, targetRect = None):
+        if targetRect:
+            dx = self.rect.center[0] - targetRect.center[0]
+            dy = self.rect.center[1] - targetRect.center[1]
+            return dx*dx + dy*dy
+        return -1
+    
+    def consider_target(self, target):
+        pass
     
     def remove(self):
         pass
@@ -96,7 +109,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     def can_collide(self, physicsEntity):
         return not self is physicsEntity.parent
     
-    def will_collide(self, physicsEntity, ticks):
+    def will_collide(self, physicsEntity, ticks = consts.COLLIDE_TICKS, interval = consts.COLLIDE_INTERVAL):
         '''determine if this entity will collide with physicsEntity within the given number of ticks'''
         
         # determine if we may collide
@@ -127,4 +140,4 @@ class PhysicsEntity(pygame.sprite.Sprite):
             
             test_rect_other.left += physicsEntity.velocity[0]
             test_rect_other.top += physicsEntity.velocity[1]
-            n += 1
+            n += interval

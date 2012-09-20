@@ -83,6 +83,20 @@ class Physics(object):
                             if pChild.can_collide(pCollide) and pCollide.can_collide(pChild):
                                 pChild.collide(pCollide, context)
                                 pCollide.collide(pChild, context)
+                    
+                    # test if there is a possible future collision
+                    if pChild.can_collide(pCollide) and pCollide.can_collide(pChild) and pChild.will_collide(pCollide):
+                        dist = pChild.distance_to_sq(pCollide.rect)
+                        
+                        if not pChild.collider or pChild.distance_to_sq(pChild.collider.rect) < dist:
+                            pChild.collider = pCollide
+                        if not pCollide.collider or pCollide.distance_to_sq(pCollide.collider.rect) < dist:
+                            pCollide.collider = pChild
+                    
+                    # test if these ships would like to target one another
+                    pChild.consider_target(pCollide)
+                    pCollide.consider_target(pChild)
+                    
                     counts += 1
                     j += 1
                 i += 1

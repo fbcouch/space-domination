@@ -189,6 +189,8 @@ class Planet(object):
         mission.width = 5000
         mission.height = 5000
         
+        squad = Squadron()
+        
         proto = ship_list[3]
         # add a player spawn randomly
         sp = Spawn()
@@ -202,7 +204,28 @@ class Planet(object):
         if not mission.spawnList: mission.spawnList = []
         mission.spawnList.append(sp)
         
-        squad = Squadron()
+        squad.squad_target = (sp.x, sp.y)
+        squad.angle = sp.r
+        #sp.squad = squad
+        
+        sp = Spawn()
+        sp.id = 0
+        sp.type = "friendly"
+        sp.team = Ship.TEAM_DEFAULT_FRIENDLY
+        sp.tag = "ally"
+        offset = Vec2(0, 0)
+        offset.setXY(squad.formation[1][0], squad.formation[1][1])
+        offset.theta += squad.angle
+        offset = offset.getXY()
+        
+        sp.x = squad.squad_target[0] + offset[0] 
+        sp.y = squad.squad_target[1] + offset[1]
+        sp.r = squad.angle
+        mission.spawnList.append(sp)
+        
+        #sp.squad = squad
+        
+        
         for i in range(0, self.strength * 3):
             if i % 3 == 0:
                 squad = Squadron()
@@ -241,7 +264,8 @@ class Planet(object):
             
         if not mission.triggerList: mission.triggerList = []
         mission.triggerList.append(CreateTrigger(0, 'objective-primary', 'destroy-class', "", 'primary', display_text = 'Destroy the enemy fighters'))
-        mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'survive-attached', "", '', display_text = 'You must survive!'))
+        mission.triggerList.append(CreateTrigger(1, 'objective-secondary', 'survive-class', "", 'ally', display_text = 'Keep your squad alive'))
+        mission.triggerList.append(CreateTrigger(2, 'objective-primary', 'survive-attached', "", '', display_text = 'You must survive!'))
         mission.triggerList[len(mission.triggerList) - 1].parent = mission.spawnList[0]
         
         return mission

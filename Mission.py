@@ -94,6 +94,7 @@ class MissionXMLParser(handler.ContentHandler):
     inBackground = False
     inTrigger = False
     inPoint = False
+    inAlly = False
     
     def __init__(self):
         handler.ContentHandler.__init__(self)
@@ -142,6 +143,14 @@ class MissionXMLParser(handler.ContentHandler):
             self.loadedMission.spawnList.append(newSpawn)
             
             self.inEnemy = True
+        elif name == "ally":
+            newSpawn = self.spawn_from_attrs(attrs)
+            newSpawn.type = 'friendly'
+            newSpawn.team = Ship.TEAM_DEFAULT_FRIENDLY
+            
+            self.loadedMission.spawnList.append(newSpawn)
+            
+            self.inAlly = True
         elif name == "trigger":
             tg = CreateTrigger(int(attrs.get('id')), 
                                attrs.get('type',''),
@@ -156,7 +165,7 @@ class MissionXMLParser(handler.ContentHandler):
             #if self.inPoint:
             #    cspawn = self.loadedMission.spawnList[len(self.loadedMission.spawnList) - 1]
             #    tg.parent = cspawn.hard_points[len(cspawn.hard_points) - 1]
-            if self.inPlayerSpawn or self.inEnemy:
+            if self.inPlayerSpawn or self.inEnemy or self.inAlly:
                 tg.parent = self.loadedMission.spawnList[len(self.loadedMission.spawnList) - 1]
             
             
@@ -164,7 +173,7 @@ class MissionXMLParser(handler.ContentHandler):
                         
             self.inTrigger = True
         elif name == "point":
-            if self.inEnemy or self.inPlayerSpawn:
+            if self.inEnemy or self.inPlayerSpawn or self.inAlly:
                 newSpawn = self.spawn_from_attrs(attrs)
                 self.loadedMission.spawnList[len(self.loadedMission.spawnList)-1].hard_points.append(newSpawn)
                 
@@ -180,6 +189,8 @@ class MissionXMLParser(handler.ContentHandler):
             self.inPlayerSpawn = False
         elif name == "enemy":
             self.inEnemy = False
+        elif name == "ally":
+            self.inAlly = False
         elif name == "trigger":
             self.inTrigger = False
         elif name == "point":

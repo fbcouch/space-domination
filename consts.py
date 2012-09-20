@@ -26,3 +26,6 @@ PARALLAX = 1.0 # set to less than 1 for parallax
 
 FRAMERATE = 60 # frames per second for drawing
 GAMESPEED = 20 # frames per second for the game to run
+
+COLLIDE_TICKS = 500
+COLLIDE_INTERVAL = 10

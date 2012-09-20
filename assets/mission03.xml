@@ -18,6 +18,8 @@
 	<enemy id="3" x="1400" y="600" rot="120.0" tag="sec" />
 	<enemy id="3" x="1200" y="900" rot="140.0" tag="sec" />
 	
+	<ally id="0" x="50" y="900" rot="30" tag="ally" />
+	<trigger id="5" type="objective-secondary" condition="survive-class" tag="ally" display-text="Keep your squad alive." />
 	<trigger id="3" type="objective-secondary" condition="destroy-class" tag="sec" display-text="Kill the enemy fighters." />
 	<trigger id="4" condition="mission-start" message-title="Commander" message-body="There's an outpost near here that those scouts came from. If we move quickly, they will be caught unaware. Find it, and take it down!" />
 	
