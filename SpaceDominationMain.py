@@ -84,7 +84,7 @@ class SpaceDominationMain(object):
     backgroundSpriteGroup = None
     triggerList = None
     foregroundSpriteGroup = None
-    
+    elapsedTime = 0.0
     messageList = None
     
     # Profile stuff
@@ -311,8 +311,9 @@ class SpaceDominationMain(object):
         self.pause_game()
     
     def buildMission(self, mission):
+        self.elapsedTime = 0.0
         #add the trigger list
-        self.triggerList = mission.triggerList
+        self.triggerList = mission.triggerList[:]
         #self.rootSprite = pygame.sprite.OrderedUpdates()
         self.shipSpriteGroup = OrderedUpdatesRect()
         self.backgroundSpriteGroup = OrderedUpdatesRect() #pygame.sprite.OrderedUpdates()
@@ -360,7 +361,6 @@ class SpaceDominationMain(object):
             tempShip.set_rotation(spawn.r)
             tempShip.tag = spawn.tag
             
-            
         # first, set up any auto-backgrounds
         if mission.background_style == 'tiled':
             # set up a tiled background using background_file and width, height
@@ -377,8 +377,13 @@ class SpaceDominationMain(object):
             self.backgroundSpriteGroup.add(tempBg)
             
         self.updateTriggers()
-        
     
+    def endMission(self):
+        
+        self.gameState = self.GAMESTATE_GAMEOVER
+        self.menuManager.main_menu_click()    
+        return self.updateTriggers()
+        
     def linkTriggers(self, spawn, ship):
         for tg in self.triggerList:
             if tg.parent == spawn:
@@ -409,6 +414,8 @@ class SpaceDominationMain(object):
             #    self.physics.updatePhysics(self)
             #    self.lastTick = pygame.time.get_ticks()
             timestep = float(dt) * consts.GAMESPEED * 0.001
+            
+            self.elapsedTime += dt
             
             self.physics.updatePhysics(self, timestep)
             
@@ -520,9 +527,11 @@ class SpaceDominationMain(object):
         
         
             # TODO display HUD things
-            self.screen.blit(self.fpstext, (10,10))
+            self.screen.blit(self.fpstext, (10,30))
             
             for sprite in self.shipSpriteGroup:
+                if not sprite.active:
+                    continue
                 # TODO change these to bars (open/filled rect)
                 self.screen.blit( 
                                  self.defaultfont.render(str(sprite.shields) + "/" 
@@ -535,6 +544,8 @@ class SpaceDominationMain(object):
                 
                 if isinstance(sprite, StationShip):
                     for hp in sprite.hard_points:
+                        if not hp.active:
+                            continue
                         self.screen.blit(self.defaultfont.render("%i/%i" % (int(hp.health), int(hp.max_health)), 1, (0, 250, 0)),
                                          (hp.rect.left + render[0], hp.rect.top + hp.rect.height + render[1]))
                 
@@ -623,6 +634,8 @@ class OrderedUpdatesRect(pygame.sprite.OrderedUpdates):
         @param offset      sprites will be rendered with this offset
         '''
         for spt in self.sprites():
+            if isinstance(spt, PhysicsEntity) and not spt.active:
+                continue
             if not rect or spt.rect.colliderect(rect):
                 if offset:
                     self.spritedict[spt] = surface.blit(spt.image, (spt.rect.left + offset[0], spt.rect.top + offset[1]))

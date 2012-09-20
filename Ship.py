@@ -76,7 +76,6 @@ class Ship(PhysicsEntity):
     hard_points = None
     
     
-    
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(Ship, self).__init__()
         self.weapons = []
@@ -164,6 +163,8 @@ class Ship(PhysicsEntity):
    
     def update(self, context = None, timestep = 1):
         super(Ship, self).update(context, timestep)
+        if not self.active:
+            return
         
         #for pt in self.hard_points:
         #    pt.update(context)

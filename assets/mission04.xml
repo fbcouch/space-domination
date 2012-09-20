@@ -9,5 +9,6 @@
 	
 	<trigger id="2" type="objective-primary" condition="destroy-class"  tag="prim" display-text="Stop the rogue pilot." message-title="Commander" message-body="Nice job pilot. That was close!" />
 	<trigger id="4" condition="mission-start" message-title="Commander" message-body="We have a rogue pilot attempting to escape. Intercept him before it's too late!" />
-	
+	<trigger id="5" condition="spawn-at-time" tag="prim" attrs="0:03" display-text="Incoming" message-title="Commander" message-body="Here he comes!" />
+	<trigger id="6" condition="end-at-time" type="objective-primary" tag="prim" attrs="1:03" display-text="Rogue hyperspace jump" message-title="Commander" message-body="You were too slow, he got away." />
 </mission>

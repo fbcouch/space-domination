@@ -28,13 +28,12 @@ class Mission(object):
     background_file = None
     
     
-    
     def __init__(self):
         self.backgroundList = []
         self.spawnList = []
         self.triggerList = []
     
-    def update(self, context = None):
+    def update(self, context = None, timestep = 1):
         pass
     
     def build(self):

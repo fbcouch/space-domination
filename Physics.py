@@ -31,7 +31,10 @@ class Physics(object):
         counts = 0
         i=0
         while i < len(self.physicsChildren):
-            pChild = self.physicsChildren[i]                      
+            pChild = self.physicsChildren[i]     
+            if not pChild.active:
+                i += 1
+                continue                 
             
             accel = Vec2(0,0)
             accel.setXY(pChild.accel[0], pChild.accel[1])
@@ -67,7 +70,11 @@ class Physics(object):
             i+=1
         
         # Collision detection by Recursive Dimensional Clustering
-        collision_groups = self.collisionDetection(self.physicsChildren, 5)
+        collides = []
+        for c in self.physicsChildren:
+            if c.active:
+                collides.append(c)
+        collision_groups = self.collisionDetection(collides, 5)
         # now brute-force the groups
         for gp in collision_groups:
             i = 0
@@ -92,8 +99,12 @@ class Physics(object):
         # Do collision prediction and target selection
         for i in range(0, len(context.shipSpriteGroup)):
             pChild = context.shipSpriteGroup.sprites()[i]
+            if not pChild.active:
+                continue
             for j in range(i + 1, len(context.shipSpriteGroup)):
                 pCollide = context.shipSpriteGroup.sprites()[j]
+                if not pCollide.active:
+                    continue
                 # test if there is a possible future collision
                 if pChild.can_collide(pCollide) and pCollide.can_collide(pChild) and pChild.will_collide(pCollide):
                     dist = pChild.distance_to_sq(pCollide.rect)

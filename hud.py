@@ -4,6 +4,7 @@ Created on Jul 19, 2012
 @author: Jami
 '''
 import Utils
+import consts
 import pygame
 
 class HUD(object):
@@ -42,6 +43,9 @@ class HUD(object):
             
             # display health, ammo, shields
             self.display_ship_info(screen, context.playerShip, font)
+            
+            # display timer
+            self.display_timer(screen, context.elapsedTime, font)
             
                 
     def display_objectives(self, screen, triggers, font = None):
@@ -200,7 +204,20 @@ class HUD(object):
                             screen.blit(self.objective_pointer['survive'], draw_rect.topleft)
                         else:
                             screen.blit(self.objective_pointer['destroy'], draw_rect.topleft)
-                
+    
+    def display_timer(self, screen, time, font = None):
+        #h = int(time / TIME_HRS_MUL)
+        #time -= h * TIME_HRS_MUL
+        m = int(time / consts.TIME_MIN_MUL)
+        time -= m * consts.TIME_MIN_MUL
+        s = int(time / consts.TIME_SEC_MUL)
+        if s < 10:
+            text = "Mission Time %i:0%i" % (m, s)
+        else:
+            text = "Mission Time %i:%i" % (m, s)
+            
+        screen.blit(font.render(text, 1, (0, 255, 0)), (10, 10))
+            
     def calc_line_x(self, m, b, x):
         return m * x + b
     

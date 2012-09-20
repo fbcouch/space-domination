@@ -41,6 +41,9 @@ class AIShip(Ship):
         
     def update(self, context = None, timestep = 1):
         super(AIShip, self).update(context, timestep)
+        if not self.active:
+            return
+            
         if self.removeSelf and self.squad:
             self.squad.remove(self)
             self.squad = None
@@ -216,6 +219,8 @@ class StationShip(AIShip):
         
     def update(self, context = None, timestep = 1):
         super(AIShip, self).update(context)
+        if not self.active:
+            return False
         
         if not self.initialized:
             for hp in self.hard_points:

@@ -5,6 +5,7 @@ Created on Jul 13, 2012
 '''
 from PopupMessage import PopupMessage
 import Utils
+import consts
 
 class Trigger(object):
     '''
@@ -38,6 +39,8 @@ class Trigger(object):
     parent = None
     
     completed = False
+    
+    spawn_list = None
     
     def __init__(self):
         '''
@@ -80,9 +83,85 @@ class Trigger(object):
                 else:
                     self.display_text = self.orig_display_text + " (" + str(count) + " remain)"
                     self.completed = True
-                
+        
+        if self.condition == "spawn-at-time":
+            if context and not self.completed and not self.spawn_list:
+                self.spawn_list = self.get_attached(context.shipSpriteGroup)
+            
+                for sp in self.spawn_list:
+                    sp.active = False
+                    
+            
+            if context and self.attrs and len(self.attrs) > 0:
+                end_at = self.attrs[0].split(":")
+                end_at = float(end_at[0]) * consts.TIME_MIN_MUL + float(end_at[1]) * consts.TIME_SEC_MUL
+                if context.elapsedTime >= end_at:
+                    self.completed = True
+                    self.display_text = self.orig_display_text
+                    for sp in self.spawn_list:
+                        sp.active = True
+                        self.spawn_list.remove(sp)
+                    
+                else:
+                    self.completed = False
+                    dt = end_at - context.elapsedTime
+                    m = int(dt / consts.TIME_MIN_MUL)
+                    dt -= m * consts.TIME_MIN_MUL
+                    s = int(dt / consts.TIME_SEC_MUL)
+                    if s < 10:
+                        text = " (%i:0%i until spawn)" % (m, s)
+                    else:
+                        text = " (%i:%i until spawn)" % (m, s)
+                    self.display_text = self.orig_display_text + text
+        
+        if self.condition == "spawn-on-destroy":
+            if context and not self.completed and not self.spawn_list:
+                self.spawn_list = self.get_attached(context.shipSpriteGroup)
+                for sp in self.spawn_list:
+                    sp.active = False
+                    
+            if context and not self.completed:
+                if self.attrs and len(self.attrs) > 0:
+                    count = 0
+                    for ship in context.shipSpriteGroup:
+                        if ship.tag.count(self.attrs[0]) > 0:
+                            count += 1
+                    if count > 0:
+                        self.completed = False
+                    else:
+                        self.completed = True
+                        for sp in self.spawn_list:
+                            sp.active = True
+                            self.spawn_list.remove(sp)
+
+                else:
+                    self.completed = True
+                    for sp in self.spawn_list:
+                        sp.active = True
+                        self.spawn_list.remove(sp)
+        
+        if self.condition == "end-at-time":
+            if context and self.attrs and len(self.attrs) > 0:
+                end_at = self.attrs[0].split(":")
+                end_at = float(end_at[0]) * consts.TIME_MIN_MUL + float(end_at[1]) * consts.TIME_SEC_MUL
+                if context.elapsedTime >= end_at:
+                    self.completed = False
+                    self.display_text = self.orig_display_text
+                    if context.gameState != context.GAMESTATE_GAMEOVER: context.endMission()
+                else:
+                    self.completed = True
+                    completed = True
+                    dt = end_at - context.elapsedTime
+                    m = int(dt / consts.TIME_MIN_MUL)
+                    dt -= m * consts.TIME_MIN_MUL
+                    s = int(dt / consts.TIME_SEC_MUL)
+                    if s < 10:
+                        text = " (%i:0%i remains)" % (m, s)
+                    else:
+                        text = " (%i:%i remains)" % (m, s)
+                    self.display_text = self.orig_display_text + text
     
-        if not completed and self.completed and context:
+        if not completed == self.completed and context:
             if self.message_title and self.message_body:
                 # display a message
                 context.messageList.append(PopupMessage(self.message_title, self.message_body, PopupMessage.DEFAULT_DURATION, context.screen.get_width(), self.message_icon_image))
@@ -91,7 +170,7 @@ class Trigger(object):
     def get_attached(self, shiplist):
         '''get a list of the attached ships'''
         attached = []
-        if self.condition.count("class") > 0:
+        if self.condition.count("class") > 0 or self.condition.count("spawn") > 0:
             for ship in shiplist:
                 if ship.tag.count(self.tag) > 0:
                     attached.append(ship)

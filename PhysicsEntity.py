@@ -31,6 +31,8 @@ class PhysicsEntity(pygame.sprite.Sprite):
     target = None
     collider = None
     
+    active = True
+    
     def __init__(self):
         super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
         self.image = None
@@ -89,6 +91,8 @@ class PhysicsEntity(pygame.sprite.Sprite):
     '''
     def update(self, context = None, timestep = 1):
         self.rect.topleft = self.position
+        if not self.active:
+            return
         
     def distance_to_sq(self, targetRect = None):
         if targetRect:
