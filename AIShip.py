@@ -96,7 +96,8 @@ class AIShip(Ship):
                 self.waypoint = target
             
             # TODO next add a bit of noise to account for difficulty
-            
+            if not self.waypoint:
+                self.waypoint = self.update_waypoint()
             angle = self.face_target(self.waypoint, timestep)
             
             x, angle = self.get_angle_to_target(target)
@@ -156,7 +157,7 @@ class AIShip(Ship):
             
             
     def face_target(self, target, timestep = 1):
-  
+        
         targetAngle, dT = self.get_angle_to_target(target)
         
         

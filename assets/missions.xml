@@ -9,7 +9,7 @@
 	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault">
 		Hit the outpost before the scouts are missed and the element of surprise is lost!
 	</mission>
-	<mission icon="mission03_icon.png" file="mission04.xml" name="Intercept Rogue Pilot">
+	<mission icon="mission04_icon.png" file="mission04.xml" name="Intercept Rogue Pilot">
 		Intercept Rogue Pilot before it it too late.
 	</mission>
 	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault" />
