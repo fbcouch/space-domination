@@ -380,8 +380,9 @@ class PagedMenu(Frame):
                 self.selected_item = item
                 return True
             elif event.key == pygame.K_RETURN:
-                self.selected_item.on_click()
-                return True
+                if self.selected_item:
+                    self.selected_item.on_click()
+                    return True
         return False
     
     def get_num_pages(self):
