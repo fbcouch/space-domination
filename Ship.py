@@ -75,6 +75,7 @@ class Ship(PhysicsEntity):
     
     hard_points = None
     
+    engine_blip_time = 0.0
     
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(Ship, self).__init__()
@@ -192,7 +193,11 @@ class Ship(PhysicsEntity):
         else:
             self.ticks_for_regen -= timestep
         
-        if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0):
+        self.engine_blip_time += timestep
+        if self.engine_blip_time > 10:
+            self.engine_blip_time = 10
+        if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0) and self.engine_blip_time > 1:
+            self.engine_blip_time -= 1
             for ep in self.engine_points:
                 #engine_glow = Particle(load_sprite_sheet('glowengine1_10.png', 10, 10, colorkey = -1), interval = 1)
                 engine_glow = GlowParticle('circle', 10, self.engine_color, 100, interval = 1)

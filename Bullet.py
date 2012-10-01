@@ -17,6 +17,8 @@ class Bullet(PhysicsEntity):
     damage = 0
     type = "laser"
     
+    blip_time = 0.0
+    
     def __init__(self):
         super(Bullet, self).__init__()
     
@@ -25,7 +27,12 @@ class Bullet(PhysicsEntity):
         
         self.ticks_remaining -= timestep;
         
-        if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0):
+        
+        self.blip_time += timestep
+        if self.blip_time > 10:
+            self.blip_time = 10
+        if self.engine_points and (self.accel[0] != 0 or self.accel[1] != 0) and self.blip_time > 1:
+            self.blip_time -= 1
             for ep in self.engine_points:
                 #engine_glow = Particle(load_sprite_sheet('glowengine1_10.png', 10, 10, colorkey = -1), interval = 1)
                 engine_glow = GlowParticle('circle', 10, self.engine_color, 100, interval = 1)
