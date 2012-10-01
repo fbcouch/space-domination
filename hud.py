@@ -3,8 +3,10 @@ Created on Jul 19, 2012
 
 @author: Jami
 '''
+from AIShip import StationShip
 import Utils
 import consts
+import math
 import pygame
 
 class HUD(object):
@@ -46,6 +48,9 @@ class HUD(object):
             
             # display timer
             self.display_timer(screen, context.elapsedTime, font)
+            
+            # display unit bars
+            self.draw_unit_bars(screen, context.shipSpriteGroup, render, font)
             
                 
     def display_objectives(self, screen, triggers, font = None):
@@ -145,7 +150,47 @@ class HUD(object):
             color = (0, 250, 0)
             screen.blit(font.render(text, 1, color), (screen.get_width() - font.size(text)[0] - 10, y))
             y += font.size(text)[1] + 2
-        
+    
+    def draw_unit_bars(self, screen, shiplist, render, font):
+        for sprite in shiplist:
+            if not sprite.active:
+                continue
+            # TODO change these to bars (open/filled rect)
+            #screen.blit(font.render(str(sprite.shields) + "/" 
+            #                    + str(sprite.max_shields), 1, (0, 0, 250)) ,
+            #                    (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1]))
+            if sprite.max_shields > 0:
+                r = pygame.rect.Rect(sprite.rect.left + render[0], sprite.rect.bottom + render[1], sprite.original.get_rect().width, 10)
+                r.centerx = sprite.rect.centerx + render[0]
+                self.draw_boxes(float(sprite.shields) / sprite.max_shields, r, consts.COLOR_BLUE, screen)
+            
+            if sprite.max_health > 0:
+                r = pygame.rect.Rect(sprite.rect.left + render[0], sprite.rect.bottom + render[1] + 11, sprite.original.get_rect().width, 10)
+                r.centerx = sprite.rect.centerx + render[0]
+                self.draw_boxes(float(sprite.health) / sprite.max_health, r, consts.COLOR_GREEN, screen)
+            
+            if isinstance(sprite, StationShip):
+                for hp in sprite.hard_points:
+                    if not hp.active:
+                        continue
+                    r = pygame.rect.Rect(hp.rect.left + render[0], hp.rect.bottom + render[1], hp.original.get_rect().width, 10)
+                    r.centerx = hp.rect.centerx + render[0]
+                    self.draw_boxes(float(hp.health) / hp.max_health, r, consts.COLOR_GREEN, screen)
+                    
+    
+    def draw_boxes(self, pct, rect, color, screen, num_boxes = 1):
+        w = pct * rect.width
+        if num_boxes == 1:
+            pygame.gfxdraw.rectangle(screen, pygame.rect.Rect(rect.left - 1, rect.top, rect.width + 1, rect.height), color)
+            pygame.gfxdraw.box(screen, pygame.rect.Rect(rect.left, rect.top, w, rect.height), color)
+        else:    
+            boxes = int(rect.width / 10)
+            box_width = math.floor((rect.width) / boxes)
+            boxes = int(pct * boxes)
+            for i in range(boxes):
+                pygame.gfxdraw.box(screen, pygame.rect.Rect(rect.left + i * box_width, rect.top, box_width - 1, rect.height), color)
+    
+    
     def mark_objectives(self, screen, triggers, rect, shiplist):
         '''draw little balls around the edge of the screen toward the offscreen objectives'''
         

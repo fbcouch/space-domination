@@ -529,25 +529,7 @@ class SpaceDominationMain(object):
             # TODO display HUD things
             self.screen.blit(self.fpstext, (10,30))
             
-            for sprite in self.shipSpriteGroup:
-                if not sprite.active:
-                    continue
-                # TODO change these to bars (open/filled rect)
-                self.screen.blit( 
-                                 self.defaultfont.render(str(sprite.shields) + "/" 
-                                        + str(sprite.max_shields), 1, (0, 0, 250)) ,
-                                        (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1]))
-                self.screen.blit(
-                                 self.defaultfont.render(str(sprite.health) + "/" 
-                                        + str(sprite.max_health), 1, (0, 250, 0)) ,
-                                        (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1] + 20))
-                
-                if isinstance(sprite, StationShip):
-                    for hp in sprite.hard_points:
-                        if not hp.active:
-                            continue
-                        self.screen.blit(self.defaultfont.render("%i/%i" % (int(hp.health), int(hp.max_health)), 1, (0, 250, 0)),
-                                         (hp.rect.left + render[0], hp.rect.top + hp.rect.height + render[1]))
+            
                 
                 #if isinstance(sprite, AIShip):
                 #    rect = pygame.rect.Rect(0,0,10,10)

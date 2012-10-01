@@ -33,3 +33,4 @@ Some Feedback/TODO:
 - damage decay of lasers?
 
 - BUG: check to see if engine-trail bug exists in 0.3 - add back default engine color
+- BUG: if you hit "enter" when no item is selected, the game crashes (None has no method "on click")
