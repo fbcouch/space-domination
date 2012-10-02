@@ -341,6 +341,12 @@ class SpaceDominationMain(object):
                     tempShip.team = spawn.team
                     
                     self.linkTriggers(spawn, tempShip)
+                    
+                    if self.shipList[spawn.id].hard_points:
+                        for pt in self.shipList[spawn.id].hard_points:
+                            hpt = AIShip(spawn.x + pt['x'], spawn.y + pt['y'], spawn.r + pt['rot'], proto = self.shipList[pt['id']], parent = tempShip, context = self)
+                            hpt.team = tempShip.team
+                            tempShip.hard_points.append(hpt)
                 elif spawn.id == -1:
                     tempShip = StationShip(spawn.x, spawn.y, spawn.r, proto = spawn.proto, context = self)
                     tempShip.team = spawn.team

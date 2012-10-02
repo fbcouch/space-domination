@@ -194,7 +194,7 @@ class Campaign(object):
         remaining_planets = self.planets[:]
         for i in range(len(self.planets)):
             p = self.factions[i % len(self.factions)]['ai'].choose_planet(remaining_planets)
-            p.strength = i / 2 + 1
+            p.strength = 1
             if p in remaining_planets: remaining_planets.remove(p)
 
 class Planet(object):

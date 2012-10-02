@@ -41,6 +41,8 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     
     weapons = None
     
+    hard_points = None
+    
     image = None
     
     def __init__(self):
@@ -110,6 +112,7 @@ class Ship(PhysicsEntity):
         self.max_health = self.health
         self.max_shields = self.shields
         self.team = proto.team
+
         
         
         if not proto.image:
@@ -327,6 +330,10 @@ class ShipListXMLParser(handler.ContentHandler):
         elif name == "weapon":
             self.ship.weapons.append({'id':int(attrs.get('id', '0')), 'points':attrs.get('points')})
             
+        elif name == "point":
+            if not self.ship.hard_points:
+                self.ship.hard_points = []
+            self.ship.hard_points.append({'id': int(attrs.get('id')), 'x': int(attrs.get('x')), 'y': int(attrs.get('y')), 'rot': float(attrs.get('rot'))})
             
     def endElement(self, name):
         pass

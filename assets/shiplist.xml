@@ -23,4 +23,9 @@
 		<weapon id="0" points="41,3;41,49"/>
 		<weapon id="2" />
 	</ship>
+	<ship id="7" name="Small Defense Platform" file="station1.png" health="1000" hregen="0"	shields="100" sregen="2" speed="0" turn="0" armor="0">
+		<point id="4" x="-15" y="55" rot="270.0" />
+		<point id="4" x="347" y="55" rot="270.0" />
+		<point id="5" x="185" y="70" rot="270.0" />
+	</ship>
 </shiplist>
