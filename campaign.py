@@ -70,7 +70,7 @@ class CampaignManager(object):
             planets = width * height
         
         planetList = []
-        factions = [{'name': "Red team", 'color': consts.COLOR_RED}, {'name': "Blue team", 'color': consts.COLOR_BLUE}]
+        factions = [{'name': "Red team", 'color': consts.COLOR_RED, 'ai' : None}, {'name': "Blue team", 'color': consts.COLOR_BLUE, 'ai' : None}]
         # don't want to reuse names, so we copy the list 
         names = list(self.planetNames)
         for i in range(0, planets):
@@ -91,13 +91,16 @@ class CampaignManager(object):
                 if not taken:
                     planet.boardPosition = pos
             
-            planet.faction = factions[random.randint(0, len(factions) - 1)]    
+            #planet.faction = factions[random.randint(0, len(factions) - 1)]    
             planet.strength = random.randint(1, 3)
             planetList.append(planet)
         
         cp = Campaign()
         cp.planets = planetList
         cp.factions = factions
+        factions[0]['ai'] = FactionAI(cp, factions[0])
+        factions[1]['ai'] = FactionAI(cp, factions[1])
+        cp.init()
         cp.boardSize = (width, height)
         self.campaignList.append(cp)
         return cp
@@ -124,7 +127,49 @@ class CampaignManager(object):
         self.display = CampaignMenu(parent, campaign = self.currentCampaign, manager = self, ship_list = self.context.shipList, mission_start = self.context.startMission)
         parent.add_child(self.display)
         self.display.set_active(True)
-        
+
+
+class FactionAI(object):
+    '''
+    Handles the AI for a given faction
+    '''
+    
+    campaign = None
+    faction = None
+    planets = None
+    
+    def __init__(self, campaign, faction):
+        self.campaign = campaign
+        self.faction = faction
+        self.planets = []
+    
+    def choose_planet(self, available):
+        if len(self.planets) == 0:
+            # if we don't have one, choose one randomly
+            planet = available[random.randint(0, len(available) - 1)]
+            self.planets.append(planet)
+            planet.faction = self.faction
+            return planet
+        elif len(available) == 1:
+            self.planets.append(available[0])
+            available[0].faction = self.faction
+            return available[0]
+        else:
+            # choose the nearest planet
+            near = None
+            ndist = 0
+            for p in available:
+                if not near:
+                    near = p
+                for l in self.planets:
+                    dist = (p.boardPosition[0] - l.boardPosition[0]) ** 2 + (p.boardPosition[1] - l.boardPosition[1]) ** 2
+                    if not l is p and (ndist == 0 or dist < ndist):
+                        near = p
+                        ndist = dist
+            self.planets.append(near)
+            near.faction = self.faction
+            return near
+            
 class Campaign(object):
     '''
     Contains the status of a campaign...this theoretically should be saved/loaded from files
@@ -138,7 +183,19 @@ class Campaign(object):
         self.boardSize = (0,0)
         self.factions = []
         
-    
+        
+    def init(self):
+        '''
+        initializes the campaign
+        '''
+        self.faction_choose_planets()
+        
+    def faction_choose_planets(self):
+        remaining_planets = self.planets[:]
+        for i in range(len(self.planets)):
+            p = self.factions[i % len(self.factions)]['ai'].choose_planet(remaining_planets)
+            p.strength = i / 2 + 1
+            if p in remaining_planets: remaining_planets.remove(p)
 
 class Planet(object):
     '''
