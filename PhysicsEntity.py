@@ -33,6 +33,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     active = True
     
+    
     def __init__(self):
         super(PhysicsEntity, self).__init__() # for now, we just call the super constructor
         self.image = None
@@ -91,6 +92,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     '''
     def update(self, context = None, timestep = 1):
         self.rect.topleft = self.position
+
         if not self.active:
             return
         

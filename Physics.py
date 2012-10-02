@@ -5,14 +5,14 @@ Created on May 11, 2012
 '''
 
 from Bullet import Bullet
+from Vec2 import Vec2
 from pygame.locals import *
 import Utils
-from Vec2  import Vec2
-import pygame
-import sys
-import os
-import random
 import math
+import os
+import pygame
+import random
+import sys
 
 class Physics(object):
     '''
