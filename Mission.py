@@ -27,6 +27,7 @@ class Mission(object):
     background_style = None #'tiled' or ??
     background_file = None
     
+    isCampaignMission = False
     
     def __init__(self):
         self.backgroundList = []

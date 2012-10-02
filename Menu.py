@@ -6,13 +6,15 @@ Created on Aug 17, 2012
 from MissionMenu import MissionMenu
 from ProfileMenu import ProfileMenu
 from gui.basicmenu import BasicMenu, BasicTextButton, BasicImageButton, \
-    BasicTextInput
+    BasicTextInput, Label
 from gui.gui import GUI, Frame, Element
 import Utils
+import consts
 import pygame
 
 class SpaceDominationGUI(GUI):
     '''GUI implentation for Space Domination'''
+    mission_results = None
     
     def __init__(self, parent, **kwargs):
         super(SpaceDominationGUI, self).__init__(parent, **kwargs)
@@ -76,7 +78,13 @@ class SpaceDominationGUI(GUI):
                 child.set_active(False)
             self.parent.campaignMgr.show_display(self)
             
-
+    def mission_results_show(self, result, mission):
+        if not self.mission_results:
+            self.mission_results = MissionResultsMenu(self, self.main_menu_click, self.campaign_menu_click, mission, self.parent.largefont)
+            self.add_child(self.mission_results)
+        self.mission_results.init(result, mission)
+        self.generic_click(target_id = self.children.index(self.mission_results))
+        
 class PauseMenu(BasicMenu):
     
     unpause_fxn = None
@@ -92,7 +100,54 @@ class PauseMenu(BasicMenu):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             if self.unpause_fxn: self.unpause_fxn()
         
-
+class MissionResultsMenu(Frame):
     
+    default_back_fxn = None
+    campaign_back_fxn = None
+    mission = None
+    font = None
     
+    resultLabel = None
+    backBtn = None
     
+    def __init__(self, parent, default_back_fxn, campaign_back_fxn, mission, font, **kwargs):
+        super(MissionResultsMenu, self).__init__(parent, **kwargs)
+        
+        self.default_back_fxn = default_back_fxn
+        self.campaign_back_fxn = campaign_back_fxn
+        self.mission = mission
+        self.font = font
+    
+    def init(self, result, mission = None):
+        if mission:
+            self.mission = mission
+        
+        if result:
+            text = "MISSION COMPLETE"
+            color = consts.COLOR_GREEN
+        else:
+            text = "MISSION FAILED"
+            color = consts.COLOR_RED
+            
+        if not self.resultLabel:
+            self.resultLabel = Label(self, text, font = self.font, color = color)
+        else:
+            self.resultLabel.set_text(text)
+            self.resultLabel.color = color
+            
+        self.resultLabel.rect.center = (pygame.display.get_surface().get_width() * 0.5, 150)
+            
+    def update(self, event):
+        super(MissionResultsMenu, self).update(event)
+        
+        if self.resultLabel:
+            self.resultLabel.rect.center = (pygame.display.get_surface().get_width() * 0.5, 150)
+        
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            if self.mission and self.mission.isCampaignMission:
+                if self.campaign_back_fxn: self.campaign_back_fxn()
+                return True
+            else:
+                if self.default_back_fxn: self.default_back_fxn()
+                return True
+                

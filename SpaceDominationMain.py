@@ -387,8 +387,13 @@ class SpaceDominationMain(object):
     def endMission(self):
         
         self.gameState = self.GAMESTATE_GAMEOVER
-        self.menuManager.main_menu_click()    
-        return self.updateTriggers()
+        
+        #self.menuManager.main_menu_click()
+        result = self.updateTriggers()    
+        if self.currentMission.isCampaignMission:
+            self.campaignMgr.mission_ended(result, self.currentMission)
+        self.menuManager.mission_results_show(result, self.currentMission)
+        return result 
         
     def linkTriggers(self, spawn, ship):
         for tg in self.triggerList:
@@ -441,13 +446,13 @@ class SpaceDominationMain(object):
 
             if self.updateTriggers():
                 # player completed all primary objectives - mission should end with a victory status now
-                self.gameState = self.GAMESTATE_GAMEOVER
-                self.menuManager.main_menu_click()
+                self.endMission()
                 
             if not self.playerShip in self.shipSpriteGroup:
                 # player ship died - game over :(
-                self.gameState = self.GAMESTATE_GAMEOVER
-                self.menuManager.main_menu_click()
+                #self.gameState = self.GAMESTATE_GAMEOVER
+                #self.menuManager.main_menu_click()
+                self.endMission()
             
             if self.gameState == self.GAMESTATE_GAMEOVER:
                 # TODO the game is ending, save the profile stats
@@ -546,13 +551,13 @@ class SpaceDominationMain(object):
             self.HUD.draw(self.screen, self, render)
                 
             
-            if self.gameState == self.GAMESTATE_GAMEOVER:
-                if self.updateTriggers():
-                    text_surf = self.largefont.render("MISSION COMPLETE", 1, (0, 255, 0))
-                    self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
-                else:
-                    text_surf = self.largefont.render("MISSION FAILED", 1, (255, 0, 0))
-                    self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
+            #if self.gameState == self.GAMESTATE_GAMEOVER:
+            #    if self.updateTriggers():
+            #        text_surf = self.largefont.render("MISSION COMPLETE", 1, (0, 255, 0))
+            #        self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
+            #    else:
+            #        text_surf = self.largefont.render("MISSION FAILED", 1, (255, 0, 0))
+            #        self.screen.blit( text_surf, (self.screen.get_width() * 0.5 - text_surf.get_width() * 0.5, 100))
             
         return True
     

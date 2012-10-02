@@ -128,6 +128,9 @@ class CampaignManager(object):
         parent.add_child(self.display)
         self.display.set_active(True)
 
+    def mission_ended(self, result, mission):
+        
+        pass
 
 class FactionAI(object):
     '''
@@ -245,6 +248,7 @@ class Planet(object):
         mission.background_style = 'tiled'
         mission.width = 5000
         mission.height = 5000
+        mission.isCampaignMission = True
         
         squad = Squadron()
         
