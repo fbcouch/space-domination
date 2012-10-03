@@ -43,6 +43,8 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     
     hard_points = None
     
+    spawn = None
+    
     image = None
     
     def __init__(self):
@@ -227,6 +229,9 @@ class Ship(PhysicsEntity):
             for hp in self.hard_points:
                 if hp in context.foregroundSpriteGroup: context.foregroundSpriteGroup.remove(hp)
             if self in context.foregroundSpriteGroup: context.foregroundSpriteGroup.remove(self)
+            
+            if not self.parent and not self in context.destroyedSpriteGroup:
+                context.destroyedSpriteGroup.add(self)
         
         if self.parent:
             if self in self.parent.hard_points: self.parent.hard_points.remove(self)

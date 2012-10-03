@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shiplist>
-	<ship id="0" name="" file="base-fighter1.png" health="100" hregen="0" shields="100" sregen="2" speed="8" turn="4" armor="0" engines="1,32;1,48" engine-color="orange" flyable="True">
+	<ship id="0" name="Fighter" file="base-fighter1.png" health="100" hregen="0" shields="100" sregen="2" speed="8" turn="4" armor="0" engines="1,32;1,48" engine-color="orange" flyable="True">
 		<weapon id="0" points="39,4;39,76"/>
 		<weapon id="2" />
 	</ship>
 	<ship id="1" name="" file="1st_pixel_spaceship.png" health="100" hregen="2" shields="0" sregen="2" speed="4" turn="1" armor="0">
 		<weapon id="1" />
 	</ship>
-	<ship id="2" name="" file="block1.png" health="100" hregen="0" shields="0" sregen="0" speed="0" turn="0" armor="0" />
-	<ship id="3" name="" file="base-enemy1.png" health="100" hregen="0" shields="0" sregen="2" speed="6" turn="3" armor="0" engines="5,32;5,48" engine-color="blue" flyable="True">
+	<ship id="2" name="Crate" file="block1.png" health="100" hregen="0" shields="0" sregen="0" speed="0" turn="0" armor="0" />
+	<ship id="3" name="Fighter" file="base-enemy1.png" health="100" hregen="0" shields="0" sregen="2" speed="6" turn="3" armor="0" engines="5,32;5,48" engine-color="blue" flyable="True">
 		<weapon id="1" points="45,35;45,45" />
 	</ship>
 	<ship id="4" name="laser-turret-1" file="laser-turret1.png" health="100" hregen="0"
@@ -19,7 +19,7 @@
 			shields="0" sregen="0" speed="0" turn="2" armor="0">
 		<weapon id="4" />
 	</ship>
-	<ship id="6" name="" file="rebel-interceptor-1.png" health="75" hregen="0" shields="75" sregen="2" speed="12" turn="7" armor="0" engines="1,16;1,36" engine-color="orange" flyable="True">
+	<ship id="6" name="Interceptor" file="rebel-interceptor-1.png" health="75" hregen="0" shields="75" sregen="2" speed="12" turn="7" armor="0" engines="1,16;1,36" engine-color="orange" flyable="True">
 		<weapon id="0" points="41,3;41,49"/>
 		<weapon id="2" />
 	</ship>

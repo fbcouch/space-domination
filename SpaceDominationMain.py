@@ -81,6 +81,7 @@ class SpaceDominationMain(object):
     rootSprite = None
     
     shipSpriteGroup = None
+    destroyedSpriteGroup = None
     backgroundSpriteGroup = None
     triggerList = None
     foregroundSpriteGroup = None
@@ -316,6 +317,7 @@ class SpaceDominationMain(object):
         self.triggerList = mission.triggerList[:]
         #self.rootSprite = pygame.sprite.OrderedUpdates()
         self.shipSpriteGroup = OrderedUpdatesRect()
+        self.destroyedSpriteGroup = OrderedUpdatesRect()
         self.backgroundSpriteGroup = OrderedUpdatesRect() #pygame.sprite.OrderedUpdates()
         self.foregroundSpriteGroup = OrderedUpdatesRect() #pygame.sprite.OrderedUpdates()
         self.physics = Physics()
@@ -366,6 +368,7 @@ class SpaceDominationMain(object):
             tempShip.set_position(spawn.x, spawn.y)
             tempShip.set_rotation(spawn.r)
             tempShip.tag = spawn.tag
+            tempShip.spawn = spawn
             
         # first, set up any auto-backgrounds
         if mission.background_style == 'tiled':
@@ -389,11 +392,38 @@ class SpaceDominationMain(object):
         self.gameState = self.GAMESTATE_GAMEOVER
         
         #self.menuManager.main_menu_click()
-        result = self.updateTriggers()    
+        
+        # put together the results for the mission results menu
+        destroyedSpawns = self.currentMission.get_losses(self.destroyedSpriteGroup)
+        destroyedLabels = {'ally': {}, 'enemy': {}}
+        
+        for sp in destroyedSpawns:
+            if sp.team == Ship.TEAM_DEFAULT_FRIENDLY:
+                update = destroyedLabels['ally']
+            else:
+                update = destroyedLabels['enemy']
+            
+            if not sp.id in update.keys():
+                # create a new entry
+                lb = "Unknown"
+                img = None
+                if sp.id == -1 and sp.type == "player":
+                    lb = self.shipList[int(self.currentProfile['ship'])].name
+                    img = self.shipList[int(self.currentProfile['ship'])].image
+                elif sp.id >= 0 and sp.id < len(self.shipList):
+                    lb = self.shipList[sp.id].name
+                    img = self.shipList[sp.id].image
+                update[sp.id] = {'num': 1, 'label': lb, 'image': img}
+            else:
+                # update the existing entry
+                update[sp.id]['num'] += 1
+        
+        results = {'win': self.updateTriggers(), 'labels': destroyedLabels, 'spawns': destroyedSpawns, 'ships': self.destroyedSpriteGroup}
+        
         if self.currentMission.isCampaignMission:
-            self.campaignMgr.mission_ended(result, self.currentMission)
-        self.menuManager.mission_results_show(result, self.currentMission)
-        return result 
+            self.campaignMgr.mission_ended(results, self.currentMission)
+        self.menuManager.mission_results_show(results, self.currentMission)
+        return results['win']
         
     def linkTriggers(self, spawn, ship):
         for tg in self.triggerList:

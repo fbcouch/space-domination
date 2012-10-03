@@ -806,8 +806,9 @@ class ImageLabel(Element):
         
     def draw(self):
         super(ImageLabel, self).draw()
-        self.angle += 1
-        self.apply_rotate()
+        if self.rotate:
+            self.angle += 1
+            self.apply_rotate()
         
     def apply_rotate(self):
         self.angle = self.angle % 360

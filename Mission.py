@@ -40,6 +40,15 @@ class Mission(object):
     def build(self):
         pass
     
+    def get_losses(self, destroyedSpriteGroup):
+        '''returns a list of destroyed spawns'''
+        destroyed = []
+        for ship in destroyedSpriteGroup:
+            if ship.spawn in self.spawnList:
+                destroyed.append(ship.spawn)
+                
+        return destroyed
+    
     def toXML(self):
         returnVal = "<mission name=\"" + self.missionName + "\" desc=\"" + self.missionDesc + "\">\n"
         for bg in self.backgroundList:
