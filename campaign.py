@@ -8,7 +8,7 @@ from Mission import Mission, Spawn
 from Ship import Ship
 from Trigger import CreateTrigger
 from Vec2 import Vec2
-from gui.basicmenu import BasicImageButton
+from gui.basicmenu import BasicImageButton, ImageLabel
 from gui.gui import Frame
 import Utils
 import consts
@@ -92,14 +92,18 @@ class CampaignManager(object):
                     planet.boardPosition = pos
             
             #planet.faction = factions[random.randint(0, len(factions) - 1)]    
-            planet.strength = random.randint(1, 3)
+            #planet.strength = random.randint(1, 3)
             planetList.append(planet)
         
         cp = Campaign()
         cp.planets = planetList
         cp.factions = factions
-        factions[0]['ai'] = FactionAI(cp, factions[0])
-        factions[1]['ai'] = FactionAI(cp, factions[1])
+        
+        points = len(cp.planets) / len(cp.factions)
+        for f in factions:
+            f['ai'] = FactionAI(cp, f)
+            f['ai'].planet_upgrade_points = points
+        
         cp.init()
         cp.boardSize = (width, height)
         self.campaignList.append(cp)
@@ -140,11 +144,16 @@ class FactionAI(object):
     campaign = None
     faction = None
     planets = None
+    fleets = None
+    
+    planet_upgrade_points = 0
+    fleet_upgrade_points = 0
     
     def __init__(self, campaign, faction):
         self.campaign = campaign
         self.faction = faction
         self.planets = []
+        self.fleets = []
     
     def choose_planet(self, available):
         if len(self.planets) == 0:
@@ -172,7 +181,27 @@ class FactionAI(object):
             self.planets.append(near)
             near.faction = self.faction
             return near
-            
+    
+    def do_turn(self):
+        pass
+    
+    def spend_planet_upgrade_point(self):
+        if self.planet_upgrade_points > 0:
+            self.planets[random.randint(0, len(self.planets) - 1)].strength += 1
+    
+    def spend_fleet_upgrade_point(self):
+        pass
+    
+    def place_fleet(self):
+        ft = Fleet()
+        self.fleets.append(ft)
+        self.campaign.fleets.append(ft)
+        ft.faction = self.faction
+        ft.board_position = self.planets[random.randint(0, len(self.planets) - 1)].boardPosition
+        for i in range(0, 6):
+            ft.ship_id_list.append(3)
+        
+    
 class Campaign(object):
     '''
     Contains the status of a campaign...this theoretically should be saved/loaded from files
@@ -180,11 +209,13 @@ class Campaign(object):
     planets = None
     boardSize = None
     factions = None
+    fleets = None
     
     def __init__(self):
         self.planets = []
         self.boardSize = (0,0)
         self.factions = []
+        self.fleets = []
         
         
     def init(self):
@@ -193,12 +224,42 @@ class Campaign(object):
         '''
         self.faction_choose_planets()
         
+        points = self.factions[0]['ai'].planet_upgrade_points
+        i = 0
+        while i < points:
+            for f in self.factions:
+                f['ai'].spend_planet_upgrade_point()
+            i += 1
+        
+        fleets = float(len(self.planets)) / consts.PLANETS_PER_FLEET
+        if fleets - int(fleets) >= 0.5:
+            fleets = int(fleets) + 1
+        else:
+            fleets = int(fleets)
+        
+        i = 0
+        while i < fleets:
+            for f in self.factions:
+                f['ai'].place_fleet()
+            i += 1
+        
+        
     def faction_choose_planets(self):
         remaining_planets = self.planets[:]
         for i in range(len(self.planets)):
             p = self.factions[i % len(self.factions)]['ai'].choose_planet(remaining_planets)
             p.strength = 1
             if p in remaining_planets: remaining_planets.remove(p)
+
+class Fleet(object):
+    faction = None
+    board_position = None
+    armor_level = 0
+    weapon_level = 0
+    ship_id_list = None
+    
+    def __init__(self):
+        self.ship_id_list = []
 
 class Planet(object):
     '''
@@ -349,6 +410,8 @@ class CampaignMenu(Frame):
     back_btn = None
     new_btn = None
     
+    fleet_image = None
+    
     def __init__(self, parent, **kwargs):
         super(CampaignMenu, self).__init__(parent, **kwargs)
         
@@ -360,6 +423,8 @@ class CampaignMenu(Frame):
             self.campaign = self.manager.create_new_random()
             self.manager.currentCampaign = self.campaign
         
+        self.fleet_image, r = Utils.load_image("fleet_logo.png", -1)
+        
         self.init()
         
     def init(self):
@@ -367,7 +432,10 @@ class CampaignMenu(Frame):
         initializes stuff - should be called whenever the campaign changes
         '''
         for p in self.campaign.planets:
-            PlanetButton(self, planet = p, callback = self.planet_click, callback_kwargs = {'value': p})
+            PlanetButton(self, planet = p)#, callback = self.planet_click, callback_kwargs = {'value': p})
+        
+        for f in self.campaign.fleets:
+            FleetImageLabel(self, f, image = self.fleet_image)
         
         offset, block_size = self.get_offset_and_block_size()
         
@@ -440,6 +508,9 @@ class CampaignMenu(Frame):
         for c in self.children:
             if isinstance(c, PlanetButton):
                 c.rect.topleft = offset[0] + c.planet.boardPosition[0] * block_size[0], offset[1] + c.planet.boardPosition[1] * block_size[1]
+                c.draw()
+            elif isinstance(c, FleetImageLabel):
+                c.rect.topleft = offset[0] + c.fleet.board_position[0] * block_size[0], offset[1] + c.fleet.board_position[1] * block_size[1]
                 c.draw()
             else:
                 c.draw()
@@ -539,5 +610,17 @@ class PlanetButton(BasicImageButton):
     def on_mouse_off(self):
         pass
         
+class FleetImageLabel(ImageLabel):
+    fleet = None
     
+    def __init__(self, parent, fleet, **kwargs):
+        super(FleetImageLabel, self).__init__(parent, **kwargs)
+        self.fleet = fleet
+
+class BattleButton(BasicImageButton):
+    battle = None
     
+    def __init__(self, parent, battle, **kwargs):
+        super(BattleButton, self).__init__(parent, **kwargs)
+        
+        self.battle = battle
