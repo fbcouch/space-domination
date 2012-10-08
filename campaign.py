@@ -8,7 +8,7 @@ from Mission import Mission, Spawn
 from Ship import Ship
 from Trigger import CreateTrigger
 from Vec2 import Vec2
-from gui.basicmenu import BasicImageButton, ImageLabel
+from gui.basicmenu import BasicImageButton, ImageLabel, BasicTextButton
 from gui.gui import Frame
 import Utils
 import consts
@@ -183,11 +183,44 @@ class FactionAI(object):
             return near
     
     def do_turn(self):
-        pass
+        # TODO spend planet upgrade points
+        while self.planet_upgrade_points > 0:
+            self.spend_planet_upgrade_point()
+            
+        # TODO spend fleet upgrade points
+        self.spend_fleet_upgrade_point()    
+        
+        # TODO move fleets around and select a battle
+        b = None
+        for f in self.fleets:
+            dx = random.randint(-1, 1)
+            dy = random.randint(-1, 1)
+            if f.board_position[0] + dx < 0:
+                dx = random.randint(0, 1)
+            elif f.board_position[0] + dx >= self.campaign.boardSize[0]:
+                dx = random.randint(-1, 0)
+            
+            if f.board_position[1] + dy < 0:
+                dy = random.randint(0, 1)
+            elif f.board_position[1] + dy >= self.campaign.boardSize[1]:
+                dy = random.randint(-1, 0)
+                
+            occupy = self.campaign.occupied_by((f.board_position[0] + dx, f.board_position[1] + dy))
+             
+            if (isinstance(occupy, Fleet) and not occupy in self.fleets) or (isinstance(occupy, Planet) and not occupy in self.planets):
+                if not b:
+                    b = Battle()
+                    b.start = f.board_position
+                    b.end = (f.board_position[0] + dx, f.board_position[1] + dy)
+            else:
+                f.board_position = (f.board_position[0] + dx, f.board_position[1] + dy)
+        return b
+    
     
     def spend_planet_upgrade_point(self):
         if self.planet_upgrade_points > 0:
             self.planets[random.randint(0, len(self.planets) - 1)].strength += 1
+            self.planet_upgrade_points -= 1
     
     def spend_fleet_upgrade_point(self):
         pass
@@ -210,12 +243,14 @@ class Campaign(object):
     boardSize = None
     factions = None
     fleets = None
+    battles = None
     
     def __init__(self):
         self.planets = []
         self.boardSize = (0,0)
         self.factions = []
         self.fleets = []
+        self.battles = []
         
         
     def init(self):
@@ -242,6 +277,7 @@ class Campaign(object):
             for f in self.factions:
                 f['ai'].place_fleet()
             i += 1
+            
         
         
     def faction_choose_planets(self):
@@ -250,6 +286,34 @@ class Campaign(object):
             p = self.factions[i % len(self.factions)]['ai'].choose_planet(remaining_planets)
             p.strength = 1
             if p in remaining_planets: remaining_planets.remove(p)
+            
+    def occupied_by(self, pos):        
+        '''returns the planet or fleet occupying this space'''
+        
+        for p in self.planets:
+            if p.boardPosition == pos:
+                return p
+        
+        for f in self.fleets:
+            if f.board_position == pos:
+                return f
+        
+    def do_turn(self, **kwargs):
+        self.battles = []
+        for f in self.factions:
+            f['ai'].planet_upgrade_points += len(f['ai'].planets)
+            f['ai'].fleet_upgrade_points += len(f['ai'].planets)
+            
+            b = f['ai'].do_turn()
+            if b:
+                self.battles.append(b)
+                
+        return self.battles
+
+class Battle(object):
+    faction = None # the faction owning the battle
+    start = None # the location of the fleet attacking
+    end = None # the destination
 
 class Fleet(object):
     faction = None
@@ -411,6 +475,10 @@ class CampaignMenu(Frame):
     new_btn = None
     
     fleet_image = None
+    arrow_image = None
+    
+    battle_btns = None
+    cur_battles = None
     
     def __init__(self, parent, **kwargs):
         super(CampaignMenu, self).__init__(parent, **kwargs)
@@ -425,17 +493,28 @@ class CampaignMenu(Frame):
         
         self.fleet_image, r = Utils.load_image("fleet_logo.png", -1)
         
+        self.arrow_image, r = Utils.load_image("battle_arrow.png", -1)
+        
+        self.battle_btns = []
+        
         self.init()
         
     def init(self):
         '''
         initializes stuff - should be called whenever the campaign changes
         '''
+        self.children = []
+        
+        BasicTextButton(self, text = "Do Turn", callback = self.campaign.do_turn)
+        
         for p in self.campaign.planets:
             PlanetButton(self, planet = p)#, callback = self.planet_click, callback_kwargs = {'value': p})
         
         for f in self.campaign.fleets:
             FleetImageLabel(self, f, image = self.fleet_image)
+            
+        self.cur_battles = self.campaign.battles[:]
+        self.refresh_battle_btns()
         
         offset, block_size = self.get_offset_and_block_size()
         
@@ -466,7 +545,14 @@ class CampaignMenu(Frame):
         self.save_btn.rect.topleft = (left - self.save_btn.rect.width, top)
         top += self.save_btn.rect.height + 2
         
-        
+    
+    def refresh_battle_btns(self):
+        for b in self.cur_battles:
+            vec = Vec2(0,0)
+            vec.setXY(b.end[0] - b.start[0], b.end[1] - b.start[1])
+            img = pygame.transform.rotate(self.arrow_image.copy(), vec.theta)
+            self.battle_btns.append(BattleButton(self, battle = b, image = img, callback = self.battle_click, callback_kwargs = {'value': b}))
+            
         
     def get_offset_and_block_size(self):
         width = pygame.display.get_surface().get_width() 
@@ -502,7 +588,14 @@ class CampaignMenu(Frame):
         self.background.fill((0,0,0), self.background.get_rect())
         pygame.gfxdraw.rectangle(self.background, self.background.get_rect(), consts.COLOR_ORANGE)
         
-        
+        if not set(self.cur_battles) == set(self.campaign.battles):
+            # need to refresh the battle buttons
+            for b in self.battle_btns:
+                 self.children.remove(b)
+            self.battle_btns = []
+            
+            self.cur_battles = self.campaign.battles[:]
+            self.refresh_battle_btns()
         
         pygame.display.get_surface().blit(self.background, offset)
         for c in self.children:
@@ -511,6 +604,9 @@ class CampaignMenu(Frame):
                 c.draw()
             elif isinstance(c, FleetImageLabel):
                 c.rect.topleft = offset[0] + c.fleet.board_position[0] * block_size[0], offset[1] + c.fleet.board_position[1] * block_size[1]
+                c.draw()
+            elif isinstance(c, BattleButton):
+                c.rect.topleft = offset[0] + (c.battle.start[0] + c.battle.end[0]) * 0.5 * block_size[0], offset[1] + (c.battle.start[1] + c.battle.end[1]) * 0.5 * block_size[1]
                 c.draw()
             else:
                 c.draw()
@@ -554,6 +650,9 @@ class CampaignMenu(Frame):
         
         # start the mission
         self.mission_start(mission)
+        
+    def battle_click(self, **kwargs):
+        pass
         
 class PlanetButton(BasicImageButton):
     planet = None
