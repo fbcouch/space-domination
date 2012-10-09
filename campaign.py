@@ -210,6 +210,7 @@ class FactionAI(object):
             if (isinstance(occupy, Fleet) and not occupy in self.fleets) or (isinstance(occupy, Planet) and not occupy in self.planets):
                 if not b:
                     b = Battle()
+                    b.faction = self.faction
                     b.start = f.board_position
                     b.end = (f.board_position[0] + dx, f.board_position[1] + dy)
             else:
@@ -309,7 +310,109 @@ class Campaign(object):
                 self.battles.append(b)
                 
         return self.battles
-
+    
+    def get_mission(self, battle):
+        '''returns the mission to be played for the selected battle'''
+        
+        # first, figure out the fleet that is attacking / defending
+        a_fleet = None
+        d_fleet = None
+        for f in self.fleets:
+            if f.faction == battle.faction and set(f.board_position) == set(battle.start):
+                a_fleet = f
+            elif set(f.board_position) == set(battle.end):
+                d_fleet = f
+                
+        if not a_fleet:
+            return None # No attacking fleet, so how can there be a battle?
+        
+        # now, figure out if a planet is involved in the defense
+        d_planet = None
+        for p in self.planets:
+            if set(p.boardPosition) == set(battle.end):
+                d_planet = p
+                
+        # now, generate the mission
+        mission = Mission()
+        mission.background_file = 'default_background.png'
+        mission.background_style = 'tiled'
+        mission.width = 5000
+        mission.height = 5000
+        mission.isCampaignMission = True
+        
+        # figure out the attack vector so the attackers/defenders can be laid out accordingly
+        angle = Vec2(0,0)
+        angle.setXY(battle.end[0] - battle.start[0], battle.end[1] - battle.start[1])
+        
+        angle.magnitude = 2000
+        d_midpt = angle.getXY()
+        angle.magnitude *= -1
+        a_midpt = angle.getXY()
+        
+        angle = angle.theta
+        
+        d_midpt = (int(mission.width * 0.5 + d_midpt[0]), int(mission.height * 0.5 + d_midpt[1]))
+        a_midpt = (int(mission.width * 0.5 + a_midpt[0]), int(mission.height * 0.5 + a_midpt[1]))
+        
+        if not mission.spawnList: mission.spawnList = []
+        if not mission.triggerList: mission.triggerList = []
+        
+        if a_fleet.faction == self.factions[0]:
+            # player is on the attacking team
+            sp = Spawn()
+            sp.id = -1
+            sp.type = "player"
+            sp.team = Ship.TEAM_DEFAULT_FRIENDLY
+            sp.x = a_midpt[0]
+            sp.y = a_midpt[1]
+            sp.r = angle
+            sp.tag = "self"
+            mission.spawnList.append(sp)
+            
+            a_team = Ship.TEAM_DEFAULT_FRIENDLY
+            d_team = Ship.TEAM_DEFAULT_ENEMY
+        else:
+            # player is on the defending team
+            sp = Spawn()
+            sp.id = -1
+            sp.type = "player"
+            sp.team = Ship.TEAM_DEFAULT_FRIENDLY
+            sp.x = d_midpt[0]
+            sp.y = d_midpt[1]
+            sp.r = 360 - angle
+            sp.tag = "self"
+            mission.spawnList.append(sp)
+            
+            a_team = Ship.TEAM_DEFAULT_ENEMY
+            d_team = Ship.TEAM_DEFAULT_FRIENDLY
+            
+        mission.triggerList.append(CreateTrigger(0, 'objective-primary', 'survive-attached', '', '', display_text = 'You must survive!'))
+        mission.triggerList[len(mission.triggerList) - 1].parent = sp
+        
+        a_fleet.add_to_mission(mission, a_midpt, angle, a_team, "a_fleet")
+        if d_fleet:
+            d_fleet.add_to_mission(mission, d_midpt, 360 - angle, d_team, "d_fleet")
+        if d_planet:
+            d_planet.add_to_mission(mission, d_midpt, 360 - angle, d_team, "d_planet")
+            
+        if a_team == Ship.TEAM_DEFAULT_FRIENDLY:
+            # player is attacking
+            if d_fleet:
+                mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'destroy-class', '', 'd_fleet', display_text = 'Destroy the enemy fleet!'))
+            if d_planet:
+                mission.triggerList.append(CreateTrigger(2, 'objective-primary', 'destroy-class', '', 'd_planet', display_text = 'Destroy planetary defenses!'))
+            mission.triggerList.append(CreateTrigger(3, 'objective-secondary', 'survive-class', '', 'a_fleet', display_text = 'Keep your allies alive!'))
+            
+        else:
+            # player is defending
+            mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'destroy-class', '', 'a_fleet', display_text = 'Destroy the enemy fleet!'))
+            if d_fleet:
+                mission.triggerList.append(CreateTrigger(2, 'objective-secondary', 'survive-class', '', 'd_fleet', display_text = 'Keep your fleet alive!'))
+            if d_planet:
+                mission.triggerList.append(CreateTrigger(3, 'objective-secondary', 'survive-class', '', 'd_planet', display_text = 'Keep the planetary defenses online!'))
+                
+        return mission
+    
 class Battle(object):
     faction = None # the faction owning the battle
     start = None # the location of the fleet attacking
@@ -324,6 +427,9 @@ class Fleet(object):
     
     def __init__(self):
         self.ship_id_list = []
+        
+    def add_to_mission(self, mission, pos, angle, team, tag):
+        pass
 
 class Planet(object):
     '''
@@ -456,7 +562,87 @@ class Planet(object):
         
         return mission
     
-    
+    def add_to_mission(self, mission, pos, angle, team, tag):
+        # TODO set up the planet spawning better
+        # for now, 1 = +1 squad; 2 = +1 squad; 3 = +1 station; 4 = +1 squad; 5 = +1 station
+        # station id = 7; squad = 3x Fighter (id = 3)
+        squads = 0
+        stations = 0
+        
+        if self.strength >= 1:
+            squads += 1
+        
+        if self.strength >= 2:
+            squads += 1
+        
+        if self.strength >= 3:
+            stations += 1
+        
+        if self.strength >= 4:
+            squads += 1
+        
+        if self.strength >= 5:
+            stations += 1
+            
+        for i in range(0, stations):
+            conflicts = True
+            j = 0
+            while conflicts and j < 100:
+                x = random.randint(pos[0] - 1000, pos[0] + 1000)
+                y = random.randint(pos[1] - 1000, pos[1] + 1000)
+                conflicts = False
+                for s in mission.spawnList:
+                    if (s.x - x)**2 + (s.y - y)**2 < 1000 ** 2:
+                        conflicts = True
+                j += 1
+        
+            if not conflicts:
+                sp = Spawn()
+                sp.id = 7
+                sp.team = team
+                sp.x = x
+                sp.y = y
+                sp.tag = tag
+                
+                mission.spawnList.append(sp)
+                
+        for i in range(0, squads):
+            squad = Squadron()
+            squad.angle = angle
+            conflicts = True
+            j = 0
+            while conflicts and j < 100:
+                x = random.randint(pos[0] - 1000, pos[0] + 1000)
+                y = random.randint(pos[1] - 1000, pos[1] + 1000)
+                conflicts = False
+                for s in mission.spawnList:
+                    if (s.x - x)**2 + (s.y - y)**2 < 1000 ** 2:
+                        conflicts = True
+                j += 1
+            
+            if not conflicts:
+                squad.squad_target = (x, y)
+                
+                for j in range(0, 3):
+                    offset = Vec2(0, 0)
+                    offset.setXY(*squad.formation[j])
+                    offset.theta += squad.angle
+                    offset = offset.getXY()
+                    
+                    x = squad.squad_target[0] + offset[0]
+                    y = squad.squad_target[1] + offset[1]
+                    
+                    sp = Spawn()
+                    sp.id = 3
+                    sp.team = team
+                    sp.squad = squad
+                    sp.x = x
+                    sp.y = y
+                    sp.r = squad.angle
+                    sp.tag = tag
+                    
+                    mission.spawnList.append(sp)
+                    
 class CampaignMenu(Frame):
     '''
     This will handle the major menu interactions that the player has with the campaign system 
@@ -475,7 +661,7 @@ class CampaignMenu(Frame):
     new_btn = None
     
     fleet_image = None
-    arrow_image = None
+    
     
     battle_btns = None
     cur_battles = None
@@ -551,7 +737,7 @@ class CampaignMenu(Frame):
             vec = Vec2(0,0)
             vec.setXY(b.end[0] - b.start[0], b.end[1] - b.start[1])
             img = pygame.transform.rotate(self.arrow_image.copy(), vec.theta)
-            self.battle_btns.append(BattleButton(self, battle = b, image = img, callback = self.battle_click, callback_kwargs = {'value': b}))
+            self.battle_btns.append(BattleButton(self, battle = b, callback = self.battle_click, callback_kwargs = {'value': b}))
             
         
     def get_offset_and_block_size(self):
@@ -652,7 +838,9 @@ class CampaignMenu(Frame):
         self.mission_start(mission)
         
     def battle_click(self, **kwargs):
-        pass
+        mission = self.campaign.get_mission(kwargs.get('value'))
+        
+        self.mission_start(mission)
         
 class PlanetButton(BasicImageButton):
     planet = None
@@ -719,7 +907,23 @@ class FleetImageLabel(ImageLabel):
 class BattleButton(BasicImageButton):
     battle = None
     
+    arrow_image = None
+    arrow_image_hover = None
+    
     def __init__(self, parent, battle, **kwargs):
+        vec = Vec2(0,0)
+        vec.setXY(battle.end[0] - battle.start[0], battle.end[1] - battle.start[1])
+        
+        self.arrow_image, r = Utils.load_image('battle_arrow.png', -1)
+        self.arrow_image = pygame.transform.rotate(self.arrow_image, vec.theta)
+        
+        self.arrow_image_hover, r = Utils.load_image('battle_arrow_hover.png', -1)
+        self.arrow_image_hover = pygame.transform.rotate(self.arrow_image_hover, vec.theta)
+        
+        kwargs['image'] = self.arrow_image
+        kwargs['selected_image'] = self.arrow_image_hover
+        kwargs['unselected_image'] = self.arrow_image
+        
         super(BattleButton, self).__init__(parent, **kwargs)
         
         self.battle = battle
