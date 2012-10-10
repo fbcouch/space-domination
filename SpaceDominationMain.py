@@ -339,26 +339,34 @@ class SpaceDominationMain(object):
                 self.linkTriggers(spawn, tempShip)
             else:
                 if spawn.id >= 0 and spawn.id < len(self.shipList):
-                    tempShip = AIShip(spawn.x, spawn.y, spawn.r, proto = self.shipList[spawn.id], context = self)
-                    tempShip.team = spawn.team
-                    
-                    self.linkTriggers(spawn, tempShip)
-                    
                     if self.shipList[spawn.id].hard_points:
+                        tempShip = StationShip(spawn.x, spawn.y, proto = self.shipList[spawn.id], context = self)
                         for pt in self.shipList[spawn.id].hard_points:
                             hpt = AIShip(spawn.x + pt['x'], spawn.y + pt['y'], spawn.r + pt['rot'], proto = self.shipList[pt['id']], parent = tempShip, context = self)
                             hpt.team = tempShip.team
                             tempShip.hard_points.append(hpt)
-                elif spawn.id == -1:
-                    tempShip = StationShip(spawn.x, spawn.y, spawn.r, proto = spawn.proto, context = self)
+                    else:
+                        tempShip = AIShip(spawn.x, spawn.y, spawn.r, proto = self.shipList[spawn.id], context = self)
                     tempShip.team = spawn.team
-                    for pt in spawn.hard_points:
-                        if pt.id >= 0 and pt.id < len(self.shipList):
-                            hpt = AIShip(spawn.x + pt.x, spawn.y + pt.y, spawn.r + pt.r, proto = self.shipList[pt.id], parent = tempShip, context = self)    
-                            hpt.team = tempShip.team     
-                            tempShip.hard_points.append(hpt)
                     
                     self.linkTriggers(spawn, tempShip)
+                    
+                    
+                elif spawn.id == -1:
+                    if spawn.hard_points:
+                        tempShip = StationShip(spawn.x, spawn.y, spawn.r, proto = spawn.proto, context = self)
+                    
+                        for pt in spawn.hard_points:
+                            if pt.id >= 0 and pt.id < len(self.shipList):
+                                hpt = AIShip(spawn.x + pt.x, spawn.y + pt.y, spawn.r + pt.r, proto = self.shipList[pt.id], parent = tempShip, context = self)    
+                                hpt.team = tempShip.team     
+                                tempShip.hard_points.append(hpt)
+                    else:
+                        tempShip = AIShip(spawn.x, spawn.y, spawn.r, proto = spawn.proto, context = self)
+                        
+                    tempShip.team = spawn.team
+                    self.linkTriggers(spawn, tempShip)
+                    
             if spawn.squad:
                 spawn.squad.append(tempShip)
                 tempShip.squad = spawn.squad

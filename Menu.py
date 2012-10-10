@@ -124,9 +124,6 @@ class MissionResultsMenu(Frame):
         if mission:
             self.mission = mission
         
-        
-        
-        
         if 'win' in results and results['win']:
             text = "MISSION COMPLETE"
             color = consts.COLOR_GREEN
@@ -137,8 +134,9 @@ class MissionResultsMenu(Frame):
         if not self.resultLabel:
             self.resultLabel = Label(self, text, font = self.largefont, color = color)
         else:
-            self.resultLabel.set_text(text)
             self.resultLabel.color = color
+            self.resultLabel.set_text(text)
+            
             
         self.resultLabel.rect.center = (pygame.display.get_surface().get_width() * 0.5, 150)
         
