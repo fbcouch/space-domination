@@ -21,6 +21,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
     rotation = 0        # important for acceleration stuff
     position = (0.0, 0.0) # important for floating point physics
     future_positions = None # will be used for collision prediction
+    rdc_rect = None # will be used for collision detection/prediction
     
     
     removeSelf = False
@@ -42,7 +43,7 @@ class PhysicsEntity(pygame.sprite.Sprite):
         self.rect = None
         self.original = None
         
-        
+        self.rdc_rect = pygame.rect.Rect(0,0,0,0)
         
     def accelerate(self, mag = 0):
         self.accelerate_r(mag, self.rotation)
@@ -96,6 +97,26 @@ class PhysicsEntity(pygame.sprite.Sprite):
         self.rect.topleft = self.position
         
         self.predict_positions(consts.COLLIDE_TICKS, consts.COLLIDE_INTERVAL)
+        predict = self.future_positions[len(self.future_positions) - 1]
+        if self.rect.left < predict.left:
+            self.rdc_rect.left = self.rect.left
+        else:
+            self.rdc_rect.left = predict.left
+        
+        if self.rect.right > predict.right:
+            self.rdc_rect.width = self.rect.right - self.rdc_rect.left
+        else:
+            self.rdc_rect.width = predict.right - self.rdc_rect.left
+        
+        if self.rect.top < predict.top:
+            self.rdc_rect.top = self.rect.top
+        else:
+            self.rdc_rect.top = predict.top
+            
+        if self.rect.bottom > predict.bottom:
+            self.rdc_rect.height = self.rect.bottom - self.rdc_rect.top
+        else:
+            self.rdc_rect.height = predict.bottom - self.rdc_rect.top
         
         if not self.active:
             return

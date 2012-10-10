@@ -80,16 +80,21 @@ class Physics(object):
             i = 0
             while i < len(gp['members']):
                 pChild = gp['members'][i]
+                if not pChild.active:
+                    i += 1
+                    continue
                 j = i + 1
                 while j < len(gp['members']):
                     pCollide = gp['members'][j]
-                    if pygame.sprite.collide_rect(pChild, pCollide):
+                    if not pCollide.active or not (pChild.can_collide(pCollide) and pCollide.can_collide(pChild)):
+                        j += 1
+                        continue
+                    '''if pygame.sprite.collide_rect(pChild, pCollide):
                         # the two rects collide
                         if pygame.sprite.collide_mask(pChild, pCollide):
                             # this is a real collision
-                            if pChild.can_collide(pCollide) and pCollide.can_collide(pChild):
-                                pChild.collide(pCollide, context)
-                                pCollide.collide(pChild, context)
+                            pChild.collide(pCollide, context)
+                            pCollide.collide(pChild, context)'''
                     
                     counts += 1
                     j += 1
@@ -118,7 +123,36 @@ class Physics(object):
                 pChild.consider_target(pCollide)
                 pCollide.consider_target(pChild)
         t4 = pygame.time.get_ticks()
-        print "%i physics entities; phys update = %i ms; collision detection = %i ms; prediction/targeting = %i ms" % (len(self.physicsChildren), t2 - t1, t2 - t1, t3 - t1)
+        self.insertionSort(self.physicsChildren, 0)
+        
+        active_list = []
+        pairs = []
+        for i in range(0, len(self.physicsChildren)):
+            item = self.physicsChildren[i]
+            if not item.active: continue
+            for j in active_list:
+                if item is j: continue
+                if item.rect.left > j.rect.right:
+                    active_list.remove(j)
+                else:
+                    active_list.append(item)
+                    # possible collision
+                    add = True
+                    for p in pairs:
+                        if (p[0] is item or p[1] is item) and (p[0] is j or p[1] is j):
+                            add = False
+                    if add: pairs.append([item, j])
+            if len(active_list) == 0:
+                active_list.append(item)
+        for p in pairs:
+            item = p[0]
+            j = p[1]
+            if item.can_collide(j) and j.can_collide(item) and item.rect.colliderect(j.rect) and pygame.sprite.collide_mask(item, j):
+                item.collide(j, context)
+                j.collide(item, context)
+        t5 = pygame.time.get_ticks()
+        print "%i physics entities; SAP = %i ms (%i); RDC = %i ms" %(len(self.physicsChildren), t5 - t4, len(pairs), t3 - t2)
+        #print "%i physics entities; phys update = %i ms; collision detection = %i ms; prediction/targeting = %i ms" % (len(self.physicsChildren), t2 - t1, t3 - t2, t4 - t3)
         return
     
     def collisionDetection(self, collide_list, group_size):
@@ -129,6 +163,7 @@ class Physics(object):
         
     def subdivide(self, collide_list, axis, group_size):
         '''recursive function that stops when the current group is <= group_size'''
+        
         if len(collide_list) <= group_size:
             return [{'members': collide_list}]
             
@@ -178,7 +213,7 @@ class Physics(object):
                 returnval.append(g)
             else:
                 returnval.extend(self.subdivide(g['members'], (axis + 1) % 2, group_size))
-            
+        
         return returnval
             
     def sortChildren(self, sort_list, axis):
@@ -198,6 +233,17 @@ class Physics(object):
                 newlist.append(s)
                 
         return newlist
+    
+    def insertionSort(self, sort_list, axis):
+        for i in range(0, len(sort_list)):
+            item = sort_list[i]
+            iHole = i
+            
+            while iHole > 0 and sort_list[iHole - 1].position[axis] > item.position[axis]:
+                sort_list[iHole] = sort_list[iHole - 1]
+                iHole -= 1
+            sort_list[iHole] = item 
+        return sort_list
     
     def getChildren(self):
         return self.physicsChildren
