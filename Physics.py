@@ -68,7 +68,7 @@ class Physics(object):
             pChild.rect.topleft = pChild.position
             
             i+=1
-        
+        t2 = pygame.time.get_ticks()
         # Collision detection by Recursive Dimensional Clustering
         collides = []
         for c in self.physicsChildren:
@@ -94,7 +94,7 @@ class Physics(object):
                     counts += 1
                     j += 1
                 i += 1
-        t2 = pygame.time.get_ticks()
+        t3 = pygame.time.get_ticks()
         
         # Do collision prediction and target selection
         for i in range(0, len(context.shipSpriteGroup)):
@@ -117,6 +117,8 @@ class Physics(object):
                 # test if these ships would like to target one another
                 pChild.consider_target(pCollide)
                 pCollide.consider_target(pChild)
+        t4 = pygame.time.get_ticks()
+        print "%i physics entities; phys update = %i ms; collision detection = %i ms; prediction/targeting = %i ms" % (len(self.physicsChildren), t2 - t1, t2 - t1, t3 - t1)
         return
     
     def collisionDetection(self, collide_list, group_size):

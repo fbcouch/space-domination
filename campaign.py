@@ -429,7 +429,50 @@ class Fleet(object):
         self.ship_id_list = []
         
     def add_to_mission(self, mission, pos, angle, team, tag):
-        pass
+        # TODO set up spawing the fleet better
+        # for now, just randomly spawn the ship_id_list
+        
+        i = 0
+        squad = None
+        for fs in self.ship_id_list:
+            
+            if i % 3 == 0:
+                squad = Squadron()
+                squad.angle = angle
+                
+                conflicts = True
+                j = 0
+                while conflicts and j < 100:
+                    x = random.randint(pos[0] - 1000, pos[0] + 1000)
+                    y = random.randint(pos[1] - 1000, pos[1] + 1000)
+                    conflicts = False
+                    for s in mission.spawnList:
+                        if (s.x - x) ** 2 + (s.y - y) ** 2 < 1000 ** 2:
+                            conflicts = True
+                    j += 1
+                
+                squad.squad_target = (x, y)
+            else:
+                offset = Vec2(0, 0)
+                offset.setXY(squad.formation[i % 3][0], squad.formation[i % 3][1])
+                offset.theta += squad.angle
+                offset = offset.getXY()
+                
+                x = squad.squad_target[0] + offset[0]
+                y = squad.squad_target[1] + offset[1]
+                    
+            sp = Spawn()
+            sp.squad = squad
+            sp.id = fs
+            sp.team = team
+            sp.x = x
+            sp.y = y
+            sp.r = angle
+            sp.tag = tag
+            
+            mission.spawnList.append(sp)
+        return
+                
 
 class Planet(object):
     '''

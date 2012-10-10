@@ -20,6 +20,8 @@ class PhysicsEntity(pygame.sprite.Sprite):
     
     rotation = 0        # important for acceleration stuff
     position = (0.0, 0.0) # important for floating point physics
+    future_positions = None # will be used for collision prediction
+    
     
     removeSelf = False
     
@@ -92,7 +94,9 @@ class PhysicsEntity(pygame.sprite.Sprite):
     '''
     def update(self, context = None, timestep = 1):
         self.rect.topleft = self.position
-
+        
+        self.predict_positions(consts.COLLIDE_TICKS, consts.COLLIDE_INTERVAL)
+        
         if not self.active:
             return
         
@@ -115,35 +119,32 @@ class PhysicsEntity(pygame.sprite.Sprite):
     def can_collide(self, physicsEntity):
         return not self is physicsEntity.parent
     
-    def will_collide(self, physicsEntity, ticks = consts.COLLIDE_TICKS, interval = consts.COLLIDE_INTERVAL):
+    def will_collide(self, physicsEntity):
         '''determine if this entity will collide with physicsEntity within the given number of ticks'''
         
+        if not self.future_positions or not physicsEntity.future_positions:
+            return False
+        
         # determine if we may collide
+        for i in range(0, len(self.future_positions)):
+            if i >= len(physicsEntity.future_positions):
+                return False
+            
+            if self.future_positions[i].colliderect(physicsEntity.future_positions[i]):
+                return True
+            
+        return False
+            
+    def predict_positions(self, ticks = consts.COLLIDE_TICKS, interval = consts.COLLIDE_INTERVAL):
+        '''predict the future positions of this entity'''
         n = 0
-        test_rect_self = self.rect.copy()
-        test_rect_other = physicsEntity.rect.copy()
+        self.future_positions = []
+        n_rect = self.rect.copy()
         while n <= ticks:
+            n_rect.left += self.velocity[0]
+            n_rect.top += self.velocity[1]
             
-            if test_rect_self.colliderect(test_rect_other):
-                self_rect_save = self.rect.copy()
-                self.rect = test_rect_self
-                other_rect_save = physicsEntity.rect.copy()
-                physicsEntity.rect = test_rect_other
-                
-                if not self.image or not physicsEntity.image:
-                    collide = True
-                else:
-                    collide = pygame.sprite.collide_mask(self, physicsEntity)
-                
-                self.rect = self_rect_save
-                physicsEntity.rect = other_rect_save
-                
-                if collide:
-                    return True
+            self.future_positions.append(n_rect.copy())
             
-            test_rect_self.left += self.velocity[0]
-            test_rect_self.top += self.velocity[1]
-            
-            test_rect_other.left += physicsEntity.velocity[0]
-            test_rect_other.top += physicsEntity.velocity[1]
             n += interval
+        

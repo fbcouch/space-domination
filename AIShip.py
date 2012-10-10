@@ -122,7 +122,7 @@ class AIShip(Ship):
                     if not ship.team == self.team:
                         # we don't mind hitting an enemy
                         continue
-                    if test_bullet.will_collide(ship, self.weapons[self.selected_weapon].bullet_ticks):
+                    if test_bullet.will_collide(ship): # TODO take into account the bullet lifetime here
                         # we would hit a friendly...
                         can_fire = False
                 if can_fire:
@@ -262,7 +262,7 @@ class StationShip(AIShip):
                 ticks = int(math.sqrt(self.rect.width * self.rect.width + self.rect.height * self.rect.height) / math.sqrt(physicsEntity.get_vel_sq())) + 1
             
             for hp in self.hard_points:
-                if physicsEntity.will_collide(hp, ticks):
+                if physicsEntity.will_collide(hp): # TODO implement ticks
                     return False
             return True
         
