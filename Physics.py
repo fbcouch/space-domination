@@ -9,6 +9,7 @@ from Vec2 import Vec2
 from pygame.locals import *
 import Utils
 import math
+import numpy
 import os
 import pygame
 import random
@@ -21,10 +22,12 @@ class Physics(object):
     
     physicsChildren = None
     
+    stats = None
+    
     def __init__(self):
         self.physicsChildren = []
         
-    
+        self.stats = {'entities': [], 'time': [], 'comp': []} # each entry consists of: # physics entities; ms for collision detection; # of comparisons
     
     def updatePhysics(self, context = None, timestep = 1):
         t1 = pygame.time.get_ticks()
@@ -118,7 +121,34 @@ class Physics(object):
                 pChild.consider_target(pCollide)
                 pCollide.consider_target(pChild)
         t4 = pygame.time.get_ticks()
-        print "%i physics entities; phys update = %i ms; collision detection = %i ms; prediction/targeting = %i ms" % (len(self.physicsChildren), t2 - t1, t2 - t1, t3 - t1)
+        
+        # use sweep and prune collision detection
+        #pairs = self.sweepAndPrune()
+        
+        # use rabbyt collision detection
+        #pairs = rabbyt.collisions.collide(self.physicsChildren)
+        '''
+        n = 0
+        for p in pairs:
+            if (p[0].active and p[1].active and p[0].rect.colliderect(p[1].rect) and p[0].can_collide(p[1]) and p[1].can_collide(p[0]) and pygame.sprite.collide_mask(p[0], p[1])):
+                # a collision!
+                p[0].collide(p[1], context)
+                p[1].collide(p[0], context)
+                n += 1
+        t5 = pygame.time.get_ticks()
+        '''
+        #print "%i entities; rdc: %i ms (%i)" % (len(self.physicsChildren), t3-t2, counts)
+        #self.stats['entities'].append(len(self.physicsChildren))
+        #self.stats['time'].append(t5-t4)
+        #self.stats['comp'].append(len(pairs))
+        
+        
+        #print "%i physics entities; SAP = %i ms (%i); RDC = %i ms (%i)" % (len(self.physicsChildren), t5 - t4, len(pairs), t3 - t2, counts)
+        #avgEntities = numpy.average(self.stats['entities'])
+        #avgTime = numpy.average(self.stats['time'])
+        #avgComp = numpy.average(self.stats['comp'])
+        #print "Avg Entities: %f ; Avg Time: %f ms; Avg Comp: %f" % (avgEntities, avgTime, avgComp)
+        
         return
     
     def collisionDetection(self, collide_list, group_size):
@@ -198,6 +228,40 @@ class Physics(object):
                 newlist.append(s)
                 
         return newlist
+    
+    def sweepAndPrune(self):
+        self.insertionSort(self.physicsChildren, 0)
+        pairs = []
+        active = []
+        rma = []
+        for i in range(0, len(self.physicsChildren)):
+            item = self.physicsChildren[i]
+            
+            for j in active:
+                if j.rect.right < item.rect.left:
+                    rma.append(j) # flag this for removal
+                else:
+                    pairs.append([j, item])
+            
+            for r in rma:
+                if r in active: active.remove(r)
+            
+            active.append(item)
+        return pairs
+    
+    def insertionSort(self, list, axis):
+        for i in range(0, len(list)):
+            item = list[i]
+            iHole = i
+            # iterate the hole back through the list until A[iHole - 1] <= item
+            while iHole > 0 and list[iHole - 1].rect.left > item.rect.left:
+                # move hole to the previous index
+                list[iHole] = list[iHole - 1]
+                iHole -= 1
+            # place the item in the hole
+            list[iHole] = item
+            
+        return list
     
     def getChildren(self):
         return self.physicsChildren

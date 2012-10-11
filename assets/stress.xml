@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mission width="10000" height="10000" background-style="tiled" background-file="default_background.png">
+
+	<playerspawn x="250.0" y="500.0" rot="30.0" >
+		<trigger id="1" type="objective-primary" condition="survive-attached" display-text="You must survive the mission." />
+	</playerspawn>
+		
+	<enemy id="7" x="1500" y="800" rot="0.0">
+		<point id="4" x="-15" y="55" rot="270.0" />
+		<point id="4" x="347" y="55" rot="270.0" />
+		<point id="5" x="185" y="70" rot="270.0" />
+		
+		<trigger id="2" type="objective-primary" condition="destroy-attached" display-text="Take down the space station." message-title="Commander" message-body="Nice job! Look's like you're ready for some real action." />
+	</enemy>
+	
+	<enemy id="3" x="1400" y="600" rot="120.0" tag="sec" />
+	<enemy id="3" x="1200" y="900" rot="140.0" tag="sec" />
+	<enemy id="3" x="1400" y="1600" rot="120.0" tag="sec" />
+	<enemy id="3" x="1200" y="1900" rot="140.0" tag="sec" />
+	<enemy id="3" x="1400" y="2600" rot="120.0" tag="sec" />
+	<enemy id="3" x="1200" y="2900" rot="140.0" tag="sec" />
+	<enemy id="3" x="1400" y="3600" rot="120.0" tag="sec" />
+	<enemy id="3" x="1200" y="3900" rot="140.0" tag="sec" />
+	
+	<ally id="0" x="50" y="900" rot="30" tag="ally" />
+	<ally id="0" x="50" y="1600" rot="30" tag="ally" />
+	<ally id="0" x="50" y="1900" rot="30" tag="ally" />
+	<ally id="0" x="50" y="2600" rot="30" tag="ally" />
+	<ally id="0" x="50" y="2900" rot="30" tag="ally" />
+	<ally id="0" x="50" y="3600" rot="30" tag="ally" />
+	<ally id="0" x="50" y="3900" rot="30" tag="ally" />
+	
+	<trigger id="5" type="objective-secondary" condition="survive-class" tag="ally" display-text="Keep your squad alive." />
+	<trigger id="3" type="objective-secondary" condition="destroy-class" tag="sec" display-text="Kill the enemy fighters." />
+	<trigger id="4" condition="mission-start" message-title="Commander" message-body="There's an outpost near here that those scouts came from. If we move quickly, they will be caught unaware. Find it, and take it down!" />
+	
+</mission>

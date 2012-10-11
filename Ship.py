@@ -245,6 +245,7 @@ class Ship(PhysicsEntity):
                 max_damager.stats['kills'] += 1 
             
     def collide(self, physicsEntity = None, context = None):
+        pass
         if physicsEntity: # decrement shields and health here
             if isinstance(physicsEntity, Bullet): # a bullet hit the ship
                 damage = self.take_damage(physicsEntity.damage)
@@ -261,6 +262,8 @@ class Ship(PhysicsEntity):
                         self.stats['damaged-by'][physicsEntity] += damage
                     else:
                         self.stats['damaged-by'][physicsEntity] = damage
+        
+        
             
                 
                     

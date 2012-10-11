@@ -7,6 +7,7 @@ from Particle import Particle, GlowParticle
 from PhysicsEntity import PhysicsEntity
 from Utils import load_sprite_sheet
 from Vec2 import Vec2
+import Utils
 import pygame
 
 
@@ -49,7 +50,7 @@ class Bullet(PhysicsEntity):
             self.remove(context)
         if (self.ticks_remaining <= 0):
             if self.type == 'missile':
-                explosion = Particle(load_sprite_sheet('explosion3.png', 100, 100, colorkey = -1), target = self)
+                explosion = Particle(Utils.get_asset('explosion3.png'), target = self)
                 context.foregroundSpriteGroup.add(explosion)
             self.remove(context)
                 
@@ -60,14 +61,15 @@ class Bullet(PhysicsEntity):
             if self in context.foregroundSpriteGroup: context.foregroundSpriteGroup.remove(self)
             
     def collide(self, physicsEntity = None, context = None):
+        
         if(physicsEntity and not isinstance(physicsEntity, Bullet)):
             
             if physicsEntity.health < physicsEntity.max_health and physicsEntity.shields <= 1:
-                explosion = Particle(load_sprite_sheet('explosion3.png', 100, 100, colorkey = -1), target = self)
+                explosion = Particle(Utils.get_asset('explosion3.png'), target = self)
                 context.foregroundSpriteGroup.add(explosion)
             else:
                 # sheild hit
-                explosion = Particle(load_sprite_sheet('shield_hit.png', 100, 100, colorkey = -1), target = self)
+                explosion = Particle(Utils.get_asset('shield_hit.png'), target = self)
                 context.foregroundSpriteGroup.add(explosion)
             self.parent.stats['damage-dealt'] += self.damage
             self.parent.stats['shots-hit'] += 1
