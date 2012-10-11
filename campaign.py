@@ -128,8 +128,13 @@ class CampaignManager(object):
         return Planet(names[random.randint(0, len(names) - 1)], files[random.randint(0, len(files) - 1)])
     
     def show_display(self, parent):
-        self.display = CampaignMenu(parent, campaign = self.currentCampaign, manager = self, ship_list = self.context.shipList, mission_start = self.context.startMission)
-        parent.add_child(self.display)
+        if not self.display:
+            self.display = CampaignMenu(parent, campaign = self.currentCampaign, manager = self, ship_list = self.context.shipList, mission_start = self.context.startMission)
+        else:
+            self.display.init()
+        
+        if not self.display in parent.children:
+            parent.add_child(self.display)
         self.display.set_active(True)
 
     def mission_ended(self, result, mission):
@@ -184,8 +189,7 @@ class FactionAI(object):
     
     def do_turn(self):
         # TODO spend planet upgrade points
-        while self.planet_upgrade_points > 0:
-            self.spend_planet_upgrade_point()
+        self.spend_planet_upgrade_points()
             
         # TODO spend fleet upgrade points
         self.spend_fleet_upgrade_point()    
@@ -222,6 +226,16 @@ class FactionAI(object):
         if self.planet_upgrade_points > 0:
             self.planets[random.randint(0, len(self.planets) - 1)].strength += 1
             self.planet_upgrade_points -= 1
+    
+    def spend_planet_upgrade_points(self):
+        j = 1
+        while j < 5 and self.planet_upgrade_points >= j * 10:
+            upgraded = False
+            for p in self.planets:
+                if p.strength == j and self.planet_upgrade_points >= p.strength * 10:
+                    self.planet_upgrade_points -= p.strength * 10
+                    p.strength += 1
+            j += 1
     
     def spend_fleet_upgrade_point(self):
         pass
@@ -734,7 +748,7 @@ class CampaignMenu(Frame):
         '''
         self.children = []
         
-        BasicTextButton(self, text = "Do Turn", callback = self.campaign.do_turn)
+        BasicTextButton(self, text = "Do Turn", callback = self.do_turn_click)#self.campaign.do_turn)
         
         for p in self.campaign.planets:
             PlanetButton(self, planet = p)#, callback = self.planet_click, callback_kwargs = {'value': p})
@@ -820,7 +834,7 @@ class CampaignMenu(Frame):
         if not set(self.cur_battles) == set(self.campaign.battles):
             # need to refresh the battle buttons
             for b in self.battle_btns:
-                 self.children.remove(b)
+                 if b in self.children: self.children.remove(b)
             self.battle_btns = []
             
             self.cur_battles = self.campaign.battles[:]
@@ -884,6 +898,10 @@ class CampaignMenu(Frame):
         mission = self.campaign.get_mission(kwargs.get('value'))
         
         self.mission_start(mission)
+        
+    def do_turn_click(self, **kwargs):
+        self.campaign.do_turn(**kwargs)
+        self.init()
         
 class PlanetButton(BasicImageButton):
     planet = None

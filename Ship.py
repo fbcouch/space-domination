@@ -216,7 +216,7 @@ class Ship(PhysicsEntity):
                 context.foregroundSpriteGroup.add(engine_glow)
         
         if self.removeSelf or self.health <= 0:
-            explosion = Particle(load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1), target = self)
+            explosion = Particle(Utils.get_asset('explosion1.png'), target = self)
             context.foregroundSpriteGroup.add(explosion)
             self.remove(context)
         
