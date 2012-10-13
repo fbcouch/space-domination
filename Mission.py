@@ -4,7 +4,7 @@ Created on May 5, 2012
 @author: Jami
 '''
 
-from Ship import PShip, Ship
+from Ship import PShip, Ship, Upgrade
 from Trigger import CreateTrigger, Trigger
 from Utils import load_image
 from xml.sax import saxutils, handler, make_parser
@@ -83,8 +83,11 @@ class Spawn(object):
     
     squad = None
     
+    upgrade = None
+    
     def __init__(self):
         self.hard_points = []
+        self.upgrade = Upgrade()
     
     def toXML(self):
         returnString = "<"

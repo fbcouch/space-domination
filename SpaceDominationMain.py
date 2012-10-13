@@ -380,6 +380,7 @@ class SpaceDominationMain(object):
             tempShip.set_rotation(spawn.r)
             tempShip.tag = spawn.tag
             tempShip.spawn = spawn
+            tempShip.apply_upgrade(spawn.upgrade)
             
         # first, set up any auto-backgrounds
         if mission.background_style == 'tiled':

@@ -5,7 +5,7 @@ Created on Sep 12, 2012
 '''
 from AIShip import Squadron
 from Mission import Mission, Spawn
-from Ship import Ship
+from Ship import Ship, Upgrade
 from Trigger import CreateTrigger
 from Vec2 import Vec2
 from gui.basicmenu import BasicImageButton, ImageLabel, BasicTextButton
@@ -19,7 +19,6 @@ import random
 DEFAULT_PLANETS = 10
 DEFAULT_BOARD_WIDTH = 8
 DEFAULT_BOARD_HEIGHT = 8
-
 
 class CampaignManager(object):
     '''
@@ -259,6 +258,7 @@ class Campaign(object):
     factions = None
     fleets = None
     battles = None
+    turn = 0
     
     def __init__(self):
         self.planets = []
@@ -315,14 +315,15 @@ class Campaign(object):
         
     def do_turn(self, **kwargs):
         self.battles = []
-        for f in self.factions:
-            f['ai'].planet_upgrade_points += len(f['ai'].planets)
-            f['ai'].fleet_upgrade_points += len(f['ai'].planets)
-            
-            b = f['ai'].do_turn()
-            if b:
-                self.battles.append(b)
+        f = self.factions[self.turn % len(self.factions)]
+        f['ai'].planet_upgrade_points += len(f['ai'].planets)
+        f['ai'].fleet_upgrade_points += len(f['ai'].planets)
+        
+        b = f['ai'].do_turn()
+        if b:
+            self.battles.append(b)
                 
+        self.turn += 1
         return self.battles
     
     def get_mission(self, battle):
@@ -427,6 +428,8 @@ class Campaign(object):
                 
         return mission
     
+
+    
 class Battle(object):
     faction = None # the faction owning the battle
     start = None # the location of the fleet attacking
@@ -445,6 +448,9 @@ class Fleet(object):
     def add_to_mission(self, mission, pos, angle, team, tag):
         # TODO set up spawing the fleet better
         # for now, just randomly spawn the ship_id_list
+        a_up  = self.get_armor_upgrade(self.armor_level)
+        w_up = self.get_wp_upgrade(self.weapon_level)
+        upgrade = w_up + a_up
         
         i = 0
         squad = None
@@ -483,11 +489,21 @@ class Fleet(object):
             sp.y = y
             sp.r = angle
             sp.tag = tag
+            sp.upgrade = upgrade
             
             mission.spawnList.append(sp)
         return
                 
-
+    def get_wp_upgrade(self, level):
+        up = Upgrade()
+        up.damage = level * 3
+        return up
+    
+    def get_armor_upgrade(self, level):
+        up = Upgrade()
+        up.armor = level * 3
+        return up
+        
 class Planet(object):
     '''
     Within the context of a campaign, there will be planets with some attributes such as defense level, etc
@@ -723,6 +739,8 @@ class CampaignMenu(Frame):
     battle_btns = None
     cur_battles = None
     
+    last_update = 0
+    
     def __init__(self, parent, **kwargs):
         super(CampaignMenu, self).__init__(parent, **kwargs)
         
@@ -840,13 +858,19 @@ class CampaignMenu(Frame):
             self.cur_battles = self.campaign.battles[:]
             self.refresh_battle_btns()
         
+        if pygame.time.get_ticks() > self.last_update + 32:
+            for b in self.children:
+                b.update(None)
+                
+            self.last_update = pygame.time.get_ticks()
+        
         pygame.display.get_surface().blit(self.background, offset)
         for c in self.children:
             if isinstance(c, PlanetButton):
                 c.rect.topleft = offset[0] + c.planet.boardPosition[0] * block_size[0], offset[1] + c.planet.boardPosition[1] * block_size[1]
                 c.draw()
             elif isinstance(c, FleetImageLabel):
-                c.rect.topleft = offset[0] + c.fleet.board_position[0] * block_size[0], offset[1] + c.fleet.board_position[1] * block_size[1]
+                c.target = offset[0] + c.fleet.board_position[0] * block_size[0], offset[1] + c.fleet.board_position[1] * block_size[1]
                 c.draw()
             elif isinstance(c, BattleButton):
                 c.rect.topleft = offset[0] + (c.battle.start[0] + c.battle.end[0]) * 0.5 * block_size[0], offset[1] + (c.battle.start[1] + c.battle.end[1]) * 0.5 * block_size[1]
@@ -901,7 +925,7 @@ class CampaignMenu(Frame):
         
     def do_turn_click(self, **kwargs):
         self.campaign.do_turn(**kwargs)
-        self.init()
+        #self.init()
         
 class PlanetButton(BasicImageButton):
     planet = None
@@ -960,10 +984,34 @@ class PlanetButton(BasicImageButton):
         
 class FleetImageLabel(ImageLabel):
     fleet = None
+    target = None
+    speed = 2
+    pos = None
     
     def __init__(self, parent, fleet, **kwargs):
         super(FleetImageLabel, self).__init__(parent, **kwargs)
         self.fleet = fleet
+        
+    def update(self, event):
+        if event: super(FleetImageLabel, self).update(event)
+        
+        if not event:
+            if not self.pos:
+                self.pos = self.target
+            
+            if self.target and set(self.pos) != set(self.target):
+                # tween our movement toward the target space
+                vec = Vec2(0, 0)
+                vec.setXY(self.target[0] - self.pos[0], self.target[1] - self.pos[1])
+                vec.magnitude = self.speed
+                self.pos = [self.pos[0] + vec.getXY()[0], self.pos[1] + vec.getXY()[1]]
+                self.rect.topleft = self.pos
+                
+                if self.pos[0] - self.target[0] <= self.speed: self.pos[0] = self.target[0]
+                if self.pos[1] - self.target[1] <= self.speed: self.pos[1] = self.target[1]
+                
+            if self.pos: self.rect.topleft = self.pos
+                
 
 class BattleButton(BasicImageButton):
     battle = None

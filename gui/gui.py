@@ -159,6 +159,7 @@ class Element(pygame.sprite.Sprite):
     
     def update(self, event):
         # TODO implement dragging
+        if not event: return False
         if event.type == pygame.MOUSEMOTION:
             #print "MOUSEMOTION pos (%s), rel (%s), buttons (%s)" % (event.pos, event.rel, event.buttons)
             if not self.mouse_over and self.rect.collidepoint(event.pos):
