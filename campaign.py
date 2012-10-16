@@ -763,7 +763,7 @@ class CampaignMenu(Frame):
     battle_btns = None
     cur_battles = None
     
-    skip_btn = None
+    battle_modal = None
     
     last_update = 0
     
@@ -848,16 +848,17 @@ class CampaignMenu(Frame):
             img = pygame.transform.rotate(self.arrow_image.copy(), vec.theta)
             self.battle_btns.append(BattleButton(self, battle = b, callback = self.battle_click, callback_kwargs = {'value': b}))
         
-        if len(self.battle_btns) > 0:
-            if not self.skip_btn:
-                self.skip_btn = BasicTextButton(self, text = "Skip", callback = self.skip_click, callback_kwargs = {'value': b})
-            if self.skip_btn not in self.children:
-                self.skip_btn.callback_kwargs['value'] = b
-                self.add_child(self.skip_btn)
-                
+        if not self.battle_modal:
+            self.battle_modal = BattleModal(self, self.battle_click, self.skip_click)
+            
+        if not self.battle_modal in self.children:
+            self.add_child(self.battle_modal)
+        
+        if len(self.cur_battles) > 0:
+            self.battle_modal.set_battle(self.cur_battles[len(self.cur_battles) - 1])
+            self.battle_modal.set_active(True)
         else:
-            if self.skip_btn and self.skip_btn in self.children:
-                self.children.remove(self.skip_btn)
+            self.battle_modal.set_active(False)
             
             
         
@@ -925,12 +926,10 @@ class CampaignMenu(Frame):
             elif isinstance(c, BattleButton):
                 c.rect.topleft = offset[0] + (c.battle.start[0] + c.battle.end[0]) * 0.5 * block_size[0], offset[1] + (c.battle.start[1] + c.battle.end[1]) * 0.5 * block_size[1]
                 c.draw()
-            elif c is self.skip_btn:
-                self.skip_btn.rect.centerx = self.battle_btns[len(self.battle_btns) - 1].rect.centerx
-                self.skip_btn.rect.top = self.battle_btns[len(self.battle_btns) - 1].rect.bottom
-                c.draw()
+            
             else:
-                c.draw()
+                if c.is_active():
+                    c.draw()
             
     def update(self, event):
         super(CampaignMenu, self).update(event)
@@ -1099,3 +1098,65 @@ class BattleButton(BasicImageButton):
         super(BattleButton, self).__init__(parent, **kwargs)
         
         self.battle = battle
+
+class BattleModal(Frame):
+    play_btn = None
+    play_callback = None
+    play_callback_kwargs = None
+    
+    skip_btn = None
+    skip_callback = None
+    skip_callback_kwargs = None
+    
+    v_center = True
+    h_center = True
+    
+    draw_rect = None
+    background = None
+    def __init__(self, parent, battle_callback, skip_callback, **kwargs):
+        super(BattleModal, self).__init__(parent, **kwargs)
+        
+        self.play_callback = battle_callback
+        self.play_callback_kwargs = kwargs.get('battle_callback_kwargs', {})
+        
+        self.skip_callback = skip_callback
+        self.skip_callback_kwargs = kwargs.get('skip_callback_kwargs', {})
+        
+        self.play_btn = BasicTextButton(self, text = 'Play Battle', callback = self.play_callback, callback_kwargs = self.play_callback_kwargs)
+        self.skip_btn = BasicTextButton(self, text = 'Simulate', callback = self.skip_callback, callback_kwargs = self.skip_callback_kwargs)
+        
+        self.draw_rect = pygame.rect.Rect(0, 0, 0, 0)
+        self.draw_rect.width = self.play_btn.rect.width + self.skip_btn.rect.width + 75
+        self.draw_rect.height = self.play_btn.rect.height + 50
+        
+        if "offset" in kwargs:
+            self.draw_rect.topleft = kwargs.get('offset')
+        else:
+            if self.h_center:
+                self.draw_rect.centerx = pygame.display.get_surface().get_width() * 0.5
+            if self.v_center:
+                self.draw_rect.centery = pygame.display.get_surface().get_height() * 0.5
+                
+        self.play_btn.rect.left = self.draw_rect.left + 25
+        self.play_btn.rect.top = self.draw_rect.top + 25
+        
+        self.skip_btn.rect.right = self.draw_rect.right - 25
+        self.skip_btn.rect.top = self.draw_rect.top + 25
+        
+        self.background = pygame.surface.Surface((self.draw_rect.width, self.draw_rect.height))
+        self.background.fill((0, 0, 0))
+        pygame.gfxdraw.rectangle(self.background, self.background.get_rect(), consts.COLOR_ORANGE)
+        
+    def draw(self):
+        pygame.display.get_surface().blit(self.background, self.draw_rect.topleft)
+        super(BattleModal, self).draw()
+    
+    def update(self, event):
+        if event: super(BattleModal, self).update(event)
+        
+        return True # modal, so don't let anybody else have input
+            
+    def set_battle(self, battle):
+        self.play_callback_kwargs['value'] = battle
+        self.skip_callback_kwargs['value'] = battle
+            
