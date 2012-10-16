@@ -5,7 +5,7 @@ Created on Sep 12, 2012
 '''
 from AIShip import Squadron
 from Mission import Mission, Spawn
-from Ship import Ship
+from Ship import Ship, Upgrade
 from Trigger import CreateTrigger
 from Vec2 import Vec2
 from gui.basicmenu import BasicImageButton, ImageLabel, BasicTextButton
@@ -19,7 +19,6 @@ import random
 DEFAULT_PLANETS = 10
 DEFAULT_BOARD_WIDTH = 8
 DEFAULT_BOARD_HEIGHT = 8
-
 
 class CampaignManager(object):
     '''
@@ -128,8 +127,14 @@ class CampaignManager(object):
         return Planet(names[random.randint(0, len(names) - 1)], files[random.randint(0, len(files) - 1)])
     
     def show_display(self, parent):
-        self.display = CampaignMenu(parent, campaign = self.currentCampaign, manager = self, ship_list = self.context.shipList, mission_start = self.context.startMission)
-        parent.add_child(self.display)
+        if not self.display:
+            self.display = CampaignMenu(parent, campaign = self.currentCampaign, manager = self, ship_list = self.context.shipList, mission_start = self.context.startMission)
+        else:
+            self.display.campaign = self.currentCampaign
+            self.display.init()
+        
+        if not self.display in parent.children:
+            parent.add_child(self.display)
         self.display.set_active(True)
 
     def mission_ended(self, result, mission):
@@ -184,8 +189,7 @@ class FactionAI(object):
     
     def do_turn(self):
         # TODO spend planet upgrade points
-        while self.planet_upgrade_points > 0:
-            self.spend_planet_upgrade_point()
+        self.spend_planet_upgrade_points()
             
         # TODO spend fleet upgrade points
         self.spend_fleet_upgrade_point()    
@@ -193,7 +197,7 @@ class FactionAI(object):
         # TODO move fleets around and select a battle
         b = None
         for f in self.fleets:
-            dx = random.randint(-1, 1)
+            '''dx = random.randint(-1, 1)
             dy = random.randint(-1, 1)
             if f.board_position[0] + dx < 0:
                 dx = random.randint(0, 1)
@@ -203,7 +207,16 @@ class FactionAI(object):
             if f.board_position[1] + dy < 0:
                 dy = random.randint(0, 1)
             elif f.board_position[1] + dy >= self.campaign.boardSize[1]:
-                dy = random.randint(-1, 0)
+                dy = random.randint(-1, 0)'''
+            # move toward opposing fleet
+            for e in self.campaign.fleets:
+                if e.faction is not self.faction:
+                    dx = (e.board_position[0] - f.board_position[0])
+                    if dx != 0:
+                        dx = dx / math.fabs(dx)
+                    dy = (e.board_position[1] - f.board_position[1])
+                    if dy != 0:
+                        dy = dy / math.fabs(dy)
                 
             occupy = self.campaign.occupied_by((f.board_position[0] + dx, f.board_position[1] + dy))
              
@@ -215,6 +228,7 @@ class FactionAI(object):
                     b.end = (f.board_position[0] + dx, f.board_position[1] + dy)
             else:
                 f.board_position = (f.board_position[0] + dx, f.board_position[1] + dy)
+                
         return b
     
     
@@ -222,6 +236,16 @@ class FactionAI(object):
         if self.planet_upgrade_points > 0:
             self.planets[random.randint(0, len(self.planets) - 1)].strength += 1
             self.planet_upgrade_points -= 1
+    
+    def spend_planet_upgrade_points(self):
+        j = 1
+        while j < 5 and self.planet_upgrade_points >= j * 10:
+            upgraded = False
+            for p in self.planets:
+                if p.strength == j and self.planet_upgrade_points >= p.strength * 10:
+                    self.planet_upgrade_points -= p.strength * 10
+                    p.strength += 1
+            j += 1
     
     def spend_fleet_upgrade_point(self):
         pass
@@ -245,6 +269,7 @@ class Campaign(object):
     factions = None
     fleets = None
     battles = None
+    turn = 0
     
     def __init__(self):
         self.planets = []
@@ -301,14 +326,15 @@ class Campaign(object):
         
     def do_turn(self, **kwargs):
         self.battles = []
-        for f in self.factions:
-            f['ai'].planet_upgrade_points += len(f['ai'].planets)
-            f['ai'].fleet_upgrade_points += len(f['ai'].planets)
-            
-            b = f['ai'].do_turn()
-            if b:
-                self.battles.append(b)
+        f = self.factions[self.turn % len(self.factions)]
+        f['ai'].planet_upgrade_points += len(f['ai'].planets)
+        f['ai'].fleet_upgrade_points += len(f['ai'].planets)
+        
+        b = f['ai'].do_turn()
+        if b:
+            self.battles.append(b)
                 
+        self.turn += 1
         return self.battles
     
     def get_mission(self, battle):
@@ -321,6 +347,9 @@ class Campaign(object):
             if f.faction == battle.faction and set(f.board_position) == set(battle.start):
                 a_fleet = f
             elif set(f.board_position) == set(battle.end):
+                d_fleet = f
+            elif (not d_fleet and f.faction != battle.faction and math.fabs(f.board_position[0] - battle.end[0]) <= 1
+                  and math.fabs(f.board_position[1] - battle.end[1]) <= 1):
                 d_fleet = f
                 
         if not a_fleet:
@@ -398,7 +427,12 @@ class Campaign(object):
         if a_team == Ship.TEAM_DEFAULT_FRIENDLY:
             # player is attacking
             if d_fleet:
-                mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'destroy-class', '', 'd_fleet', display_text = 'Destroy the enemy fleet!'))
+                if set(d_fleet.board_position) == set(battle.end):
+                    mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'destroy-class', '', 'd_fleet', display_text = 'Destroy the enemy fleet!'))
+                else:
+                    mission.triggerList.append(CreateTrigger(1, 'objective-secondary', 'destroy-class', '', 'd_fleet', display_text = 'Destroy the enemy fleet!'))
+                    mission.triggerList.append(CreateTrigger(5, 'objective-secondary', 'spawn-at-time', '0:30', 'd_fleet', display_text = 'Enemy reinforcements arriving: '))
+                    
             if d_planet:
                 mission.triggerList.append(CreateTrigger(2, 'objective-primary', 'destroy-class', '', 'd_planet', display_text = 'Destroy planetary defenses!'))
             mission.triggerList.append(CreateTrigger(3, 'objective-secondary', 'survive-class', '', 'a_fleet', display_text = 'Keep your allies alive!'))
@@ -408,10 +442,17 @@ class Campaign(object):
             mission.triggerList.append(CreateTrigger(1, 'objective-primary', 'destroy-class', '', 'a_fleet', display_text = 'Destroy the enemy fleet!'))
             if d_fleet:
                 mission.triggerList.append(CreateTrigger(2, 'objective-secondary', 'survive-class', '', 'd_fleet', display_text = 'Keep your fleet alive!'))
+                if set(d_fleet.board_position) != set(battle.end):
+                    mission.triggerList.append(CreateTrigger(5, 'objective-secondary', 'spawn-at-time', '0:30', 'd_fleet', display_text = 'Friendly reinforcements arriving: '))
             if d_planet:
                 mission.triggerList.append(CreateTrigger(3, 'objective-secondary', 'survive-class', '', 'd_planet', display_text = 'Keep the planetary defenses online!'))
                 
         return mission
+    
+    def simulate_battle(self, battle):
+        # TODO actually simulate the battle...
+        if battle in self.battles: self.battles.remove(battle)
+
     
 class Battle(object):
     faction = None # the faction owning the battle
@@ -431,6 +472,9 @@ class Fleet(object):
     def add_to_mission(self, mission, pos, angle, team, tag):
         # TODO set up spawing the fleet better
         # for now, just randomly spawn the ship_id_list
+        a_up  = self.get_armor_upgrade(self.armor_level)
+        w_up = self.get_wp_upgrade(self.weapon_level)
+        upgrade = w_up + a_up
         
         i = 0
         squad = None
@@ -469,11 +513,21 @@ class Fleet(object):
             sp.y = y
             sp.r = angle
             sp.tag = tag
+            sp.upgrade = upgrade
             
             mission.spawnList.append(sp)
         return
                 
-
+    def get_wp_upgrade(self, level):
+        up = Upgrade()
+        up.damage = level * 3
+        return up
+    
+    def get_armor_upgrade(self, level):
+        up = Upgrade()
+        up.armor = level * 3
+        return up
+        
 class Planet(object):
     '''
     Within the context of a campaign, there will be planets with some attributes such as defense level, etc
@@ -709,6 +763,10 @@ class CampaignMenu(Frame):
     battle_btns = None
     cur_battles = None
     
+    battle_modal = None
+    
+    last_update = 0
+    
     def __init__(self, parent, **kwargs):
         super(CampaignMenu, self).__init__(parent, **kwargs)
         
@@ -734,18 +792,22 @@ class CampaignMenu(Frame):
         '''
         self.children = []
         
-        BasicTextButton(self, text = "Do Turn", callback = self.campaign.do_turn)
+        #BasicTextButton(self, text = "Do Turn", callback = self.do_turn_click)#self.campaign.do_turn)
+        offset, block_size = self.get_offset_and_block_size()
         
         for p in self.campaign.planets:
             PlanetButton(self, planet = p)#, callback = self.planet_click, callback_kwargs = {'value': p})
         
         for f in self.campaign.fleets:
-            FleetImageLabel(self, f, image = self.fleet_image)
+            fil = FleetImageLabel(self, f, image = self.fleet_image)
+            fil.pos = (offset[0] + f.board_position[0] * block_size[0], offset[1] + f.board_position[1] * block_size[1])
+            fil.target = fil.pos[:]
+            
             
         self.cur_battles = self.campaign.battles[:]
         self.refresh_battle_btns()
         
-        offset, block_size = self.get_offset_and_block_size()
+        
         
         left = offset[0] + offset[2]
         top = offset[1]
@@ -776,11 +838,28 @@ class CampaignMenu(Frame):
         
     
     def refresh_battle_btns(self):
+        for b in self.battle_btns:
+            if b in self.children: self.children.remove(b)
+        self.battle_btns = []
+        
         for b in self.cur_battles:
             vec = Vec2(0,0)
             vec.setXY(b.end[0] - b.start[0], b.end[1] - b.start[1])
             img = pygame.transform.rotate(self.arrow_image.copy(), vec.theta)
             self.battle_btns.append(BattleButton(self, battle = b, callback = self.battle_click, callback_kwargs = {'value': b}))
+        
+        if not self.battle_modal:
+            self.battle_modal = BattleModal(self, self.battle_click, self.skip_click)
+            
+        if not self.battle_modal in self.children:
+            self.add_child(self.battle_modal)
+        
+        if len(self.cur_battles) > 0:
+            self.battle_modal.set_battle(self.cur_battles[len(self.cur_battles) - 1])
+            self.battle_modal.set_active(True)
+        else:
+            self.battle_modal.set_active(False)
+            
             
         
     def get_offset_and_block_size(self):
@@ -819,12 +898,22 @@ class CampaignMenu(Frame):
         
         if not set(self.cur_battles) == set(self.campaign.battles):
             # need to refresh the battle buttons
-            for b in self.battle_btns:
-                 self.children.remove(b)
-            self.battle_btns = []
+            
             
             self.cur_battles = self.campaign.battles[:]
             self.refresh_battle_btns()
+        
+        if pygame.time.get_ticks() > self.last_update + 32:
+            ismoving = False
+            for b in self.children:
+                b.update(None)
+                if isinstance(b, FleetImageLabel) and b.is_moving():
+                    ismoving = True
+                
+            if not ismoving and len(self.battle_btns) == 0:
+                self.campaign.do_turn()
+            
+            self.last_update = pygame.time.get_ticks()
         
         pygame.display.get_surface().blit(self.background, offset)
         for c in self.children:
@@ -832,13 +921,15 @@ class CampaignMenu(Frame):
                 c.rect.topleft = offset[0] + c.planet.boardPosition[0] * block_size[0], offset[1] + c.planet.boardPosition[1] * block_size[1]
                 c.draw()
             elif isinstance(c, FleetImageLabel):
-                c.rect.topleft = offset[0] + c.fleet.board_position[0] * block_size[0], offset[1] + c.fleet.board_position[1] * block_size[1]
+                c.target = offset[0] + c.fleet.board_position[0] * block_size[0], offset[1] + c.fleet.board_position[1] * block_size[1]
                 c.draw()
             elif isinstance(c, BattleButton):
                 c.rect.topleft = offset[0] + (c.battle.start[0] + c.battle.end[0]) * 0.5 * block_size[0], offset[1] + (c.battle.start[1] + c.battle.end[1]) * 0.5 * block_size[1]
                 c.draw()
+            
             else:
-                c.draw()
+                if c.is_active():
+                    c.draw()
             
     def update(self, event):
         super(CampaignMenu, self).update(event)
@@ -861,9 +952,6 @@ class CampaignMenu(Frame):
         self.manager.create_new_random()
         self.manager.currentCampaign = self.manager.campaignList[len(self.manager.campaignList) - 1]
         self.manager.show_display(self.parent)
-    
-    def test(self, who):
-        print "test!"
         
     def planet_click(self, **kwargs):
         '''
@@ -884,6 +972,13 @@ class CampaignMenu(Frame):
         mission = self.campaign.get_mission(kwargs.get('value'))
         
         self.mission_start(mission)
+        
+    def do_turn_click(self, **kwargs):
+        self.campaign.do_turn(**kwargs)
+        #self.init()
+        
+    def skip_click(self, **kwargs):
+        self.campaign.simulate_battle(kwargs.get('value'))
         
 class PlanetButton(BasicImageButton):
     planet = None
@@ -942,10 +1037,43 @@ class PlanetButton(BasicImageButton):
         
 class FleetImageLabel(ImageLabel):
     fleet = None
+    target = None
+    speed = 10
+    pos = None
     
     def __init__(self, parent, fleet, **kwargs):
         super(FleetImageLabel, self).__init__(parent, **kwargs)
         self.fleet = fleet
+        
+    def update(self, event):
+        if event: super(FleetImageLabel, self).update(event)
+        
+        if not event:
+            
+            if not self.pos:
+                self.pos = self.target[:]
+                
+            
+            if self.target and set(self.pos) != set(self.target):
+                # tween our movement toward the target space
+                vec = Vec2(0, 0)
+                vec.setXY(self.target[0] - self.pos[0], self.target[1] - self.pos[1])
+                vec.magnitude = self.speed
+                self.pos = [self.pos[0] + vec.getXY()[0], self.pos[1] + vec.getXY()[1]]
+                self.rect.topleft = self.pos
+                
+                if math.fabs(self.pos[0] - self.target[0]) < self.speed: self.pos[0] = self.target[0]
+                    
+                if math.fabs(self.pos[1] - self.target[1]) < self.speed: self.pos[1] = self.target[1]
+                    
+            if self.pos: self.rect.topleft = self.pos
+            
+    def is_moving(self):
+        if self.pos and self.target and set(self.pos) != set(self.target):
+            return True
+        else:
+            return False
+                
 
 class BattleButton(BasicImageButton):
     battle = None
@@ -970,3 +1098,65 @@ class BattleButton(BasicImageButton):
         super(BattleButton, self).__init__(parent, **kwargs)
         
         self.battle = battle
+
+class BattleModal(Frame):
+    play_btn = None
+    play_callback = None
+    play_callback_kwargs = None
+    
+    skip_btn = None
+    skip_callback = None
+    skip_callback_kwargs = None
+    
+    v_center = True
+    h_center = True
+    
+    draw_rect = None
+    background = None
+    def __init__(self, parent, battle_callback, skip_callback, **kwargs):
+        super(BattleModal, self).__init__(parent, **kwargs)
+        
+        self.play_callback = battle_callback
+        self.play_callback_kwargs = kwargs.get('battle_callback_kwargs', {})
+        
+        self.skip_callback = skip_callback
+        self.skip_callback_kwargs = kwargs.get('skip_callback_kwargs', {})
+        
+        self.play_btn = BasicTextButton(self, text = 'Play Battle', callback = self.play_callback, callback_kwargs = self.play_callback_kwargs)
+        self.skip_btn = BasicTextButton(self, text = 'Simulate', callback = self.skip_callback, callback_kwargs = self.skip_callback_kwargs)
+        
+        self.draw_rect = pygame.rect.Rect(0, 0, 0, 0)
+        self.draw_rect.width = self.play_btn.rect.width + self.skip_btn.rect.width + 75
+        self.draw_rect.height = self.play_btn.rect.height + 50
+        
+        if "offset" in kwargs:
+            self.draw_rect.topleft = kwargs.get('offset')
+        else:
+            if self.h_center:
+                self.draw_rect.centerx = pygame.display.get_surface().get_width() * 0.5
+            if self.v_center:
+                self.draw_rect.centery = pygame.display.get_surface().get_height() * 0.5
+                
+        self.play_btn.rect.left = self.draw_rect.left + 25
+        self.play_btn.rect.top = self.draw_rect.top + 25
+        
+        self.skip_btn.rect.right = self.draw_rect.right - 25
+        self.skip_btn.rect.top = self.draw_rect.top + 25
+        
+        self.background = pygame.surface.Surface((self.draw_rect.width, self.draw_rect.height))
+        self.background.fill((0, 0, 0))
+        pygame.gfxdraw.rectangle(self.background, self.background.get_rect(), consts.COLOR_ORANGE)
+        
+    def draw(self):
+        pygame.display.get_surface().blit(self.background, self.draw_rect.topleft)
+        super(BattleModal, self).draw()
+    
+    def update(self, event):
+        if event: super(BattleModal, self).update(event)
+        
+        return True # modal, so don't let anybody else have input
+            
+    def set_battle(self, battle):
+        self.play_callback_kwargs['value'] = battle
+        self.skip_callback_kwargs['value'] = battle
+            

@@ -121,6 +121,9 @@ class SpaceDominationMain(object):
         
         self.createDisplay()
         
+        
+        Utils.load_common_assets()
+        
         pygame.display.set_caption("Space Domination (version %s) by Jami Couch" % VERSION)
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.get_surface()
@@ -377,6 +380,7 @@ class SpaceDominationMain(object):
             tempShip.set_rotation(spawn.r)
             tempShip.tag = spawn.tag
             tempShip.spawn = spawn
+            tempShip.apply_upgrade(spawn.upgrade)
             
         # first, set up any auto-backgrounds
         if mission.background_style == 'tiled':

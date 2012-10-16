@@ -50,6 +50,45 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     def __init__(self):
         self.weapons = []
 
+class Upgrade(object):
+    # for ship
+    health = 0
+    hregen = 0
+    shields = 0
+    sregen = 0
+    speed = 0
+    turn = 0
+    armor = 0
+    
+    # for weapons
+    damage = 0
+    
+    def __add__(self, other):
+        self.health += other.health
+        self.hregen += other.hregen
+        self.shields += other.shields
+        self.sregen += other.sregen
+        self.speed += other.speed
+        self.turn += other.turn
+        self.armor += other.armor
+        
+        self.damage += other.damage
+        
+        return self
+        
+    def __sub__(self, other):
+        self.health -= other.health
+        self.hregen -= other.hregen
+        self.shields -= other.shields
+        self.sregen -= other.sregen
+        self.speed -= other.speed
+        self.turn -= other.turn
+        self.armor -= other.armor
+        
+        self.damage -= other.damage
+        
+        return self
+
 class Ship(PhysicsEntity):
     TEAM_DEFAULT_FRIENDLY = 0
     TEAM_DEFAULT_ENEMY = 1
@@ -216,7 +255,7 @@ class Ship(PhysicsEntity):
                 context.foregroundSpriteGroup.add(engine_glow)
         
         if self.removeSelf or self.health <= 0:
-            explosion = Particle(load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1), target = self)
+            explosion = Particle(Utils.get_asset('explosion1.png'), target = self)
             context.foregroundSpriteGroup.add(explosion)
             self.remove(context)
         
@@ -245,6 +284,7 @@ class Ship(PhysicsEntity):
                 max_damager.stats['kills'] += 1 
             
     def collide(self, physicsEntity = None, context = None):
+        pass
         if physicsEntity: # decrement shields and health here
             if isinstance(physicsEntity, Bullet): # a bullet hit the ship
                 damage = self.take_damage(physicsEntity.damage)
@@ -261,14 +301,23 @@ class Ship(PhysicsEntity):
                         self.stats['damaged-by'][physicsEntity] += damage
                     else:
                         self.stats['damaged-by'][physicsEntity] = damage
+        
+        
             
                 
                     
     def take_damage(self, damage = 0):
         self.shields -= damage
         if(self.shields < 0):
-            self.health += self.shields
+            hdamage = -1 * self.shields
+            if self.armor >= hdamage: hdamage = 1
+            else: hdamage -= self.armor
+            diff = -1 * self.shields - hdamage
+            damage -= diff
+            self.health -= hdamage
             self.shields = 0
+        
+        
         
         if self.parent and self in self.parent.hard_points:
             self.parent.stats['damage-taken'] += damage
@@ -278,6 +327,27 @@ class Ship(PhysicsEntity):
         return damage
             
         #print "taking damage: " + str(damage) + ", health/shields: " + str(self.health) + "/" + str(self.shields)
+        
+    def apply_upgrade(self, upgrade):
+        self.health += upgrade.health
+        self.max_health += upgrade.health
+        self.hregen += upgrade.hregen
+        if self.max_shields > 0:
+            self.shields += upgrade.shields
+            self.max_shields += upgrade.shields
+            self.sregen += upgrade.sregen
+        self.armor += upgrade.armor
+        if self.speed > 0:
+            self.speed += upgrade.speed
+        self.turn += upgrade.turn
+        
+        if self.weapons:
+            for wp in self.weapons:
+                wp.base_damage += upgrade.damage
+                
+        if self.hard_points:
+            for hp in self.hard_points:
+                hp.apply_upgrade(upgrade)
 
         
 class ShipListXMLParser(handler.ContentHandler):

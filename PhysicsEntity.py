@@ -22,6 +22,8 @@ class PhysicsEntity(pygame.sprite.Sprite):
     position = (0.0, 0.0) # important for floating point physics
     future_positions = None # will be used for collision prediction
     
+    x, y, bounding_radius, bounding_radius_squared = 0, 0, 0, 0
+    left, right, top, bottom = 0, 0, 0, 0
     
     removeSelf = False
     
@@ -94,6 +96,16 @@ class PhysicsEntity(pygame.sprite.Sprite):
     '''
     def update(self, context = None, timestep = 1):
         self.rect.topleft = self.position
+        self.x, self.y = self.rect.center
+
+        if self.rect.width < self.rect.height:
+            self.bounding_radius = self.rect.height * 0.5
+        else:
+            self.bounding_radius = self.rect.width * 0.5
+        self.bounding_radius_squared = self.bounding_radius ** 2
+        
+        self.left, self.top = self.rect.topleft
+        self.right, self.bottom = self.rect.bottomright
         
         self.predict_positions(consts.COLLIDE_TICKS, consts.COLLIDE_INTERVAL)
         
