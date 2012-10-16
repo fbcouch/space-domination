@@ -6,7 +6,7 @@ Created on Aug 17, 2012
 from MissionMenu import MissionMenu
 from ProfileMenu import ProfileMenu
 from gui.basicmenu import BasicMenu, BasicTextButton, BasicImageButton, \
-    BasicTextInput, Label, ImageLabel
+    BasicTextInput, Label, ImageLabel, BasicCheckbox
 from gui.gui import GUI, Frame, Element
 import Utils
 import consts
@@ -41,6 +41,7 @@ class SpaceDominationGUI(GUI):
         self.add_child(self.options_menu)
         BasicTextInput(self.options_menu, label = 'Screen Width', value = self.parent.currentProfile['width'], numbers_only = True, select_fxn = self.options_menu.mouse_over_callback)
         BasicTextInput(self.options_menu, label = 'Screen Height', value = self.parent.currentProfile['height'], numbers_only = True, select_fxn = self.options_menu.mouse_over_callback)
+        BasicCheckbox(self.options_menu, text = 'Fullscreen', value = int(self.parent.currentProfile['fullscreen']), select_fxn = self.options_menu.mouse_over_callback)
         BasicTextButton(self.options_menu, text = 'Apply Changes', select_fxn = self.options_menu.mouse_over_callback, callback = self.apply_options)
         BasicTextButton(self.options_menu, text = 'Back to Main Menu', select_fxn = self.options_menu.mouse_over_callback, callback = self.main_menu_click)
         
@@ -56,6 +57,7 @@ class SpaceDominationGUI(GUI):
         '''apply the height/width options'''
         self.parent.currentProfile['width'] = int(self.options_menu.children[0].value)
         self.parent.currentProfile['height'] = int(self.options_menu.children[1].value)
+        self.parent.currentProfile['fullscreen'] = int(self.options_menu.children[2].value)
         self.parent.createDisplay()
         self.parent.saveProfiles()
         self.options_menu.children[0].value = self.parent.currentProfile['width']

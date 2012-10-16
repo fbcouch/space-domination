@@ -42,5 +42,6 @@ def create_fresh_profile(**kwargs):
     else:
         profile['width'] = consts.DEFAULT_WINDOW_WIDTH
         profile['height'] = consts.DEFAULT_WINDOW_HEIGHT
+    profile['fullscreen'] = False
     
     return profile

@@ -933,4 +933,54 @@ class DropdownSelector(Element):
         
     def draw(self):
         super(DropdownSelector, self).draw()
+
+class BasicCheckbox(BasicImageButton):
+    text = ""
+    checked = None
+    unchecked = None
+    value = False
     
+    def __init__(self, parent, **kwargs):
+        super(BasicImageButton, self).__init__(parent, **kwargs)
+        self.text = kwargs.get('text', "Checkbox")
+        self.font = kwargs.get('font', pygame.font.Font(None, 32))
+        self.value = kwargs.get('value', False)
+        
+        self.checked = pygame.surface.Surface((22,22))
+        pygame.gfxdraw.rectangle(self.checked, self.checked.get_rect(), (255, 255, 255))
+        self.unchecked = self.checked.copy()
+        self.checked.blit(self.font.render("X", 1, (255, 255, 255)), ((self.checked.get_width() - self.font.size("X")[0]) * 0.5 , (self.checked.get_height() - self.font.size("Y")[1]) * 0.5))
+        
+        self.create_images()
+        
+        self.callback = kwargs.get('callback', None)
+        self.callback_kwargs = kwargs.get('callback_kwargs', {})
+        self.select_fxn = kwargs.get('select_fxn', None)
+        self.unselect_fxn = kwargs.get('unselect_fxn', None)
+        
+        self.image = self.unselected_image.copy()
+        self.rect = self.image.get_rect()
+        
+    def create_images(self):
+        size = self.font.size(self.text)
+        image = pygame.surface.Surface((size[0] + self.checked.get_width() + 8, size[1]))
+        
+        self.unselected_image = image.copy()
+        self.selected_image = image.copy() 
+        self.unselected_image.blit(self.font.render(self.text, 1, (255, 255, 255)), (0,0))
+        self.selected_image.blit(self.font.render(self.text, 1, (255, 0, 0)), (0,0))
+        if self.value:
+            self.unselected_image.blit(self.checked, (size[0] + 8, 0))
+            self.selected_image.blit(self.checked, (size[0] + 8, 0))
+        else:
+            self.unselected_image.blit(self.unchecked, (size[0] + 8, 0))
+            self.selected_image.blit(self.unchecked, (size[0] + 8, 0))
+            
+    def on_click(self, **kwargs):
+        if self.value:
+            self.value = False
+        else:
+            self.value = True
+        self.create_images()
+
+        

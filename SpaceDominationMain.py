@@ -616,9 +616,14 @@ class SpaceDominationMain(object):
             else:
                 self.currentProfile['height'] = MIN_WINDOW_HEIGHT
                 
-            self.window = pygame.display.set_mode((self.currentProfile['width'],self.currentProfile['height']))
+            if not 'fullscreen' in self.currentProfile:
+                self.currentProfile['fullscreen'] = 0
+            flags = 0
+            if int(self.currentProfile['fullscreen']):
+                flags = pygame.FULLSCREEN
+            self.window = pygame.display.set_mode((self.currentProfile['width'],self.currentProfile['height']), flags)
         except ValueError, msg:
-            print "Error in profile height/width: %s" % msg
+            print "Error in profile video mode: %s" % msg
             self.window = pygame.display.set_mode((1024, 768))
     
     def saveProfiles(self, filename = None):
@@ -641,6 +646,7 @@ class SpaceDominationMain(object):
             xml_file.write('\n')
         xmlgen.endElement('profilelist')
         xmlgen.endDocument()
+        xml_file.write('\n')
         xml_file.close()
         
         self.createDisplay()
