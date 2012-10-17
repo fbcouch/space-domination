@@ -3,7 +3,7 @@ Created on Aug 20, 2012
 
 @author: Jami
 '''
-VERSION = "0.3"
+VERSION = "0.3.1"
 
 MIN_WINDOW_WIDTH = 1000
 MIN_WINDOW_HEIGHT = 500
@@ -19,6 +19,7 @@ COLOR_ORANGE = (250, 100, 0)
 COLOR_RED = (250, 0, 0)
 COLOR_GREEN = (0, 250, 0)
 COLOR_BLUE = (0, 0, 250)
+COLOR_YELLOW = (250, 250, 0)
 
 colors = {'orange': COLOR_ORANGE, 'red': COLOR_RED, 'green': COLOR_GREEN, 'blue': COLOR_BLUE}
 

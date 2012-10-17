@@ -227,11 +227,7 @@ class Ship(PhysicsEntity):
             if self.shields > self.max_shields:
                 self.shields = self.max_shields
                 
-            # ammo regen
-            for wp in self.weapons:
-                wp.cur_ammo += wp.ammo_regen
-                if wp.cur_ammo > wp.max_ammo:
-                    wp.cur_ammo = wp.max_ammo
+            
             
             self.ticks_for_regen = 30.0
         else:

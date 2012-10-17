@@ -947,6 +947,7 @@ class BasicCheckbox(BasicImageButton):
         self.value = kwargs.get('value', False)
         
         self.checked = pygame.surface.Surface((22,22))
+        self.checked.set_colorkey(self.checked.get_at((0,0)))
         pygame.gfxdraw.rectangle(self.checked, self.checked.get_rect(), (255, 255, 255))
         self.unchecked = self.checked.copy()
         self.checked.blit(self.font.render("X", 1, (255, 255, 255)), ((self.checked.get_width() - self.font.size("X")[0]) * 0.5 , (self.checked.get_height() - self.font.size("Y")[1]) * 0.5))

@@ -171,8 +171,8 @@ class AIShip(Ship):
         return dT
     
     def get_angle_to_target(self, target):
-        dx = target[0] - self.rect.left
-        dy = target[1] - self.rect.top
+        dx = target[0] - self.rect.centerx
+        dy = target[1] - self.rect.centery
         angle = Vec2(0,0)
         angle.setXY(dx, dy)
         targetAngle = (angle.theta) % 360

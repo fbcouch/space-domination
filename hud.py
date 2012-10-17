@@ -44,7 +44,7 @@ class HUD(object):
             self.display_messages(screen, context.messageList)
             
             # display health, ammo, shields
-            self.display_ship_info(screen, context.playerShip, font)
+            self.display_ship_info(screen, context.playerShip, context.medfont)
             
             # display timer
             self.display_timer(screen, context.elapsedTime, font)
@@ -109,7 +109,7 @@ class HUD(object):
         n = 0
         for weapon in ship.weapons:
             n += 1
-            ammotext.append("%i: %s (%i/%i)" % (n, weapon.name, int(weapon.cur_ammo), int(weapon.max_ammo)))
+            ammotext.append("%i: %s" % (n, weapon.name))
             
         # health
         healthtext = "Health: %i/%i" % (int(ship.health), int(ship.max_health))
@@ -126,7 +126,7 @@ class HUD(object):
         statstext.append("Damage taken: %i" % ship.stats['damage-taken'])
         
         
-        y = screen.get_height() - 150
+        y = screen.get_height() - (len(statstext) + len(ship.weapons) + 2) * (font.size("X")[1] + 2)
         
         screen.blit(font.render(healthtext, 1, (0, 250, 0)), (screen.get_width() - font.size(healthtext)[0] - 10, y))
         
@@ -140,9 +140,17 @@ class HUD(object):
         for weapon in ship.weapons:
             color = (0, 250, 0)
             if n == ship.selected_weapon:
-                color = (250, 250, 0)
+                color = consts.COLOR_YELLOW
+                if weapon.cooldown_remaining > 0:
+                    color = consts.COLOR_RED
+                    
+            if weapon.cur_ammo <= 0:
+                color = consts.COLOR_RED
                 
-            screen.blit(font.render(ammotext[n], 1, color), (screen.get_width() - font.size(ammotext[n])[0] - 10, y))
+            screen.blit(font.render(ammotext[n], 1, color), (screen.get_width() - font.size(ammotext[n])[0] - 60, y))
+            boxes = weapon.max_ammo
+            width = 50#(50 / boxes) * boxes + 1
+            self.draw_boxes(float(weapon.cur_ammo) / float(weapon.max_ammo), pygame.rect.Rect(screen.get_width() - width, y, width, font.size(ammotext[n])[1]), color, screen, boxes)
             y += font.size(ammotext[n])[1] + 2
             n += 1
             
@@ -155,10 +163,7 @@ class HUD(object):
         for sprite in shiplist:
             if not sprite.active:
                 continue
-            # TODO change these to bars (open/filled rect)
-            #screen.blit(font.render(str(sprite.shields) + "/" 
-            #                    + str(sprite.max_shields), 1, (0, 0, 250)) ,
-            #                    (sprite.rect.left + render[0], sprite.rect.top + sprite.rect.height + render[1]))
+            
             if sprite.max_shields > 0:
                 r = pygame.rect.Rect(sprite.rect.left + render[0], sprite.rect.bottom + render[1], sprite.original.get_rect().width, 10)
                 r.centerx = sprite.rect.centerx + render[0]
@@ -184,12 +189,19 @@ class HUD(object):
             pygame.gfxdraw.rectangle(screen, pygame.rect.Rect(rect.left - 1, rect.top, rect.width + 1, rect.height), color)
             pygame.gfxdraw.box(screen, pygame.rect.Rect(rect.left, rect.top, w, rect.height), color)
         else:    
-            boxes = int(rect.width / 10)
+            #boxes = int(rect.width / 10)
+            boxes = num_boxes
             box_width = math.floor((rect.width) / boxes)
             boxes = int(pct * boxes)
+            x = rect.left
             for i in range(boxes):
-                pygame.gfxdraw.box(screen, pygame.rect.Rect(rect.left + i * box_width, rect.top, box_width - 1, rect.height), color)
-    
+                add = 0
+                diff = rect.width - num_boxes * box_width
+                
+                if i >= num_boxes - diff:
+                    add = 1
+                pygame.gfxdraw.box(screen, pygame.rect.Rect(x, rect.top, box_width - 1 + add, rect.height), color)
+                x += box_width + add
     
     def mark_objectives(self, screen, triggers, rect, shiplist):
         '''draw little balls around the edge of the screen toward the offscreen objectives'''
@@ -197,7 +209,7 @@ class HUD(object):
         # TODO change color of marker based on survive/kill
         for tg in triggers:
             for ship in tg.get_attached(shiplist):
-                if not ship.rect.colliderect(rect):
+                if ship.active and not ship.rect.colliderect(rect):
                     # ok, lets draw this guy
                     # to figure out the position, lets assume a line from rect.center (x1, y1) to tg.parent.rect.center (x2, y2)
                     x1, y1 = rect.center

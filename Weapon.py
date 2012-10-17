@@ -23,6 +23,8 @@ class Weapon(object):
     bullet_ticks = 100
     bullet_speed = 20
     type = "laser" # laser or missile
+    cooldown = 0 # cant fire for this many ticks after hitting "0" ammo
+    cooldown_remaining = 0
     
     fire_points = None
     
@@ -36,17 +38,29 @@ class Weapon(object):
         pass
     
     def can_fire(self):
-        
-        if not self.fire_points or len(self.fire_points) == 0: 
-            points = 1
-        else:
-            points = len(self.fire_points)
-        if (self.cur_ammo >= points and self.last_fire > self.fire_rate):
+        if (self.cur_ammo >= self.get_points() and self.last_fire > self.fire_rate and not self.cooldown_remaining):
             return True
         return False
     
+    def get_points(self):
+        if not self.fire_points or len(self.fire_points) == 0: 
+            return 1
+        else:
+            return len(self.fire_points)
+    
     def update(self, context, timestep = 1):
         self.last_fire += timestep
+        
+        self.cur_ammo += self.ammo_regen * timestep / consts.GAMESPEED
+        if self.cur_ammo > self.max_ammo: self.cur_ammo = self.max_ammo
+        
+        if self.cur_ammo < self.get_points() and self.cooldown_remaining <= 0:
+            self.cooldown_remaining = self.cooldown
+        
+        if self.cooldown_remaining > 0:
+            self.cooldown_remaining -= timestep / consts.GAMESPEED
+        else:
+            self.cooldown_remaining = 0
     
     def fire(self, time, parent, sprite, rotation, velocity):
         '''fire the weapon if possible given (time)'''
@@ -156,6 +170,8 @@ class Weapon(object):
         returnVal.type = self.type
         returnVal.engines = self.engines
         returnVal.engine_color = self.engine_color
+        returnVal.cooldown = self.cooldown
+        returnVal.cooldown_remaining = self.cooldown_remaining
         return returnVal
     
 class WeaponListXMLParser(handler.ContentHandler):
@@ -188,6 +204,7 @@ class WeaponListXMLParser(handler.ContentHandler):
             weapon.name = attrs.get('name', 'Unnamed Weapon')   
             weapon.type = attrs.get('type', 'laser')    
             engines = attrs.get('engines', None)
+            weapon.cooldown = float(attrs.get('cooldown', '0'))
             
             if engines:
                 weapon.engines = Utils.parse_pointlist(engines)

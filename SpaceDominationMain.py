@@ -77,6 +77,7 @@ class SpaceDominationMain(object):
     
     defaultfont = None
     largefont = None
+    medfont = None
     
     rootSprite = None
     
@@ -141,6 +142,7 @@ class SpaceDominationMain(object):
         if pygame.font:
             self.defaultfont = pygame.font.Font(None, 20)
             self.largefont = pygame.font.Font(os.path.join("assets", "PLANM___.TTF"), 40)
+            self.medfont = pygame.font.Font(None, 30)
         
         # load & display splash screen
         self.showSplash()
