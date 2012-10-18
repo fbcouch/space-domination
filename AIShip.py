@@ -219,7 +219,7 @@ class StationShip(AIShip):
         self.area_size = 500
         
     def update(self, context = None, timestep = 1):
-        super(AIShip, self).update(context)
+        super(AIShip, self).update(context, timestep)
         if not self.active:
             return False
         

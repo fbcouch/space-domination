@@ -9,7 +9,6 @@ from Vec2 import Vec2
 from pygame.locals import *
 import Utils
 import math
-import numpy
 import os
 import pygame
 import random

@@ -216,22 +216,20 @@ class Ship(PhysicsEntity):
         for wp in self.weapons:
             wp.update(context, timestep)
             
-        if self.ticks_for_regen <= 0:
-            # health regen
-            self.health += self.hregen
-            if self.health > self.max_health:
-                self.health = self.max_health
-                
-            # shield regen
-            self.shields += self.sregen
-            if self.shields > self.max_shields:
-                self.shields = self.max_shields
-                
-            
-            
-            self.ticks_for_regen = 30.0
-        else:
-            self.ticks_for_regen -= timestep
+        
+        # health regen
+        self.health += self.hregen * timestep / consts.GAMESPEED
+        if self.health > self.max_health:
+            self.health = self.max_health
+        
+        if len(self.hard_points) > 0:
+            traceback.print_stack()
+        
+        # shield regen
+        self.shields += self.sregen * timestep / consts.GAMESPEED
+        if self.shields > self.max_shields:
+            self.shields = self.max_shields
+        
         
         self.engine_blip_time += timestep
         if self.engine_blip_time > 10:
