@@ -15,6 +15,8 @@ class HUD(object):
     '''
     hud_bottom = None
     objective_pointer = None
+    target_box_red = None
+    target_box_blue = None
 
     def __init__(self):
         '''
@@ -22,6 +24,8 @@ class HUD(object):
         '''
         self.hud_bottom, rect = Utils.load_image("hud_msg_panel.png", colorkey = -1)
         
+        self.target_box_blue = Utils.get_asset('target-box-blue.png')
+        self.target_box_red = Utils.get_asset('target-box-red.png')
         
         imagey, rect = Utils.load_image("objective-pointer-yellow.png", colorkey = -1)
         imageg, rect = Utils.load_image("objective-pointer-green.png", colorkey = -1)
@@ -181,6 +185,22 @@ class HUD(object):
                     r = pygame.rect.Rect(hp.rect.left + render[0], hp.rect.bottom + render[1], hp.original.get_rect().width, 10)
                     r.centerx = hp.rect.centerx + render[0]
                     self.draw_boxes(float(hp.health) / hp.max_health, r, consts.COLOR_GREEN, screen)
+                    
+            # draw HUD boxes around these guys
+            if not sprite.target_box:
+                max_d = sprite.rect.width
+                if sprite.rect.height > max_d: max_d = sprite.rect.height
+                power = math.log(max_d, 2)
+                power = int(math.ceil(power))
+                size = 2 ** power
+                if sprite.team == sprite.TEAM_DEFAULT_FRIENDLY:
+                    sprite.target_box = pygame.transform.scale(self.target_box_blue, (size, size))
+                else:
+                    sprite.target_box = pygame.transform.scale(self.target_box_red, (size, size))
+                
+            
+            screen.blit(sprite.target_box, (render[0] + sprite.rect.left + (sprite.rect.width - sprite.target_box.get_width()) * 0.5, render[1] + sprite.rect.top + (sprite.rect.height - sprite.target_box.get_height()) * 0.5))
+            
                     
     
     def draw_boxes(self, pct, rect, color, screen, num_boxes = 1):

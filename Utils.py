@@ -128,6 +128,9 @@ def load_common_assets():
     assets['explosion1.png'] = load_sprite_sheet('explosion1.png', 100, 100, colorkey = -1)
     assets['explosion3.png'] = load_sprite_sheet('explosion3.png', 100, 100, colorkey = -1)
     assets['shield_hit.png'] = load_sprite_sheet('shield_hit.png', 100, 100, colorkey = -1)
+    assets['target-box-blue.png'], r = load_image('target-box-blue.png', -1)
+    assets['target-box-red.png'], r = load_image('target-box-red.png', -1)
+    
     
     
 def get_asset(name):

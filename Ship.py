@@ -120,6 +120,8 @@ class Ship(PhysicsEntity):
     
     engine_blip_time = 0.0
     
+    target_box = None
+    
     def __init__(self, x = 0, y = 0, r = 0, proto = PShip(), parent = None, context = None):
         super(Ship, self).__init__()
         self.weapons = []

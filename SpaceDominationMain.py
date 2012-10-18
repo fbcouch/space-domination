@@ -624,7 +624,7 @@ class SpaceDominationMain(object):
             if int(self.currentProfile['fullscreen']):
                 flags = pygame.FULLSCREEN
             self.window = pygame.display.set_mode((self.currentProfile['width'],self.currentProfile['height']), flags)
-        except ValueError, msg:
+        except pygame.error, msg:
             print "Error in profile video mode: %s" % msg
             self.window = pygame.display.set_mode((1024, 768))
     
