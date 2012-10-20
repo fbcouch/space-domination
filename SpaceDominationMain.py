@@ -17,7 +17,7 @@ from Particle import Particle
 from Physics import *
 from PhysicsEntity import PhysicsEntity
 from PlayerShip import PlayerShip
-from Ship import Ship, PShip, Weapon, ShipListXMLParser
+from Ship import Ship, PShip, Weapon, ShipListXMLParser, UpgradeListXMLParser
 from Utils import load_sprite_sheet
 from Weapon import WeaponListXMLParser
 from campaign import CampaignManager
@@ -61,6 +61,7 @@ class SpaceDominationMain(object):
     weaponList = None
     shipList = None
     currentMission = None
+    upgradeList = None
     
     playerShip = None
     
@@ -168,6 +169,9 @@ class SpaceDominationMain(object):
         # load ships
         self.shipList = ShipListXMLParser().loadShipList()
         
+        # load upgrades
+        self.upgradeList = UpgradeListXMLParser().load_upgrades()
+
         # initialize physics manager
         self.physics = Physics()
         
@@ -316,6 +320,13 @@ class SpaceDominationMain(object):
         self.buildMission(self.currentMission)
         self.pause_game()
     
+    def getPlayerSpawn(self):
+        if 'ship' in self.currentProfile and int(self.currentProfile['ship']) >= 0 and int(self.currentProfile['ship']) < len(self.shipList):
+            proto = self.shipList[int(self.currentProfile['ship'])]
+        else:
+            proto = self.shipList[0]
+        return proto
+    
     def buildMission(self, mission):
         self.elapsedTime = 0.0
         #add the trigger list
@@ -334,10 +345,7 @@ class SpaceDominationMain(object):
         for spawn in mission.spawnList:
             
             if spawn.type == 'player': # this is the player ship
-                tp = self.shipList[0]
-                for proto in self.shipList:
-                    if 'ship' in self.currentProfile and proto.id == int(self.currentProfile['ship']):
-                        tp = proto
+                tp = self.getPlayerSpawn()
                 tempShip = PlayerShip(proto = tp, context = self)
                 tempShip.team = spawn.team
                 self.playerShip = tempShip
@@ -644,11 +652,20 @@ class SpaceDominationMain(object):
                     keys[key] = str(profile[key])
             xml_file.write('\t')
             xmlgen.startElement('profile', keys)
+            for s in profile.shiplist:
+                keys = {}
+                for key in profile.shiplist[s]:
+                    keys[key] = str(profile.shiplist[s][key])
+                xml_file.write('\n\t\t')
+                xmlgen.startElement('ship', keys)
+                xmlgen.endElement('ship')
+                xml_file.write('\n')
+            xml_file.write('\t')
             xmlgen.endElement('profile')
             xml_file.write('\n')
         xmlgen.endElement('profilelist')
-        xmlgen.endDocument()
         xml_file.write('\n')
+        xmlgen.endDocument()
         xml_file.close()
         
         self.createDisplay()
@@ -689,6 +706,7 @@ class ProfileXMLParser(handler.ContentHandler):
     '''load the profiles from a specified xml file'''
     profileList = None
     defaultID = 0
+    in_profile = False
     
     def __init__(self):
         handler.ContentHandler.__init__(self)
@@ -710,9 +728,20 @@ class ProfileXMLParser(handler.ContentHandler):
             self.defaultID = int(attrs.get('default',0))
         elif name == "profile":
             self.profileList.append(profile.create_profile_from_attrs(attrs, self.defaultID))
+            self.in_profile = True
+        elif name == "ship":
+            if self.in_profile:
+                self.profileList[len(self.profileList) - 1].shiplist[attrs.get('id')] = {}
+                for key in attrs.keys():
+                    self.profileList[len(self.profileList) - 1].shiplist[attrs.get('id')][key] = attrs.get(key)
     
     def endElement(self, name):
-        pass
+        if name == "profile":
+            self.in_profile = False
+            pf = self.profileList[len(self.profileList) - 1]
+            if 'ship' in pf and len(pf.shiplist) == 0:
+                pf.shiplist[pf['ship']] = {'id': pf['ship'], 'upgrades': ""}
+        
     
     def characters(self, content):
         pass

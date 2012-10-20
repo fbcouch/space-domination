@@ -118,6 +118,18 @@ def parse_pointlist(pointlist):
         i = f + 1
     return returnval
 
+def parse_intlist(intlist):
+    returnval = []
+    i = 0
+    while i < len(intlist):
+        f = intlist.find(",", i)
+        if f == -1:
+            f = len(intlist)
+        # point is defined by i:f
+        returnval.append(int(intlist[i:f]))
+        i = f + 1
+    return returnval
+
 '''
 Asset manager type stuff
 '''
