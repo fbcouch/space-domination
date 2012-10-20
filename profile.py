@@ -10,7 +10,10 @@ class Profile(dict):
     '''
     Contains all the information necessary for a profile
     '''
+    shiplist = None
     
+    def __init__(self):
+        self.shiplist = {}
     
 def create_profile_from_attrs(attrs, default_id = -1):
     keys = attrs.keys()

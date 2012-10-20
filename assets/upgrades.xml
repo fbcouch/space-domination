@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<upgradelist>
+	<upgrade id="0" type="weapon-laser" name="Laser Tuning" cost="200" damage="1" />
+	<upgrade id="1" type="ship" name="Armor Lvl 1" cost="200" armor="1" />
+</upgradelist>

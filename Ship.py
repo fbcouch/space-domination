@@ -63,6 +63,28 @@ class Upgrade(object):
     # for weapons
     damage = 0
     
+    
+    # for store
+    cost = 0
+    type = ""
+    name = ""
+    
+    def __init__(self, attrs = None):
+        if attrs:
+            self.health = int(attrs.get('health', '0'))
+            self.hregen = float(attrs.get('hregen', 0))
+            self.shields = int(attrs.get('shields', 0))
+            self.sregen = float(attrs.get('sregen', 0))
+            self.speed = float(attrs.get('speed', 0))
+            self.turn = float(attrs.get('turn', 0))
+            self.armor = float(attrs.get('armor', 0))
+            
+            self.damage = float(attrs.get('damage', 0))
+            
+            self.type = attrs.get('type', 'default')
+            self.name = attrs.get('name', '<Unnamed Upgrade>')
+            self.cost = int(attrs.get('cost', 0))
+    
     def __add__(self, other):
         self.health += other.health
         self.hregen += other.hregen
@@ -404,6 +426,35 @@ class ShipListXMLParser(handler.ContentHandler):
                 self.ship.hard_points = []
             self.ship.hard_points.append({'id': int(attrs.get('id')), 'x': int(attrs.get('x')), 'y': int(attrs.get('y')), 'rot': float(attrs.get('rot'))})
             
+    def endElement(self, name):
+        pass
+    
+    def characters(self, content):
+        pass
+    
+class UpgradeListXMLParser(handler.ContentHandler):
+    upgradeList = None
+    ugrade = None
+    
+    def __init__(self):
+        handler.ContentHandler.__init__(self)
+        self.upgradeList = []
+        
+    def load_upgrades(self, filename = None):
+        if not filename:
+            filename = os.path.join('assets', 'upgrades.xml')
+        parser = make_parser()
+        parser.setContentHandler(self)
+        parser.parse(filename)
+        return self.upgradeList
+    
+    def startElement(self, name, attrs):
+        if name == "upgradelist":
+            self.upgradeList = []
+        elif name == "upgrade":
+            self.upgrade = Upgrade(attrs)
+            self.upgradeList.append(self.upgrade)
+    
     def endElement(self, name):
         pass
     
