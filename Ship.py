@@ -246,9 +246,6 @@ class Ship(PhysicsEntity):
         if self.health > self.max_health:
             self.health = self.max_health
         
-        if len(self.hard_points) > 0:
-            traceback.print_stack()
-        
         # shield regen
         self.shields += self.sregen * timestep / consts.GAMESPEED
         if self.shields > self.max_shields:

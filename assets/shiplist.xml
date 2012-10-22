@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shiplist>
-	<ship id="0" name="Fighter" file="base-fighter1.png" health="100" hregen="0" shields="100" sregen="2" speed="8" turn="4" armor="0" engines="1,32;1,48" engine-color="orange" flyable="True">
+	<ship id="0" name="Fighter" file="base-fighter1.png" health="100" hregen="0" shields="100" sregen="2" speed="8" turn="4" armor="0" engines="1,32;1,48" engine-color="orange" flyable="True" cost="1000">
 		<weapon id="0" points="39,4;39,76"/>
 		<weapon id="2" />
 	</ship>
@@ -27,5 +27,12 @@
 		<point id="4" x="-15" y="55" rot="270.0" />
 		<point id="4" x="347" y="55" rot="270.0" />
 		<point id="5" x="185" y="70" rot="270.0" />
+	</ship>
+	<ship id="8" name="Claw" file="claw-red.png" health="100" hregen="1" shields="50" sregen="1" speed="10" turn="5" armor="0" engines="1,35" engine-color="red" flyable="True" cost="2000">
+		<weapon id="5" />
+	</ship>48,11;48,57
+	<ship id="9" name="Fighter" file="fighter-1.png" health="100" hregen="0" shields="100" sregen="2" speed="8" turn="4" armor="0" engines="1,28;1,42" engine-color="red" flyable="True" cost="1000">
+		<weapon id="0" points="48,11;48,57"/>
+		<weapon id="2" />
 	</ship>
 </shiplist>
