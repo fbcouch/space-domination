@@ -659,7 +659,6 @@ class SpaceDominationMain(object):
                 xml_file.write('\n\t\t')
                 xmlgen.startElement('ship', keys)
                 xmlgen.endElement('ship')
-                xml_file.write('\n')
             xml_file.write('\t')
             xmlgen.endElement('profile')
             xml_file.write('\n')

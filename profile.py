@@ -38,6 +38,7 @@ def create_fresh_profile(**kwargs):
     profile['id'] = id
     profile['name'] = 'newbie'
     profile['ship'] = 0
+    profile['credits'] = 0
     disp = pygame.display.get_surface()
     if disp:
         profile['width'] = pygame.display.get_surface().get_width()

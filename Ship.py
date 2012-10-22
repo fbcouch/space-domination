@@ -35,6 +35,7 @@ class PShip(object): # Prototype for a "Ship" - IE: used in the shiplist and an 
     armor = 0
     team = -1
     player_flyable = False
+    cost = 0
     
     engine_points = None
     engine_color = "orange"
@@ -397,8 +398,9 @@ class ShipListXMLParser(handler.ContentHandler):
             self.ship.turn = int(attrs.get('turn', 5))
             self.ship.armor = int(attrs.get('armor', 0))
             self.ship.engine_points = attrs.get('engines', '')
-            self.ship.engine_color = attrs.get('engine-color', None)
+            self.ship.engine_color = attrs.get('engine-color', consts.COLOR_ORANGE)
             self.ship.player_flyable = attrs.get('flyable', False)
+            self.ship.cost = int(attrs.get('cost', 0))
             
             self.ship.file = attrs.get('file','')
             

@@ -27,8 +27,11 @@ class ProfileMenu(Frame):
     profile_add = None
     profile_delete = None
     profile_shipselect = None
+    profile_shipbuy = None
+    profile_shipupgrade = None
     
     ship_list = None
+    weapon_list = None
     
     
     def __init__(self, parent, profile, profiles, set_profile, save_profiles, **kwargs):
@@ -40,6 +43,7 @@ class ProfileMenu(Frame):
         self.set_profile_fxn = set_profile
         self.save_profiles_fxn = save_profiles
         self.ship_list = kwargs.get('shiplist', [])
+        self.weapon_list = kwargs.get('weaponlist', [])
         
         self.set_profile_view(self.current_profile)
     
@@ -126,6 +130,22 @@ class ProfileMenu(Frame):
         
         self.profile_shipselect.set_active(True)
         
+    def set_profile_shipbuy(self, profile):
+        if self.profile_shipbuy:
+            self.children.remove(self.profile_shipbuy)
+        
+        self.profile_shipbuy = ShipBuyMenu(self, self.ship_list, self.weapon_list, self.current_profile)
+        if not self.profile_shipbuy in self.children:
+            self.add_child(self.profile_shipbuy)
+        
+        for child in self.children:
+            child.set_active(False)
+        
+        self.profile_shipbuy.set_active(True)
+    
+    def set_profile_shipupgrade(self, profile):
+        pass
+    
     def delete_profile(self, pf):
         if pf in self.profile_list:
             self.profile_list.remove(pf)
@@ -407,6 +427,18 @@ class ProfileEdit(Frame):
         bn.rect.top = y
         y += bn.rect.height + self.v_pad
         
+        # buy ship
+        bn = BasicTextButton(self, text = "Buy Ship...", font = pygame.font.Font(None, 24), callback = self.set_shipbuy)
+        bn.rect.center = cl.rect.center
+        bn.rect.top = y
+        y += bn.rect.height + self.v_pad
+        
+        # upgrade ship
+        bn = BasicTextButton(self, text = "Upgrade Ship...", font = pygame.font.Font(None, 24), callback = self.set_shipupgrade)
+        bn.rect.center = cl.rect.center
+        bn.rect.top = y
+        y += bn.rect.height + self.v_pad
+        
         # save
         bn = BasicTextButton(self, text = "Save Changes", font = pygame.font.Font(None, 24), callback = self.save_profile)
         bn.rect.center = cl.rect.center
@@ -448,6 +480,17 @@ class ProfileEdit(Frame):
         self.profile['name'] = self.callsign_input.value
         self.save_profiles_fxn()
         self.parent.set_profile_shipselect(self.profile)
+        
+    def set_shipbuy(self):
+        self.profile['name'] = self.callsign_input.value
+        self.save_profiles_fxn()
+        self.parent.set_profile_shipbuy(self.profile)
+    
+    def set_shipupgrade(self):
+        self.profile['name'] = self.callsign_input.value
+        self.save_profiles_fxn()
+        self.parent.set_profile_shipupgrade(self.profile)
+        
         
 class ProfileDelete(Frame):
     profile = None
@@ -526,7 +569,147 @@ class ShipSelectMenu(PagedMenu):
     def set_profile(self, pf):
         self.profile = pf
 
+class ShipBuyMenu(PagedMenu):
+    shiplist = None
+    weaponlist = None
+    profile = None
+    
+    selected_ship = None
+    
+    title_color = None
+    desc_color = None
+    desc_max_width = 1024
+    
+    smallfont = None
+    
+    def __init__(self, parent, shiplist, weaponlist, profile, **kwargs):
+        
+        if not 'back_btn_text' in kwargs: kwargs['back_btn_text'] = "< Back"
+        if not 'back_btn_callback' in kwargs: kwargs['back_btn_callback'] = self.back_click
+        if not 'item_callback' in kwargs: kwargs['item_callback'] = self.ship_click
+        self.smallfont = kwargs.get('smallfont', pygame.font.Font(None, 16))
+    
+        self.shiplist = shiplist
+        self.weaponlist = weaponlist
+        if self.shiplist:
+            items = []
+            for ship in self.shiplist:
+                if ship.player_flyable and str(ship.id) not in profile.shiplist : 
+                    items.append((Utils.load_image(ship.file, -1)[0], ship.id))
+            kwargs['items'] = items
+        
+        self.profile = profile
+        super(ShipBuyMenu, self).__init__(parent, **kwargs)
+        
+        self.title_color = kwargs.get('title_color', (255, 255, 100))
+        self.desc_color = kwargs.get('desc_color', (200, 200, 200))
+        self.desc_max_width = int(kwargs.get('desc_width', 1024))
+        
+        
+        
+        
+    def draw(self):
+        '''draws the ship selection'''
+        draw_rect = super(ShipBuyMenu, self).draw()
+        screen = pygame.display.get_surface()
+        
+        # draw the credit label
+        cr_text = "Credit Balance: $%s" % self.profile['credits']
+        size = self.font.size(cr_text)
+        color = (255, 255, 255)
+        if self.selected_ship and int(self.selected_ship.cost) > int(self.profile['credits']):
+            color = (255, 0, 0)
+        screen.blit(self.font.render(cr_text, 1, color), (draw_rect.right - size[0], draw_rect.top - size[1]))
+        
+        
+        if self.selected_ship:
+            y = draw_rect.bottom + self.v_pad * 3
+            size = self.font.size(self.selected_ship.name)
+            x = (screen.get_width() - size[0]) * 0.5
+            screen.blit(self.font.render("%s ($%i)" % (self.selected_ship.name, self.selected_ship.cost), 1, self.title_color), (x, y))
+            if x < draw_rect.left: draw_rect.left = x
+            y += size[1] + self.v_pad
+            
+            stats = ["Health %i (%.1f)" % (self.selected_ship.health, self.selected_ship.hregen),
+                     "Shields %i (%.1f)" % (self.selected_ship.shields, self.selected_ship.sregen),
+                     "Armor %i" % self.selected_ship.armor,
+                     "Speed %i" % self.selected_ship.speed,
+                     "Turn %i" % self.selected_ship.turn]
+            s_max_x = 0
+            for s in stats:
+                size = self.font.size(s)
+                if size[0] > s_max_x: s_max_x = size[0]
+            
+            weapons = []
+            i = 0
+            for wpdict in self.selected_ship.weapons:
+                i += 1
+                wp = self.weaponlist[int(wpdict['id'])]
+                weapons.append("(%i) %s" % (i, wp.name))
+                weapons.append("  Ammo %i (%.1f)" % (wp.max_ammo, wp.ammo_regen))
+                weapons.append("  Damage (Fire Rate) %i (%i)" % (wp.base_damage, wp.fire_rate))
+                weapons.append("  Range (Speed) %i (%.1f)" % ((wp.bullet_speed * wp.bullet_ticks), wp.bullet_speed))
+                
+            x = screen.get_width() * 0.5 - s_max_x - self.h_pad
+            y_start = y
+            if x < draw_rect.left: draw_rect.left = x
+            for s in stats:
+                screen.blit(self.font.render(s, 1, self.desc_color), (x, y))
+                y += self.v_pad + self.font.size(s)[1]
+            
+            x = screen.get_width() * 0.5 + self.h_pad
+            y = y_start
+            screen.blit(self.font.render("Weapons:", 1, self.desc_color), (x, y))
+            y += self.v_pad + self.font.size("Weapons:")[1]
+            y_start = y
+            i = 0
+            max_x = 0
+            x -= self.h_pad
+            for w in weapons:
+                if i % (len(weapons) / len(self.selected_ship.weapons)) == 0:
+                    x += max_x + self.h_pad
+                    y = y_start
+                screen.blit(self.smallfont.render(w, 1, self.desc_color), (x, y))
+                size = self.smallfont.size(w)
+                y += self.v_pad + size[1]
+                if x + size[0] > draw_rect.right:
+                    draw_rect.width = x + size[0] - draw_rect.left
+                if size[0] > max_x: max_x = size[0]
+                i += 1
+            draw_rect.height = y - draw_rect.top
+        return draw_rect
+            
+        
+    def ship_click(self, **kwargs):
+        id = kwargs.get('value', 0)
+        if int(self.profile['credits']) >= int(self.shiplist[id].cost):
+            self.profile['credits'] = int(self.profile['credits']) - int(self.shiplist[id].cost)
+            self.profile.shiplist[str(id)] = {'id': id, 'upgrades': ''}
+            self.parent.set_profile_edit(self.profile)
+        
+        
+    def back_click(self, **kwargs):
+        self.parent.set_profile_edit(self.profile)
 
+    def set_profile(self, pf):
+        self.profile = pf
+        
+    def mouse_over_callback(self, child):
+        if self.selected_item and self.selected_item is not child:
+            self.selected_item.on_mouse_off()
+            
+        self.selected_ship = self.find_ship(child.callback_kwargs.get('value', None))
+        self.selected_item = child
+        
+    def find_ship(self, id):
+        if id is None: return None
+        
+        for ship in self.shiplist:
+            if ship.id == id:
+                return ship
+            
+        return None
+        
 #   . 
 #     .
 # . . .
