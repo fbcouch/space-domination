@@ -12,6 +12,11 @@
 	<mission icon="mission04_icon.png" file="mission04.xml" name="Intercept Rogue Pilot">
 		Intercept Rogue Pilot before it it too late.
 	</mission>
-	<mission icon="mission03_icon.png" file="stress.xml" name="Stress Test" desc="Large number of ships to test collision detection/framerates." />
-	<mission icon="mission03_icon.png" file="mission03.xml" name="Outpost Assault" />
+	<mission icon="mission03_icon.png" file="mission05.xml" name="Escort">
+		A local freighter has requested help passing throught a dangerous area. Make sure they pass safely.
+	</mission>
+	<mission icon="mission03_icon.png" file="stress.xml" name="Stress Test" >
+		Large number of ships to test collision detection/framerates.
+	</mission>
+	
 </missionlist>

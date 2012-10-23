@@ -140,7 +140,7 @@ class Trigger(object):
                         sp.active = True
                         self.spawn_list.remove(sp)
         
-        if self.condition == "end-at-time":
+        if self.condition == "lose-at-time":
             if context and self.attrs and len(self.attrs) > 0:
                 end_at = self.attrs[0].split(":")
                 end_at = float(end_at[0]) * consts.TIME_MIN_MUL + float(end_at[1]) * consts.TIME_SEC_MUL
@@ -160,6 +160,28 @@ class Trigger(object):
                     else:
                         text = " (%i:%i remains)" % (m, s)
                     self.display_text = self.orig_display_text + text
+                    
+        if self.condition == "win-at-time":
+            if context and self.attrs and len(self.attrs) > 0:
+                end_at = self.attrs[0].split(":")
+                end_at = float(end_at[0]) * consts.TIME_MIN_MUL + float(end_at[1]) * consts.TIME_SEC_MUL
+                if context.elapsedTime >= end_at:
+                    self.completed = True
+                    self.display_text = self.orig_display_text
+                    if context.gameState != context.GAMESTATE_GAMEOVER: context.endMission()
+                else:
+                    self.completed = False
+                    completed = False
+                    dt = end_at - context.elapsedTime
+                    m = int(dt / consts.TIME_MIN_MUL)
+                    dt -= m * consts.TIME_MIN_MUL
+                    s = int(dt / consts.TIME_SEC_MUL)
+                    if s < 10:
+                        text = " (%i:0%i remains)" % (m, s)
+                    else:
+                        text = " (%i:%i remains)" % (m, s)
+                    self.display_text = self.orig_display_text + text
+            
     
         if not completed == self.completed and context:
             if self.message_title and self.message_body:

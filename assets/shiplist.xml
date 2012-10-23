@@ -35,4 +35,5 @@
 		<weapon id="0" points="48,11;48,57"/>
 		<weapon id="2" />
 	</ship>
+	<ship id="10" name="Light Freighter" file="freighter-blue.png" health="100" shields="100" sregen="1" speed="5" turn="0" armor="0" engines="3,38;3,61" engine-color="blue" />
 </shiplist>

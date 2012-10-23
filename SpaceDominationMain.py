@@ -460,6 +460,8 @@ class SpaceDominationMain(object):
             if not tg.completed and tg.type.count("objective-primary") > 0:
                 primObjComplete = False
                 
+        
+                
         return primObjComplete
     
     def gameLoop(self):
@@ -499,6 +501,13 @@ class SpaceDominationMain(object):
             if self.updateTriggers():
                 # player completed all primary objectives - mission should end with a victory status now
                 self.endMission()
+            else:
+                failed = False
+                for tg in self.triggerList:
+                    if not tg.completed and tg.type.count("objective-primary") > 0 and tg.condition.count("survive") > 0:
+                        failed = True
+                if failed:
+                    self.endMission()
                 
             if not self.playerShip in self.shipSpriteGroup:
                 # player ship died - game over :(
