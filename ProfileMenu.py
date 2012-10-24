@@ -5,7 +5,7 @@ Created on Aug 20, 2012
 '''
 from consts import MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH
 from gui.basicmenu import BasicTextInput, BasicTextButton, PagedMenu, Label, \
-    DropdownSelector, ImageLabel
+    DropdownSelector, ImageLabel, BasicMenu
 from gui.gui import Frame, Element
 from profile import Profile
 import Utils
@@ -32,6 +32,7 @@ class ProfileMenu(Frame):
     
     ship_list = None
     weapon_list = None
+    upgrade_list = None
     
     
     def __init__(self, parent, profile, profiles, set_profile, save_profiles, **kwargs):
@@ -44,6 +45,7 @@ class ProfileMenu(Frame):
         self.save_profiles_fxn = save_profiles
         self.ship_list = kwargs.get('shiplist', [])
         self.weapon_list = kwargs.get('weaponlist', [])
+        self.upgrade_list = kwargs.get('upgradelist', [])
         
         self.set_profile_view(self.current_profile)
     
@@ -144,7 +146,17 @@ class ProfileMenu(Frame):
         self.profile_shipbuy.set_active(True)
     
     def set_profile_shipupgrade(self, profile):
-        pass
+        if self.profile_shipupgrade:
+            self.children.remove(self.profile_shipupgrade)
+        
+        self.profile_shipupgrade = ShipUpgradeMenu(self, self.current_profile, self.upgrade_list)
+        if not self.profile_shipupgrade in self.children:
+            self.add_child(self.profile_shipupgrade)
+        
+        for child in self.children:
+            child.set_active(False)
+        
+        self.profile_shipupgrade.set_active(True)
     
     def delete_profile(self, pf):
         if pf in self.profile_list:
@@ -551,7 +563,7 @@ class ShipSelectMenu(PagedMenu):
         if self.shiplist:
             items = []
             for ship in self.shiplist:
-                if ship.player_flyable: items.append((Utils.load_image(ship.file, -1)[0], ship.id))
+                if ship.player_flyable and str(ship.id) in profile.shiplist: items.append((Utils.load_image(ship.file, -1)[0], ship.id))
             kwargs['items'] = items
         
         super(ShipSelectMenu, self).__init__(parent, **kwargs)
@@ -710,6 +722,24 @@ class ShipBuyMenu(PagedMenu):
             
         return None
         
+class ShipUpgradeMenu(Frame):    
+    upgradelist = None
+    profile = None
+    
+    def __init__(self, parent, profile, upgradelist, **kwargs):
+        super(ShipUpgradeMenu, self).__init__(parent, **kwargs)
+        self.profile = profile
+        
+        btn = BasicTextButton(self, text = '< Back', callback = self.back_click)
+        btn.topleft = (0, 0)
+        
+        
+    def draw(self):
+        super(ShipUpgradeMenu, self).draw()
+        
+    def back_click(self, **kwargs):
+        self.parent.set_profile_edit(self.profile)
+    
 #   . 
 #     .
 # . . .
