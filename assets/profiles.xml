@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <profilelist default="0">
-	<profile fullscreen="1" shots-hit="5994" name="newbie" kills="489" deaths="198" damage-dealt="63790" height="1080" credits="0" id="0" ship="6" shots-fired="9188" width="1920" damage-taken="48234">
+	<profile fullscreen="1" shots-hit="5994" name="newbie" kills="489" deaths="198" damage-dealt="63790" height="1080" credits="0" width="1920" damage-taken="48234" ship="6" id="0" shots-fired="9188">
 		<ship id="6" upgrades=""></ship>	</profile>
 </profilelist>

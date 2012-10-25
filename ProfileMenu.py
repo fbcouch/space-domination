@@ -149,7 +149,7 @@ class ProfileMenu(Frame):
         if self.profile_shipupgrade:
             self.children.remove(self.profile_shipupgrade)
         
-        self.profile_shipupgrade = ShipUpgradeMenu(self, self.current_profile, self.upgrade_list)
+        self.profile_shipupgrade = ShipUpgradeMenu(self, self.current_profile, self.upgrade_list, self.ship_list, self.weapon_list)
         if not self.profile_shipupgrade in self.children:
             self.add_child(self.profile_shipupgrade)
         
@@ -724,14 +724,124 @@ class ShipBuyMenu(PagedMenu):
         
 class ShipUpgradeMenu(Frame):    
     upgradelist = None
+    shiplist = None
+    weaponlist = None
     profile = None
     
-    def __init__(self, parent, profile, upgradelist, **kwargs):
+    healthLabel = None
+    shieldLabel = None
+    armorLabel = None
+    speedLabel = None
+    weaponLabel = None
+    
+    healthButton = None
+    shieldButton = None
+    armorButton = None
+    speedButton = None
+    weaponButton = None
+    
+    backButton = None
+    creditLabel = None
+    
+    shipImage = None
+    
+    width = 600
+    height = 300
+    
+    def __init__(self, parent, profile, upgradelist, shiplist, weaponlist, **kwargs):
         super(ShipUpgradeMenu, self).__init__(parent, **kwargs)
         self.profile = profile
+        self.shiplist = shiplist
+        self.upgradelist = upgradelist
+        self.weaponlist = weaponlist
         
-        btn = BasicTextButton(self, text = '< Back', callback = self.back_click)
-        btn.topleft = (0, 0)
+        self.backButton = BasicTextButton(self, text = '< Back', callback = self.back_click)
+        self.backButton.rect.topleft = (0, 0)
+        
+        self.creditLabel = Label(self, "Credits $%i" % int(self.profile['credits']))
+        self.creditLabel.rect.topright = (self.width, 0)
+        
+        self.shipImage = ImageLabel(self, self.shiplist[int(profile['ship'])].image, rotate = True)
+        max_d = self.shipImage.image.get_width()
+        if self.shipImage.image.get_height() > max_d:
+            max_d = self.shipImage.image.get_height()
+        self.shipImage.rect.center = (self.width * 0.5, max_d * 0.5)
+        y = max_d + 5
+        
+        self.healthLabel = Label(self, "Health %i (%.1f)")
+        self.healthLabel.rect.topleft = (0, y)
+        
+        self.healthButton = BasicTextButton(self, text = "+")
+        self.healthButton.rect.topleft = (self.width * 0.5, y)
+        y = self.healthButton.rect.bottom + 5
+        
+        self.shieldLabel = Label(self, "Shield %i (%.1f)")
+        self.shieldLabel.rect.topleft = (0, y)
+        
+        self.shieldButton = BasicTextButton(self, text = "+")
+        self.shieldButton.rect.topleft = (self.width * 0.5, y)
+        y = self.shieldButton.rect.bottom + 5
+        
+        self.armorLabel = Label(self, "Armor %i")
+        self.armorLabel.rect.topleft = (0, y)
+        
+        self.armorButton = BasicTextButton(self, text = "+")
+        self.armorButton.rect.topleft = (self.width * 0.5, y)
+        y = self.armorButton.rect.bottom + 5
+        
+        self.speedLabel = Label(self, "Speed (Turn) %i (%.1f)")
+        self.speedLabel.rect.topleft = (0, y)
+        
+        self.speedButton = BasicTextButton(self, text = "+")
+        self.speedButton.rect.topleft = (self.width * 0.5, y)
+        y = self.speedButton.rect.bottom + 5
+        
+        self.weaponLabel = Label(self, "Damage %i / %i")
+        self.weaponLabel.rect.topleft = (0, y)
+        
+        self.weaponButton = BasicTextButton(self, text = "+")
+        self.weaponButton.rect.topleft = (self.width * 0.5, y)
+        y = self.weaponButton.rect.bottom + 5
+        
+        
+        offset = ((pygame.display.get_surface().get_width() - self.width) * 0.5, (pygame.display.get_surface().get_height() - self.height) * 0.5)
+        for c in self.children:
+            c.rect.topleft = (c.rect.left + offset[0], c.rect.top + offset[1])
+        
+        self.update_labels()
+        
+    def update_labels(self):
+        ship = self.shiplist[int(self.profile['ship'])]
+        upgrades = Utils.parse_intlist(self.profile.shiplist[str(self.profile['ship'])]['upgrades'])
+        wp_dmg = []
+        for w in ship.weapons:
+            wp_dmg.append(self.weaponlist[int(w['id'])].base_damage)
+                
+        for up in upgrades:
+            upgrade = self.upgradelist[up]
+            ship.health += upgrade.health
+            ship.hregen += upgrade.hregen
+            ship.shields += upgrade.shields
+            ship.sregen += upgrade.sregen
+            ship.armor += upgrade.armor
+            ship.speed += upgrade.speed
+            ship.turn += upgrade.turn
+            
+            for w in wp_dmg:
+                w += upgrade.damage
+                
+            
+        if len(wp_dmg) < 2:
+            wp_dmg.append(-1)
+        
+        if len(wp_dmg) < 2:
+            wp_dmg.append(-1)
+        
+        self.healthLabel.set_text(self.healthLabel.text % (ship.health, ship.hregen))
+        self.shieldLabel.set_text(self.shieldLabel.text % (ship.shields, ship.sregen))
+        self.armorLabel.set_text(self.armorLabel.text % ship.armor)
+        self.speedLabel.set_text(self.speedLabel.text % (ship.speed, ship.turn))
+        self.weaponLabel.set_text(self.weaponLabel.text % (wp_dmg[0], wp_dmg[1]))
         
         
     def draw(self):
