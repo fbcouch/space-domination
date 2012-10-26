@@ -771,46 +771,46 @@ class ShipUpgradeMenu(Frame):
         self.healthLabel = Label(self, "Health %i (%.1f)")
         self.healthLabel.rect.topleft = (0, y)
         
-        self.healthButton = BasicTextButton(self, text = "+")
+        self.healthButton = BasicTextButton(self, text = "+", callback = self.upgrade_click, callback_kwargs = {})
         self.healthButton.rect.topleft = (self.width * 0.5, y)
         y = self.healthButton.rect.bottom + 5
         
         self.shieldLabel = Label(self, "Shield %i (%.1f)")
         self.shieldLabel.rect.topleft = (0, y)
         
-        self.shieldButton = BasicTextButton(self, text = "+")
+        self.shieldButton = BasicTextButton(self, text = "+", callback = self.upgrade_click, callback_kwargs = {})
         self.shieldButton.rect.topleft = (self.width * 0.5, y)
         y = self.shieldButton.rect.bottom + 5
         
         self.armorLabel = Label(self, "Armor %i")
         self.armorLabel.rect.topleft = (0, y)
         
-        self.armorButton = BasicTextButton(self, text = "+")
+        self.armorButton = BasicTextButton(self, text = "+", callback = self.upgrade_click, callback_kwargs = {})
         self.armorButton.rect.topleft = (self.width * 0.5, y)
         y = self.armorButton.rect.bottom + 5
         
         self.speedLabel = Label(self, "Speed (Turn) %i (%.1f)")
         self.speedLabel.rect.topleft = (0, y)
         
-        self.speedButton = BasicTextButton(self, text = "+")
+        self.speedButton = BasicTextButton(self, text = "+", callback = self.upgrade_click, callback_kwargs = {})
         self.speedButton.rect.topleft = (self.width * 0.5, y)
         y = self.speedButton.rect.bottom + 5
         
         self.weaponLabel = Label(self, "Damage %i / %i")
         self.weaponLabel.rect.topleft = (0, y)
         
-        self.weaponButton = BasicTextButton(self, text = "+")
-        self.weaponButton.rect.topleft = (self.width * 0.5, y)
-        y = self.weaponButton.rect.bottom + 5
+        #self.weaponButton = BasicTextButton(self, text = "+")
+        #self.weaponButton.rect.topleft = (self.width * 0.5, y)
+        #y = self.weaponButton.rect.bottom + 5
         
         
         offset = ((pygame.display.get_surface().get_width() - self.width) * 0.5, (pygame.display.get_surface().get_height() - self.height) * 0.5)
         for c in self.children:
             c.rect.topleft = (c.rect.left + offset[0], c.rect.top + offset[1])
         
-        self.update_labels()
+        self.update_elements()
         
-    def update_labels(self):
+    def update_elements(self):
         ship = self.shiplist[int(self.profile['ship'])]
         upgrades = Utils.parse_intlist(self.profile.shiplist[str(self.profile['ship'])]['upgrades'])
         wp_dmg = []
@@ -844,12 +844,48 @@ class ShipUpgradeMenu(Frame):
         self.weaponLabel.set_text(self.weaponLabel.text % (wp_dmg[0], wp_dmg[1]))
         
         
+        h_upgrade = None
+        s_upgrade = None
+        a_upgrade = None
+        p_upgrade = None
+        # figure out what options to allow the user to buy
+        for up in self.upgradelist:
+            if not int(self.profile['ship']) in up.fits:
+                # this doesnt fit, skip it
+                continue
+            if not h_upgrade and up.type.count('health') > 0:
+                h_upgrade = up
+            if not s_upgrade and up.type.count('shield') > 0:
+                s_upgrade = up
+            if not a_upgrade and up.type.count('armor') > 0:
+                a_upgrade = up
+            if not p_upgrade and up.type.count('speed') > 0:
+                p_upgrade = up
+                
+        if h_upgrade:
+            self.healthButton.callback_kwargs['value'] = h_upgrade
+            self.healthButton.set_text("$%i: +%i (+%.1f)" % (h_upgrade.cost, h_upgrade.health, h_upgrade.hregen))
+        if s_upgrade:
+            self.shieldButton.callback_kwargs['value'] = s_upgrade
+            self.shieldButton.set_text("$%i: +%i (+%.1f)" % (s_upgrade.cost, s_upgrade.shields, s_upgrade.sregen))
+        if a_upgrade:
+            self.armorButton.callback_kwargs['value'] = a_upgrade
+            self.armorButton.set_text("$%i: +%i" % (a_upgrade.cost, a_upgrade.armor))
+        if p_upgrade:
+            self.speedButton.callback_kwargs['value'] = p_upgrade
+            self.speedButton.set_text("$%i: +%i (+%.1f)" % (p_upgrade.cost, p_upgrade.speed, p_upgrade.turn))
+            
+            
+        
+        
     def draw(self):
         super(ShipUpgradeMenu, self).draw()
         
     def back_click(self, **kwargs):
         self.parent.set_profile_edit(self.profile)
     
+    def upgrade_click(self, **kwargs):
+        pass
 #   . 
 #     .
 # . . .

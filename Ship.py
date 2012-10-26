@@ -69,6 +69,7 @@ class Upgrade(object):
     cost = 0
     type = ""
     name = ""
+    fits = None
     
     def __init__(self, attrs = None):
         if attrs:
@@ -85,6 +86,8 @@ class Upgrade(object):
             self.type = attrs.get('type', 'default')
             self.name = attrs.get('name', '<Unnamed Upgrade>')
             self.cost = int(attrs.get('cost', 0))
+            
+            self.fits = Utils.parse_intlist(attrs.get('fits',''))
     
     def __add__(self, other):
         self.health += other.health

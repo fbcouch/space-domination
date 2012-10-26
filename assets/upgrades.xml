@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <upgradelist>
-	<upgrade id="0" type="weapon-laser" name="Laser Tuning" cost="200" damage="1" fits="1,8,9" />
-	<upgrade id="1" type="ship" name="Armor Lvl 1" cost="200" armor="1" fits="1,8,9" />
+	<upgrade id="0" type="weapon-laser" name="Laser Tuning" cost="200" damage="1" fits="1,6,8,9" />
+	<upgrade id="1" type="armor" name="Armor Lvl 1" cost="200" armor="1" fits="1,6,8,9" />
+	<upgrade id="2" type="shield" name="Shield Lvl 2" cost="200" shields="10" sregen="0.2" fits="6,8,9" />
 </upgradelist>

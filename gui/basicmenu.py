@@ -542,6 +542,9 @@ class BasicTextButton(Element):
     callback_kwargs = None
     select_fxn = None
     
+    selected_color = None
+    unselected_color = None
+    
     def __init__(self, parent, **kwargs):
         super(BasicTextButton, self).__init__(parent, **kwargs)
         self.text = kwargs.get('text', 'default button')
@@ -552,11 +555,33 @@ class BasicTextButton(Element):
         if not self.font:
             self.font = pygame.font.Font(None, 32)
             
-        self.selected_image = self.font.render(self.text, 1, kwargs.get('selected_color', DEFAULT_SELECTED_COLOR))
-        self.unselected_image = self.font.render(self.text, 1, kwargs.get('unselected_color', DEFAULT_UNSELECTED_COLOR))
+        self.selected_color = kwargs.get('selected_color', DEFAULT_SELECTED_COLOR)
+        self.unselected_color = kwargs.get('unselected_color', DEFAULT_UNSELECTED_COLOR)
+        
+        self.image = None
+        self.rect = None
+        self.set_text(self.text)
         
         self.image = self.unselected_image.copy()
         self.rect = self.image.get_rect()
+    
+    def set_text(self, text):
+        selected = False
+        if self.image and self.image == self.selected_image:
+            selected = True
+            
+        if self.rect:
+            rect = self.rect
+        else:
+            rect = pygame.rect.Rect(0,0,1,1)
+        self.text = text
+        self.selected_image = self.font.render(self.text, 1, self.selected_color)
+        self.unselected_image = self.font.render(self.text, 1, self.unselected_color)
+        if selected:
+            self.image = self.selected_image.copy()
+        else:
+            self.image = self.unselected_image.copy()    
+        self.rect = self.image.get_rect(topleft = rect.topleft)
         
     def on_click(self, **kwargs):
         if self.callback:
