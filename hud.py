@@ -23,12 +23,21 @@ class HUD(object):
     weapon_icon_points = [(12, 4), (12, 52)]
     weapon_bar_points = [(114, 6, 300, 43), (114, 54, 300, 43)]
     
-    status_bar_points = [(40, 6, 300, 43), (40, 54, 300, 43)]
+    
+    hull_icon = None
+    shield_icon = None
+    status_icon_points = [(40, 6, 300, 43), (40, 54, 300, 43)]
+    status_bar_points = [(142, 6, 300, 43), (142, 54, 300, 43)]
     
     pill_green = None
+    pill_green_empty = None
     pill_red = None
+    pill_red_empty = None
     pill_yellow = None
+    pill_yellow_empty = None
     pill_blue = None
+    pill_blue_empty = None
+    
     selector = None
 
     def __init__(self):
@@ -47,11 +56,19 @@ class HUD(object):
         self.panel_lower_left = Utils.get_asset('hud-panel-lowerleft.png')
         self.panel_lower_right = Utils.get_asset('hud-panel-lowerright.png')
         
+        self.shield_icon = Utils.get_asset('hud-icon-shield.png')
+        self.hull_icon = Utils.get_asset('hud-icon-hull.png')
+        
         self.pill_green = Utils.get_asset('hud-pill-green.png')
+        self.pill_green_empty = Utils.get_asset('hud-pill-green-empty.png')
         self.pill_yellow = Utils.get_asset('hud-pill-yellow.png')
+        self.pill_yellow_empty = Utils.get_asset('hud-pill-yellow-empty.png')
         self.pill_red = Utils.get_asset('hud-pill-red.png')
+        self.pill_red_empty = Utils.get_asset('hud-pill-red-empty.png')
         self.pill_blue = Utils.get_asset('hud-pill-blue.png')
+        self.pill_blue_empty = Utils.get_asset('hud-pill-blue-empty.png')
         self.selector = Utils.get_asset('hud-selector-yellow.png')
+        
         
     def update(self):
         pass
@@ -145,13 +162,22 @@ class HUD(object):
             box_rect = pygame.rect.Rect(screen.get_width() - self.panel_lower_right.get_width() + self.status_bar_points[0][0],
                                         screen.get_height() - self.panel_lower_left.get_height() + self.status_bar_points[0][1],
                                         self.status_bar_points[0][2], self.status_bar_points[0][3])
-            self.draw_boxes(float(ship.shields) / float(ship.max_shields), box_rect, consts.COLOR_BLUE, screen, boxes)
+            self.draw_boxes(float(ship.shields) / float(ship.max_shields), box_rect, consts.COLOR_BLUE, screen, boxes, True)
+            if self.shield_icon:
+                screen.blit(self.shield_icon, (screen.get_width() - self.panel_lower_right.get_width() + self.status_icon_points[0][0], 
+                                               screen.get_height() - self.panel_lower_right.get_height() + self.status_icon_points[0][1]))
+            
         # health
         boxes = 10
         box_rect = pygame.rect.Rect(screen.get_width() - self.panel_lower_right.get_width() + self.status_bar_points[1][0],
                                         screen.get_height() - self.panel_lower_left.get_height() + self.status_bar_points[1][1],
                                         self.status_bar_points[1][2], self.status_bar_points[1][3])
-        self.draw_boxes(float(ship.health) / float(ship.max_health), box_rect, consts.COLOR_GREEN, screen, boxes)
+        self.draw_boxes(float(ship.health) / float(ship.max_health), box_rect, consts.COLOR_GREEN, screen, boxes, True)
+        
+        if self.hull_icon:
+            screen.blit(self.hull_icon, (screen.get_width() - self.panel_lower_right.get_width() + self.status_icon_points[1][0], 
+                                           screen.get_height() - self.panel_lower_right.get_height() + self.status_icon_points[1][1]))
+            
             
         n = 0
         for weapon in ship.weapons:
@@ -175,7 +201,7 @@ class HUD(object):
             
             boxes = weapon.max_ammo
             width = 50#(50 / boxes) * boxes + 1
-            self.draw_boxes(float(weapon.cur_ammo) / float(weapon.max_ammo), box_rect, color, screen, boxes)
+            self.draw_boxes(float(weapon.cur_ammo) / float(weapon.max_ammo), box_rect, color, screen, boxes, True)
             
             n += 1
     
@@ -219,16 +245,20 @@ class HUD(object):
             
                     
     
-    def draw_boxes(self, pct, rect, color, screen, num_boxes = 1):
+    def draw_boxes(self, pct, rect, color, screen, num_boxes = 1, draw_unfilled = False):
         w = pct * rect.width
         img = self.pill_green.copy()
+        u_img = self.pill_green_empty.copy()
         if color == consts.COLOR_RED:
             img = self.pill_red.copy()
+            u_img = self.pill_red_empty.copy()
         elif color == consts.COLOR_YELLOW:
             img = self.pill_yellow.copy()
+            u_img = self.pill_yellow_empty.copy()
         elif color == consts.COLOR_BLUE:
             img = self.pill_blue.copy()
-        
+            u_img = self.pill_blue_empty.copy()
+            
         if num_boxes == 1:
             #if pct > 0:
             #    img = pygame.transform.smoothscale(img, (int(rect.width * pct), rect.height))
@@ -241,15 +271,22 @@ class HUD(object):
             box_width = math.floor((rect.width) / boxes)
             boxes = int(pct * boxes)
             x = rect.left
-            for i in range(boxes):
+            draw_boxes = boxes
+            if draw_unfilled:
+                draw_boxes = num_boxes
+            for i in range(draw_boxes):
                 add = 0
                 diff = rect.width - num_boxes * box_width
                 
                 if i >= num_boxes - diff:
                     add = 1
                 
-                img = pygame.transform.smoothscale(img, (int(box_width - 1 + add), rect.height))
-                screen.blit(img, (x, rect.top))
+                if i < boxes:
+                    img = pygame.transform.smoothscale(img, (int(box_width - 1 + add), rect.height))
+                    screen.blit(img, (x, rect.top))
+                else:
+                    u_img = pygame.transform.smoothscale(u_img, (int(box_width - 1 + add), rect.height))
+                    screen.blit(u_img, (x, rect.top))
                 #pygame.gfxdraw.box(screen, pygame.rect.Rect(x, rect.top, box_width - 1 + add, rect.height), color)
                 x += box_width + add
     
