@@ -17,6 +17,19 @@ class HUD(object):
     objective_pointer = None
     target_box_red = None
     target_box_blue = None
+    
+    panel_lower_left = None
+    panel_lower_right = None
+    weapon_icon_points = [(12, 4), (12, 52)]
+    weapon_bar_points = [(114, 6, 300, 43), (114, 54, 300, 43)]
+    
+    status_bar_points = [(40, 6, 300, 43), (40, 54, 300, 43)]
+    
+    pill_green = None
+    pill_red = None
+    pill_yellow = None
+    pill_blue = None
+    selector = None
 
     def __init__(self):
         '''
@@ -30,6 +43,15 @@ class HUD(object):
         imagey, rect = Utils.load_image("objective-pointer-yellow.png", colorkey = -1)
         imageg, rect = Utils.load_image("objective-pointer-green.png", colorkey = -1)
         self.objective_pointer = {'destroy': imagey, 'survive': imageg}
+        
+        self.panel_lower_left = Utils.get_asset('hud-panel-lowerleft.png')
+        self.panel_lower_right = Utils.get_asset('hud-panel-lowerright.png')
+        
+        self.pill_green = Utils.get_asset('hud-pill-green.png')
+        self.pill_yellow = Utils.get_asset('hud-pill-yellow.png')
+        self.pill_red = Utils.get_asset('hud-pill-red.png')
+        self.pill_blue = Utils.get_asset('hud-pill-blue.png')
+        self.selector = Utils.get_asset('hud-selector-yellow.png')
         
     def update(self):
         pass
@@ -107,41 +129,33 @@ class HUD(object):
             msg.update(messages)
     
     def display_ship_info(self, screen, ship, font = None):
+        
+        # first display the hud panels
+        screen.blit(self.panel_lower_left, (0, screen.get_height() - self.panel_lower_left.get_height()))
+        screen.blit(self.panel_lower_right, (screen.get_width() - self.panel_lower_right.get_width(), screen.get_height() - self.panel_lower_right.get_height()))
+        
         if not font: font = pygame.font.Font(None, 20)
-        # ammo
-        ammotext = []
-        n = 0
-        for weapon in ship.weapons:
-            n += 1
-            ammotext.append("%i: %s" % (n, weapon.name))
+        
             
-        # health
-        healthtext = "Health: %i/%i" % (int(ship.health), int(ship.max_health))
+        # draw the ship status
+        
         # shields
-        shieldtext = "Shield: %i/%i" % (int(ship.shields), int(ship.max_shields))
-        
-        statstext = []
-        accuracy = 0.0
-        if ship.stats['shots-fired'] > 0:
-            accuracy = int(float(ship.stats['shots-hit'])/float(ship.stats['shots-fired']) * 1000) / 10.0
-        statstext.append("Accuracy: %i.%i (%i/%i)" % (int(accuracy), int((accuracy % 1) * 10), ship.stats['shots-hit'], ship.stats['shots-fired']))
-        statstext.append("Kills: %i" % ship.stats['kills'])
-        statstext.append("Damage dealt: %i" % ship.stats['damage-dealt'])
-        statstext.append("Damage taken: %i" % ship.stats['damage-taken'])
-        
-        
-        y = screen.get_height() - (len(statstext) + len(ship.weapons) + 2) * (font.size("X")[1] + 2)
-        
-        screen.blit(font.render(healthtext, 1, (0, 250, 0)), (screen.get_width() - font.size(healthtext)[0] - 10, y))
-        
-        y += font.size(healthtext)[1] + 2
-        
-        screen.blit(font.render(shieldtext, 1, (0, 250, 0)), (screen.get_width() - font.size(shieldtext)[0] - 10, y))
-        
-        y += font.size(shieldtext)[1] + 2
-        
+        if ship.max_shields > 0:
+            boxes = 10
+            box_rect = pygame.rect.Rect(screen.get_width() - self.panel_lower_right.get_width() + self.status_bar_points[0][0],
+                                        screen.get_height() - self.panel_lower_left.get_height() + self.status_bar_points[0][1],
+                                        self.status_bar_points[0][2], self.status_bar_points[0][3])
+            self.draw_boxes(float(ship.shields) / float(ship.max_shields), box_rect, consts.COLOR_BLUE, screen, boxes)
+        # health
+        boxes = 10
+        box_rect = pygame.rect.Rect(screen.get_width() - self.panel_lower_right.get_width() + self.status_bar_points[1][0],
+                                        screen.get_height() - self.panel_lower_left.get_height() + self.status_bar_points[1][1],
+                                        self.status_bar_points[1][2], self.status_bar_points[1][3])
+        self.draw_boxes(float(ship.health) / float(ship.max_health), box_rect, consts.COLOR_GREEN, screen, boxes)
+            
         n = 0
         for weapon in ship.weapons:
+            if n >= 2: break
             color = (0, 250, 0)
             if n == ship.selected_weapon:
                 color = consts.COLOR_YELLOW
@@ -151,17 +165,19 @@ class HUD(object):
             if weapon.cur_ammo <= 0:
                 color = consts.COLOR_RED
                 
-            screen.blit(font.render(ammotext[n], 1, color), (screen.get_width() - font.size(ammotext[n])[0] - 60, y))
+            if weapon.icon:
+                screen.blit(weapon.icon, (self.weapon_icon_points[n][0], screen.get_height() - self.panel_lower_left.get_height() + self.weapon_icon_points[n][1]))
+                box_rect = pygame.rect.Rect(self.weapon_bar_points[n][0], screen.get_height() - self.panel_lower_left.get_height() + self.weapon_bar_points[n][1], self.weapon_bar_points[n][2], self.weapon_bar_points[n][3])
+                
+            if n == ship.selected_weapon and self.selector:
+                screen.blit(self.selector, (self.weapon_icon_points[n][0], screen.get_height() - self.panel_lower_left.get_height() + self.weapon_icon_points[n][1]))
+                
+            
             boxes = weapon.max_ammo
             width = 50#(50 / boxes) * boxes + 1
-            self.draw_boxes(float(weapon.cur_ammo) / float(weapon.max_ammo), pygame.rect.Rect(screen.get_width() - width, y, width, font.size(ammotext[n])[1]), color, screen, boxes)
-            y += font.size(ammotext[n])[1] + 2
-            n += 1
+            self.draw_boxes(float(weapon.cur_ammo) / float(weapon.max_ammo), box_rect, color, screen, boxes)
             
-        for text in statstext:
-            color = (0, 250, 0)
-            screen.blit(font.render(text, 1, color), (screen.get_width() - font.size(text)[0] - 10, y))
-            y += font.size(text)[1] + 2
+            n += 1
     
     def draw_unit_bars(self, screen, shiplist, render, font):
         for sprite in shiplist:
@@ -205,7 +221,18 @@ class HUD(object):
     
     def draw_boxes(self, pct, rect, color, screen, num_boxes = 1):
         w = pct * rect.width
+        img = self.pill_green.copy()
+        if color == consts.COLOR_RED:
+            img = self.pill_red.copy()
+        elif color == consts.COLOR_YELLOW:
+            img = self.pill_yellow.copy()
+        elif color == consts.COLOR_BLUE:
+            img = self.pill_blue.copy()
+        
         if num_boxes == 1:
+            #if pct > 0:
+            #    img = pygame.transform.smoothscale(img, (int(rect.width * pct), rect.height))
+            #    screen.blit(img, rect.topleft)
             pygame.gfxdraw.rectangle(screen, pygame.rect.Rect(rect.left - 1, rect.top, rect.width + 1, rect.height), color)
             pygame.gfxdraw.box(screen, pygame.rect.Rect(rect.left, rect.top, w, rect.height), color)
         else:    
@@ -220,7 +247,10 @@ class HUD(object):
                 
                 if i >= num_boxes - diff:
                     add = 1
-                pygame.gfxdraw.box(screen, pygame.rect.Rect(x, rect.top, box_width - 1 + add, rect.height), color)
+                
+                img = pygame.transform.smoothscale(img, (int(box_width - 1 + add), rect.height))
+                screen.blit(img, (x, rect.top))
+                #pygame.gfxdraw.box(screen, pygame.rect.Rect(x, rect.top, box_width - 1 + add, rect.height), color)
                 x += box_width + add
     
     def mark_objectives(self, screen, triggers, rect, shiplist):

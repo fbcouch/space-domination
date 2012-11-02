@@ -142,6 +142,9 @@ def load_common_assets():
     assets['shield_hit.png'] = load_sprite_sheet('shield_hit.png', 100, 100, colorkey = -1)
     assets['target-box-blue.png'], r = load_image('target-box-blue.png', -1)
     assets['target-box-red.png'], r = load_image('target-box-red.png', -1)
+    assets['hud-panel-lowerleft.png'], r = load_image('hud-panel-lowerleft.png', (0, 0, 0))
+    assets['hud-panel-lowerright.png'], r = load_image('hud-panel-lowerright.png', (0, 0, 0))
+    
     
     
     
@@ -149,5 +152,11 @@ def get_asset(name):
     if name in assets:
         return assets[name]
     else:
+        try:
+            assets[name], r = load_image(name, (0,0,0))
+            return assets[name]
+        except SystemExit, message:
+            print "Error loading file: " + name
+    
         return None
     

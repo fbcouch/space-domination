@@ -26,6 +26,9 @@ class Weapon(object):
     cooldown = 0 # cant fire for this many ticks after hitting "0" ammo
     cooldown_remaining = 0
     
+    icon_file = None
+    icon = None
+    
     fire_points = None
     
     image_file = None
@@ -166,7 +169,11 @@ class Weapon(object):
         returnVal.bullet_ticks = self.bullet_ticks
         returnVal.bullet_speed = self.bullet_speed
         returnVal.image_file = self.image_file
-        returnVal.image = self.image
+        if self.image:
+            returnVal.image = self.image.copy()
+        returnVal.icon_file = self.icon_file
+        if self.icon:
+            returnVal.icon = self.icon.copy()
         returnVal.type = self.type
         returnVal.engines = self.engines
         returnVal.engine_color = self.engine_color
@@ -226,6 +233,11 @@ class WeaponListXMLParser(handler.ContentHandler):
                 weapon.image = image
             else:
                 weapon.image = None
+                
+            weapon.icon_file = attrs.get('icon', '')
+            if weapon.icon_file:
+                weapon.icon = Utils.get_asset(weapon.icon_file)    
+            
             self.weaponList.append(weapon)
             
     def endElement(self, name):
