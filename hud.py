@@ -80,21 +80,20 @@ class HUD(object):
             # draw glowing balls to point out objectives that are off screen
             self.mark_objectives(screen, context.triggerList, pygame.rect.Rect(-1 * render[0], -1 * render[1], screen.get_width(), screen.get_height()), context.shipSpriteGroup)
             
-            # draw objective text
-            self.display_objectives(screen, context.triggerList, font)
-            
-            # draw the chat messages
-            self.display_messages(screen, context.messageList)
-            
-            # display health, ammo, shields
-            self.display_ship_info(screen, context.playerShip, context.medfont)
-            
             # display timer
             self.display_timer(screen, context.elapsedTime, font)
             
             # display unit bars
             self.draw_unit_bars(screen, context.shipSpriteGroup, render, font)
             
+            # display health, ammo, shields
+            self.display_ship_info(screen, context.playerShip, context.medfont)
+            
+            # draw objective text
+            self.display_objectives(screen, context.triggerList, font)
+            
+            # draw the chat messages
+            self.display_messages(screen, context.messageList)
                 
     def display_objectives(self, screen, triggers, font = None):
         if not font: font = pygame.font.Font(None, 20)
@@ -139,10 +138,19 @@ class HUD(object):
             y += 20
     
     def display_messages(self, screen, messages):
-        y = 0
+        max_w = 0
         for msg in messages:
-            screen.blit(msg.surface, (0, screen.get_height() - msg.surface.get_height() - y - 5))
-            y += msg.surface.get_height()
+            if msg.surface.get_width() > max_w:
+                max_w = msg.surface.get_width()
+        
+        y = 0
+        x = (screen.get_width() - max_w) * 0.5
+        if screen.get_width() - 1000 < 600 and len(messages) < 2:
+            y = 50
+            
+        for msg in messages:
+            screen.blit(msg.surface, (x, screen.get_height() - msg.surface.get_height() - y - 5))
+            y += msg.surface.get_height() + 5
             msg.update(messages)
     
     def display_ship_info(self, screen, ship, font = None):

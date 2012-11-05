@@ -4,6 +4,7 @@ Created on Jul 16, 2012
 @author: jami
 '''
 import Utils
+import os
 import pygame
 
 
@@ -34,11 +35,11 @@ class PopupMessage(object):
         self.duration = duration
         self.font = font
         if not self.font:
-            self.font = pygame.font.Font(None, 20)
+            self.font = pygame.font.Font(os.path.join("assets", "promethean.ttf"), 20)
             
         titleSurface = self.font.render(self.title, 1, (204, 204, 204))
         if self.icon:
-            self.body = Utils.parse(body, width - self.icon.get_width, self.font)
+            self.body = Utils.parse(body, width - self.icon.get_width(), self.font)
         else:
             self.body = Utils.parse(body, width, self.font)
         bodySurfaces = []
