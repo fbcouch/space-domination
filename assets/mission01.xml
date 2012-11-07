@@ -12,7 +12,7 @@
 	<enemy id="2" x="850.0" y="400.0" rot="45.0" tag="prim" />
 	<enemy id="2" x="1125.0" y="400.0" rot="45.0" tag="prim" />
 
-	<trigger id="1" condition="mission-start" message-title="Trainer" message-body="Try out your controls! Use LEFT and RIGHT to rotate, UP to accelerate, and DOWN to brake. SPACE to FIRE!" />
-	<trigger id="2" type="objective-primary" condition="destroy-class" tag="prim" display-text="Destroy the crates!" message-title="Trainer" message-body="Great job, kid! We'll have you out there against the alliance soon enough." />
+	<trigger id="1" condition="mission-start" message-title="Trainer" message-body="Try out your controls! Use LEFT and RIGHT to rotate, UP to accelerate, and DOWN to brake. Use number keys 1 and 2 to swap between lasers and missiles. SPACE to FIRE!" message-icon="hud-example-msg-icon.png" />
+	<trigger id="2" type="objective-primary" condition="destroy-class" tag="prim" display-text="Destroy the crates!" message-title="Trainer" message-body="Great job, kid! We'll have you out there against the alliance soon enough." message-icon="hud-example-msg-icon.png" />
 
 </mission>

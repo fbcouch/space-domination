@@ -16,8 +16,8 @@
 	<enemy id="8" x="6200" y="2400" rot="180.0" tag="two" />
 	<enemy id="8" x="6300" y="2600" rot="180.0" tag="two" />
 	
-	<trigger id="3" condition="mission-start" message-title="Commander" message-body="All right, lets get this freighter on its way. Keep your eyes open for raiders." />
-	<trigger id="4" condition="spawn-at-time" tag="prim" attrs="0:05" message-title="Commander" message-body="Raiders! Incoming on an attack vector!" />
-	<trigger id="5" condition="spawn-at-time" tag="prim" attrs="0:35" message-title="Commander" message-body="Raiders! Incoming on an attack vector!" />
-	<trigger id="6" condition="win-at-time" type="objective-primary" tag="prim" attrs="1:05" display-text="Hyperjump" message-title="Commander" message-body="Great job, we're out of here!" />
+	<trigger id="3" condition="mission-start" message-title="Commander" message-body="All right, lets get this freighter on its way. Keep your eyes open for raiders." message-icon="hud-example-msg-icon.png" />
+	<trigger id="4" condition="spawn-at-time" tag="prim" attrs="0:05" message-title="Commander" message-body="Raiders! Incoming on an attack vector!" message-icon="hud-example-msg-icon.png" />
+	<trigger id="5" condition="spawn-at-time" tag="prim" attrs="0:35" message-title="Commander" message-body="Raiders! Incoming on an attack vector!" message-icon="hud-example-msg-icon.png" />
+	<trigger id="6" condition="win-at-time" type="objective-primary" tag="prim" attrs="1:05" display-text="Hyperjump" message-title="Commander" message-body="Great job, we're out of here!" message-icon="hud-example-msg-icon.png" />
 </mission>

@@ -10,7 +10,7 @@
 		<point id="4" x="347" y="55" rot="270.0" />
 		<point id="5" x="185" y="70" rot="270.0" />
 		
-		<trigger id="2" type="objective-primary" condition="destroy-attached" display-text="Take down the space station." message-title="Commander" message-body="Nice job! Look's like you're ready for some real action." />
+		<trigger id="2" type="objective-primary" condition="destroy-attached" display-text="Take down the space station." message-title="Commander" message-body="Nice job! Look's like you're ready for some real action." message-icon="hud-example-msg-icon.png" />
 	</enemy>
 	
 	<enemy id="3" x="1400" y="600" rot="120.0" tag="sec" />
@@ -20,6 +20,6 @@
 	
 	<trigger id="5" type="objective-secondary" condition="survive-class" tag="ally" display-text="Keep your squad alive." />
 	<trigger id="3" type="objective-secondary" condition="destroy-class" tag="sec" display-text="Kill the enemy fighters." />
-	<trigger id="4" condition="mission-start" message-title="Commander" message-body="There's an outpost near here that those scouts came from. If we move quickly, they will be caught unaware. Find it, and take it down!" />
+	<trigger id="4" condition="mission-start" message-title="Commander" message-body="There's an outpost near here that those scouts came from. If we move quickly, they will be caught unaware. Find it, and take it down!" message-icon="hud-example-msg-icon.png" />
 	
 </mission>

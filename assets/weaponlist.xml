@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <weaponlist>
-	<weapon id="0" name="Laser (Red)" file="laser-red1.png" icon="hud-icon-laserred.png" ammo="6" regen="2" damage="5" rate="5" speed="25" life="100" type="laser" cooldown="3" />
+	<weapon id="0" name="Laser (Red)" file="laser-red1.png" icon="hud-icon-laserred.png" ammo="10" regen="2" damage="5" rate="5" speed="25" life="100" type="laser" cooldown="3" />
 	<weapon id="1" name="Laser (Green)" file="laser-green1.png" icon="hud-icon-lasergreen.png" ammo="6" regen="2" damage="5" rate="5" speed="25" life="100" type="laser" cooldown="3" />
 	<weapon id="2" name="Missile" file="missile1.png" icon="hud-icon-missile1.png" ammo="5" regen="0" damage="100" rate="50" speed="15" life="100" type="missile" engines="1,10" engine-color="red" />
 	<weapon id="3" name="Laser Turret 1" file="laser-green1.png" icon="hud-icon-lasergreen.png" ammo="6" regen="2" damage="5" rate="5" speed="25" life="100" type="laser" cooldown="3" />
